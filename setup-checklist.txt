@@ -1,0 +1,28 @@
+SUPABASE SETUP CHECKLIST
+========================
+
+[ ] 1. Created Supabase project ✓ (you said you did this!)
+
+[ ] 2. Got credentials from Settings → API:
+    [ ] Project URL
+    [ ] anon public key
+    [ ] service_role key
+
+[ ] 3. Created .env.local with credentials
+
+[ ] 4. Ran SQL schema in SQL Editor:
+    - Open supabase-schema.sql
+    - Copy all (169 lines)
+    - Paste in SQL Editor
+    - Click Run
+
+[ ] 5. Created storage bucket:
+    - Name: card-images
+    - Public: Yes
+
+[ ] 6. Created admin user:
+    - In Authentication → Users
+    - Copied UUID
+    - Ran INSERT INTO user_roles SQL
+
+[ ] 7. Tested login in app

@@ -11,6 +11,7 @@ export const CARD_SCHEMA = {
   backTibetanSpelling: 'Romanized spelling (Wylie/phonetic)',
   notes: 'string (optional)',
   tags: 'array (optional)',
+  imageUrl: 'string (optional) - URL to image',
   createdAt: 'timestamp'
 };
 
@@ -45,6 +46,7 @@ export function createCard(data) {
     notes: data.notes || null,
     tags: tags,
     subcategory: data.type === 'numerals' ? 'numerals' : data.type === 'numbers' ? 'script' : null,
+    imageUrl: data.imageUrl || null, // URL to image
     createdAt: data.createdAt || Date.now()
   };
 }

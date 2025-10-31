@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import AddCardForm from './AddCardForm.jsx';
 import EditCardForm from './EditCardForm.jsx';
+import QuickTranslateForm from './QuickTranslateForm.jsx';
 import './CardManager.css';
 
 /**
  * CardManager component for viewing and managing cards
  */
-export default function CardManager({ cards, onAddCard, onEditCard, onDeleteCard }) {
+export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, onDeleteCard, isAdmin = false }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
   const [filterType, setFilterType] = useState('');
@@ -39,15 +40,23 @@ export default function CardManager({ cards, onAddCard, onEditCard, onDeleteCard
     <div className="card-manager">
       <div className="card-manager-header">
         <h2>Card Library</h2>
-        <button 
-          className="btn-add-card"
-          onClick={() => setShowAddForm(!showAddForm)}
-        >
-          {showAddForm ? 'Cancel' : '+ Add Card'}
-        </button>
+        <div className="card-manager-actions">
+          {isAdmin && (
+            <button 
+              className="btn-add-card"
+              onClick={() => setShowAddForm(!showAddForm)}
+            >
+              {showAddForm ? 'Cancel' : '+ Add Card'}
+            </button>
+          )}
+        </div>
       </div>
 
-      {showAddForm && (
+      {isAdmin && onAddCards && (
+        <QuickTranslateForm onAddCards={onAddCards} />
+      )}
+
+      {showAddForm && isAdmin && (
         <AddCardForm 
           onAdd={handleAddCard} 
           onCancel={() => setShowAddForm(false)}

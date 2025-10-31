@@ -11,6 +11,11 @@
   margin-bottom: 2rem;
 }
 
+.card-manager-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .card-manager-header h2 {
   color: #333;
   margin: 0;

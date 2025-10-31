@@ -54,6 +54,12 @@ export default function Flashcard({ card, onFlip }) {
         <div className="flashcard-inner">
         <div className="flashcard-front">
           <div className="card-content">
+            {/* Display image for English→Tibetan word cards */}
+            {isEnglishToTibetan && card.imageUrl && (
+              <div className="card-image">
+                <img src={card.imageUrl} alt={card.front} />
+              </div>
+            )}
             {isNumeralCard ? (
               <div className="tibetan-numeral">{card.front}</div>
             ) : isEnglishToTibetan ? (
