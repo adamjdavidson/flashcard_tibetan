@@ -51,7 +51,19 @@ The schema creates:
    - **Name**: `card-images`
    - **Public bucket**: ✅ Check this (images need to be publicly accessible)
 4. Click "Create bucket"
-5. Set up policies (done automatically via SQL schema)
+
+### Step 5a: Set Up Storage RLS Policies
+
+After creating the bucket, you need to set up Row Level Security policies for storage:
+
+1. Go to **SQL Editor** in your Supabase dashboard
+2. Create a new query
+3. Copy and paste the SQL from `supabase-storage-policies.sql` (see file in project root)
+4. Click "Run" to execute
+
+This will create policies that:
+- Allow **public read access** to all images (anyone can view)
+- Allow **authenticated users** to upload, update, and delete images
 
 ## Step 6: Configure Row Level Security (RLS)
 

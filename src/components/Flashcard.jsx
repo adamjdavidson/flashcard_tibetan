@@ -76,10 +76,11 @@ export default function Flashcard({ card, onFlip }) {
         </div>
         <div className="flashcard-back">
           <div className="card-content">
-            {/* For word cards */}
+            {/* For English→Tibetan word cards: show Tibetan script */}
             {isEnglishToTibetan && card.backTibetanScript ? (
               <div className="tibetan-text">{card.backTibetanScript}</div>
             ) : isTibetanToEnglish && card.backEnglish ? (
+              /* For Tibetan→English word cards: show English */
               <div className="english-word">{card.backEnglish}</div>
             ) : (
               <>

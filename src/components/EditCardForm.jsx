@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createCard, validateCard } from '../data/cardSchema.js';
+import { generateAIImage, searchImage, uploadImage, validateImageFile, createImagePreview, revokeImagePreview } from '../utils/images.js';
+import { uploadImage as uploadToSupabase } from '../services/imagesService.js';
 import './AddCardForm.css';
 
 /**
@@ -14,6 +16,12 @@ export default function EditCardForm({ card, onSave, onCancel }) {
     backTibetanSpelling: '',
     notes: ''
   });
+  const [imageUrl, setImageUrl] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [generating, setGenerating] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
 
   // Populate form with card data when card changes
   useEffect(() => {
@@ -41,6 +49,9 @@ export default function EditCardForm({ card, onSave, onCancel }) {
         backTibetanSpelling: card.backTibetanSpelling || '',
         notes: card.notes || ''
       });
+      // Set image URL and preview
+      setImageUrl(card.imageUrl || null);
+      setImagePreview(card.imageUrl || null);
     }
   }, [card]);
 
@@ -50,6 +61,153 @@ export default function EditCardForm({ card, onSave, onCancel }) {
       ...prev,
       [name]: value
     }));
+  };
+
+  // Image handlers (similar to QuickTranslateForm)
+  const handleGenerateAIImage = async () => {
+    if (!formData.front.trim() && !formData.backEnglish.trim()) {
+      setError('Please enter a word first (front or back)');
+      return;
+    }
+
+    setGenerating(true);
+    setError('');
+
+    try {
+      const prompt = `${formData.backEnglish || formData.front}, simple illustration, educational, clean background`;
+      const result = await generateAIImage(prompt);
+      
+      if (result.success && result.imageUrl) {
+        // Check if it's a base64 data URL - if so, upload to Supabase Storage
+        if (result.imageUrl.startsWith('data:image/')) {
+          try {
+            const response = await fetch(result.imageUrl);
+            const blob = await response.blob();
+            const file = new File([blob], `${formData.backEnglish || formData.front}_${Date.now()}.png`, {
+              type: blob.type || 'image/png'
+            });
+            const uploadResult = await uploadToSupabase(file);
+            
+            if (uploadResult.success && uploadResult.imageUrl) {
+              setImageUrl(uploadResult.imageUrl);
+              setImagePreview(uploadResult.imageUrl);
+            } else {
+              console.warn('Failed to upload to Supabase, using base64:', uploadResult.error);
+              setImageUrl(result.imageUrl);
+              setImagePreview(result.imageUrl);
+            }
+          } catch (uploadErr) {
+            console.error('Error uploading generated image:', uploadErr);
+            setImageUrl(result.imageUrl);
+            setImagePreview(result.imageUrl);
+          }
+        } else {
+          setImageUrl(result.imageUrl);
+          setImagePreview(result.imageUrl);
+        }
+      } else {
+        setError(result.error || 'AI image generation failed');
+      }
+    } catch (err) {
+      console.error('Image generation error:', err);
+      setError('Image generation failed. Please try again.');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleSearchUnsplash = async () => {
+    if (!formData.backEnglish.trim() && !formData.front.trim()) {
+      setError('Please enter a word first (front or back)');
+      return;
+    }
+
+    setSearching(true);
+    setError('');
+
+    try {
+      const result = await searchImage((formData.backEnglish || formData.front).trim());
+      if (result.success && result.imageUrl) {
+        setImageUrl(result.imageUrl);
+        setImagePreview(result.imageUrl);
+      } else {
+        setError(result.error || 'Image search failed');
+      }
+    } catch (err) {
+      console.error('Image search error:', err);
+      setError('Image search failed. Please try again.');
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setError(validation.error || 'Invalid image file');
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+
+    const preview = createImagePreview(file);
+    setImagePreview(preview);
+
+    try {
+      const result = await uploadImage(file);
+      if (result.success && result.imageUrl) {
+        setImageUrl(result.imageUrl);
+        revokeImagePreview(preview);
+        setImagePreview(result.imageUrl);
+      } else {
+        setError(result.error || 'Image upload failed');
+        revokeImagePreview(preview);
+        setImagePreview(null);
+      }
+    } catch (err) {
+      console.error('Image upload error:', err);
+      setError('Image upload failed. Please try again.');
+      revokeImagePreview(preview);
+      setImagePreview(null);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handlePasteImage = async (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          const validation = validateImageFile(file);
+          if (!validation.valid) {
+            setError(validation.error || 'Invalid image file');
+            return;
+          }
+          const fakeEvent = { target: { files: [file], value: '' } };
+          await handleImageUpload(fakeEvent);
+        }
+        break;
+      }
+    }
+  };
+
+  const handleRemoveImage = () => {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      revokeImagePreview(imagePreview);
+    }
+    setImageUrl(null);
+    setImagePreview(null);
   };
 
   const handleSubmit = (e) => {
@@ -83,7 +241,8 @@ export default function EditCardForm({ card, onSave, onCancel }) {
       notes: formData.notes || null,
       tags: tags,
       subcategory: subcategory,
-      category: null // Remove category
+      category: null, // Remove category
+      imageUrl: imageUrl || null // Preserve or update image URL
     };
 
     if (validateCard(updatedCard)) {
@@ -190,6 +349,64 @@ export default function EditCardForm({ card, onSave, onCancel }) {
             placeholder="Additional notes..."
           />
         </div>
+
+        {/* Image Section */}
+        <div className="image-section">
+          <label>Image (Optional)</label>
+          
+          <div className="image-actions">
+            <button
+              type="button"
+              onClick={handleGenerateAIImage}
+              disabled={generating || (!formData.front.trim() && !formData.backEnglish.trim())}
+              className="btn-secondary"
+            >
+              {generating ? 'Generating...' : 'Generate AI Image'}
+            </button>
+            
+            <button
+              type="button"
+              onClick={handleSearchUnsplash}
+              disabled={searching || (!formData.front.trim() && !formData.backEnglish.trim())}
+              className="btn-secondary"
+            >
+              {searching ? 'Searching...' : 'Search Unsplash'}
+            </button>
+            
+            <label className="btn-secondary btn-upload">
+              {uploading ? 'Uploading...' : 'Upload Image'}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                disabled={uploading}
+                style={{ display: 'none' }}
+              />
+            </label>
+            
+            {imagePreview && (
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="btn-secondary btn-remove"
+              >
+                Remove Image
+              </button>
+            )}
+          </div>
+
+          {imagePreview && (
+            <div className="image-preview">
+              <img src={imagePreview} alt="Preview" />
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
 
         <div className="form-actions">
           <button type="submit" className="btn-primary">Save Changes</button>

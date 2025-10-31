@@ -42,10 +42,12 @@ export function createCard(data) {
     front: data.front || '',
     backArabic: data.backArabic || null, // For number cards
     backEnglish: data.backEnglish || '',
+    backTibetanScript: data.backTibetanScript || null, // For word cards (Tibetan translation)
+    backTibetanNumeral: data.backTibetanNumeral || null, // For number cards (Tibetan numerals)
     backTibetanSpelling: data.backTibetanSpelling || '',
     notes: data.notes || null,
     tags: tags,
-    subcategory: data.type === 'numerals' ? 'numerals' : data.type === 'numbers' ? 'script' : null,
+    subcategory: data.subcategory || (data.type === 'numerals' ? 'numerals' : data.type === 'numbers' ? 'script' : null),
     imageUrl: data.imageUrl || null, // URL to image
     createdAt: data.createdAt || Date.now()
   };

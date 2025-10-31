@@ -144,17 +144,36 @@ export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, 
                         )}
                       </div>
                     </div>
+                    {/* Show image preview if available */}
+                    {card.imageUrl && card.subcategory === 'english_to_tibetan' && (
+                      <div className="card-item-image">
+                        <img src={card.imageUrl} alt={card.front} />
+                      </div>
+                    )}
                     <div className="card-item-front">{card.front}</div>
                     <div className="card-item-back">
-                      <div className="card-item-english">{card.backArabic || card.backEnglish}</div>
-                      {card.backTibetanScript && (
+                      {/* For English→Tibetan word cards: show Tibetan script */}
+                      {card.subcategory === 'english_to_tibetan' && card.backTibetanScript && (
                         <div className="card-item-tibetan-script">{card.backTibetanScript}</div>
                       )}
-                      {card.backTibetanNumeral && (
+                      {/* For Tibetan→English word cards: show English */}
+                      {card.subcategory === 'tibetan_to_english' && card.backEnglish && (
+                        <div className="card-item-english">{card.backEnglish}</div>
+                      )}
+                      {/* For number cards: show Arabic numeral */}
+                      {card.backArabic && (card.type === 'number') && (
+                        <div className="card-item-english">{card.backArabic}</div>
+                      )}
+                      {/* For number cards: show Tibetan script or numerals on back */}
+                      {card.type === 'number' && card.backTibetanScript && (
+                        <div className="card-item-tibetan-script">{card.backTibetanScript}</div>
+                      )}
+                      {card.type === 'number' && card.backTibetanNumeral && (
                         <div className="card-item-tibetan-numeral">{card.backTibetanNumeral}</div>
                       )}
-                      {card.backTibetanSpelling && !card.backTibetanScript && !card.backTibetanNumeral && (
-                        <div className="card-item-spelling">{card.backTibetanSpelling}</div>
+                      {/* Fallback: show English if no special subcategory and it's not a number card */}
+                      {card.subcategory !== 'english_to_tibetan' && card.subcategory !== 'tibetan_to_english' && card.type !== 'number' && card.backEnglish && (
+                        <div className="card-item-english">{card.backEnglish}</div>
                       )}
                     </div>
                   </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { translateText } from '../utils/translation.js';
 import { generateAIImage, searchImage, uploadImage, validateImageFile, createImagePreview, revokeImagePreview } from '../utils/images.js';
+import { uploadImage as uploadToSupabase } from '../services/imagesService.js';
 import { createCard } from '../data/cardSchema.js';
 import './QuickTranslateForm.css';
 
@@ -64,8 +65,41 @@ export default function QuickTranslateForm({ onAddCards }) {
       const result = await generateAIImage(prompt);
       
       if (result.success && result.imageUrl) {
-        setImageUrl(result.imageUrl);
-        setImagePreview(result.imageUrl);
+        // Check if it's a base64 data URL - if so, upload to Supabase Storage
+        if (result.imageUrl.startsWith('data:image/')) {
+          try {
+            // Convert base64 data URL to Blob
+            const response = await fetch(result.imageUrl);
+            const blob = await response.blob();
+            
+            // Create a File-like object for upload
+            const file = new File([blob], `${englishWord.replace(/\s+/g, '_')}_${Date.now()}.png`, {
+              type: blob.type || 'image/png'
+            });
+
+            // Upload to Supabase Storage
+            const uploadResult = await uploadToSupabase(file);
+            
+            if (uploadResult.success && uploadResult.imageUrl) {
+              setImageUrl(uploadResult.imageUrl);
+              setImagePreview(uploadResult.imageUrl);
+            } else {
+              // If upload fails, fallback to base64 (might be too large)
+              console.warn('Failed to upload to Supabase, using base64:', uploadResult.error);
+              setImageUrl(result.imageUrl);
+              setImagePreview(result.imageUrl);
+            }
+          } catch (uploadErr) {
+            console.error('Error uploading generated image:', uploadErr);
+            // Fallback to base64 if upload fails
+            setImageUrl(result.imageUrl);
+            setImagePreview(result.imageUrl);
+          }
+        } else {
+          // Regular URL (from DALL-E or Unsplash)
+          setImageUrl(result.imageUrl);
+          setImagePreview(result.imageUrl);
+        }
       } else {
         setError(result.error || 'AI image generation failed');
       }
@@ -193,7 +227,7 @@ export default function QuickTranslateForm({ onAddCards }) {
     const englishToTibetanCard = createCard({
       type: 'word',
       front: englishWord.trim(),
-      backEnglish: englishWord.trim(),
+      backEnglish: englishWord.trim(), // Keep for reference, but back will show Tibetan
       backTibetanScript: tibetanScript.trim(),
       backTibetanSpelling: '', // Will be empty for now
       imageUrl: imageUrl,

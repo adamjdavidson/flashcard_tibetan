@@ -19,7 +19,8 @@ export async function uploadImage(file, path = null) {
   try {
     // Generate filename if not provided
     const fileName = path || `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${file.name.split('.').pop()}`;
-    const filePath = `card-images/${fileName}`;
+    // Don't duplicate the bucket name in the path - just use the filename
+    const filePath = fileName;
 
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
