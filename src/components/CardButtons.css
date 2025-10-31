@@ -16,7 +16,7 @@
   transition: all 0.2s;
   background-color: var(--button-color);
   color: white;
-  min-width: 100px;
+  min-width: 120px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 

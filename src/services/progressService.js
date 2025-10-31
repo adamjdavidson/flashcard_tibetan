@@ -193,6 +193,7 @@ function transformProgressFromDB(dbProgress) {
     easeFactor: dbProgress.ease_factor,
     repetitions: dbProgress.repetitions,
     quality: dbProgress.quality,
+    learningStepIndex: dbProgress.learning_step_index ?? undefined,
     lastReviewDate: dbProgress.last_review_date,
     nextReviewDate: dbProgress.next_review_date,
     reviewCount: dbProgress.review_count || 0
@@ -210,6 +211,7 @@ function transformProgressToDB(userId, cardId, progress) {
     ease_factor: progress.easeFactor,
     repetitions: progress.repetitions,
     quality: progress.quality,
+    learning_step_index: progress.learningStepIndex ?? null,
     last_review_date: progress.lastReviewDate,
     next_review_date: progress.nextReviewDate,
     review_count: progress.reviewCount || 0
