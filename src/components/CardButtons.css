@@ -1,0 +1,48 @@
+.card-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 2rem 0;
+}
+
+.rating-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: var(--button-color);
+  color: white;
+  min-width: 100px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rating-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.rating-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.rating-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .card-buttons {
+    gap: 0.5rem;
+  }
+  
+  .rating-button {
+    min-width: 80px;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
