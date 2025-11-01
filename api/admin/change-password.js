@@ -3,6 +3,7 @@
  * Vercel serverless function
  * Allows admin to change their own password or another user's password
  */
+/* eslint-env node */
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -33,7 +34,7 @@ export default async function handler(req, res) {
     });
 
     // Update user password
-    const { data, error } = await supabase.auth.admin.updateUserById(userId, {
+    const { error } = await supabase.auth.admin.updateUserById(userId, {
       password: newPassword
     });
 

@@ -121,6 +121,7 @@ function App() {
 
     // Don't wait for auth - initialize immediately
     initializeData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [useSupabase, user]);
 
   // Set up real-time subscriptions for Supabase

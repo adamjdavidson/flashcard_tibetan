@@ -3,6 +3,7 @@
  * Vercel serverless function
  * Resets SM-2 progress for a user or all users
  */
+/* eslint-env node */
 
 import { createClient } from '@supabase/supabase-js';
 

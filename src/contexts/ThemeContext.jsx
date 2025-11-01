@@ -15,6 +15,7 @@ export function ThemeProvider({ children }) {
   // Load user's theme preference
   useEffect(() => {
     loadUserTheme();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Apply theme when it changes
@@ -22,6 +23,7 @@ export function ThemeProvider({ children }) {
     if (currentTheme || customColors) {
       applyTheme();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTheme, customColors]);
 
   async function loadUserTheme() {

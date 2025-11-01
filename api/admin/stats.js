@@ -3,6 +3,7 @@
  * Vercel serverless function
  * Returns system statistics
  */
+/* eslint-env node */
 
 import { createClient } from '@supabase/supabase-js';
 

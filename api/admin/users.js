@@ -3,6 +3,7 @@
  * Vercel serverless function
  * Handles user management operations (list, create, update, delete)
  */
+/* eslint-env node */
 
 import { createClient } from '@supabase/supabase-js';
 
