@@ -3,6 +3,7 @@
  * Tests full workflows: create card with classification, edit, delete, filter, sort
  */
 
+import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -334,6 +335,40 @@ describe('Admin Card Management Integration Tests', () => {
 
       await waitFor(() => {
         expect(createCategory).toHaveBeenCalled();
+      });
+    });
+
+    it('displays error message when category creation fails', async () => {
+      const user = userEvent.setup();
+      
+      createCategory.mockResolvedValue({
+        success: false,
+        error: 'Duplicate key'
+      });
+
+      render(<AdminClassificationManager />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Greetings')).toBeInTheDocument();
+      });
+
+      const addButton = screen.getByText(/add category/i);
+      await user.click(addButton);
+
+      const nameInput = screen.getByLabelText(/name/i);
+      await user.type(nameInput, 'Travel');
+
+      const submitButton = screen.getByRole('button', { name: /create/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(createCategory).toHaveBeenCalled();
+      });
+
+      // Verify error message is displayed in the alert
+      await waitFor(() => {
+        const errorAlert = screen.getByRole('alert');
+        expect(errorAlert).toHaveTextContent(/duplicate key|failed to save category/i);
       });
     });
   });

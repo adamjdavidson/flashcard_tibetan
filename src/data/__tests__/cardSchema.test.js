@@ -87,13 +87,14 @@ describe('cardSchema', () => {
       expect(validateCard(card)).toBe(false);
     });
 
-    it('rejects word card without backTibetanScript', () => {
+    it('accepts word card without backTibetanScript (now optional)', () => {
       const card = {
         type: 'word',
         front: 'test',
         backEnglish: 'test'
+        // backTibetanScript is optional - translation tool populates it
       };
-      expect(validateCard(card)).toBe(false);
+      expect(validateCard(card)).toBe(true);
     });
 
     it('rejects number card without backArabic', () => {
