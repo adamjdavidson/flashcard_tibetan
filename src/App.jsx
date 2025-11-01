@@ -5,6 +5,7 @@ import ProgressStats from './components/ProgressStats.jsx';
 import CardManager from './components/CardManager.jsx';
 import CardFilter from './components/CardFilter.jsx';
 import Auth from './components/Auth.jsx';
+import AdminPage from './components/AdminPage.jsx';
 import { useAuth } from './hooks/useAuth.js';
 import { convertNumbersToCards } from './data/tibetanNumbers.js';
 import { convertWordsToCards } from './data/tibetanWords.js';
@@ -38,7 +39,7 @@ function App() {
   const [currentCard, setCurrentCard] = useState(null);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [view, setView] = useState('study'); // 'study' or 'manage'
+  const [view, setView] = useState('study'); // 'study', 'manage', or 'admin'
   const [selectedTags, setSelectedTags] = useState(['all']); // Filter tags
   const [useSupabase, setUseSupabase] = useState(false);
   const [migrationPrompt, setMigrationPrompt] = useState(false);
@@ -356,6 +357,14 @@ function App() {
           >
             Manage Cards
           </button>
+          {isAdmin && user && (
+            <button 
+              className={`nav-button ${view === 'admin' ? 'active' : ''}`}
+              onClick={() => setView('admin')}
+            >
+              Admin
+            </button>
+          )}
           {user && (
             <div className="user-info">
               {isAdmin && <span className="admin-badge">Admin</span>}
@@ -404,6 +413,8 @@ function App() {
               </div>
             )}
           </div>
+        ) : view === 'admin' ? (
+          <AdminPage />
         ) : (
           <CardManager 
             cards={cards}
