@@ -17,7 +17,7 @@ async function applyMigration() {
     // Check if Supabase CLI is available
     try {
       await execAsync('npx supabase --version');
-    } catch (error) {
+    } catch {
       console.error('❌ Supabase CLI not found!');
       console.error('\nPlease install it first:');
       console.error('  npm install --save-dev supabase');
@@ -37,7 +37,7 @@ async function applyMigration() {
         console.warn('⚠️  Warning: Project may not be linked to remote Supabase');
         console.warn('   If migration fails, run: npx supabase link --project-ref YOUR_PROJECT_REF\n');
       }
-    } catch (error) {
+    } catch {
       // Ignore - we'll try the push anyway
       console.warn('⚠️  Could not verify project link status\n');
     }

@@ -1,6 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { describe, it, expect } from 'vitest';
 import { createCard, validateCard } from '../../data/cardSchema.js';
 import { initializeCardProgress, calculateReview } from '../../utils/sm2Algorithm.js';
 import { getDueCards, getNextCard } from '../../utils/cardUtils.js';

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import CardManager from '../CardManager.jsx';
 
@@ -209,7 +209,7 @@ describe('CardManager', () => {
     );
 
     // User badges should be present if cards have userId
-    const badges = screen.queryAllByText(/my card/i);
+    screen.queryAllByText(/my card/i);
     // At least one user card should exist
     expect(mockCards.some(c => c.userId)).toBe(true);
   });

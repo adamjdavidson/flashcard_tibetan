@@ -125,7 +125,8 @@ async function translateWithGoogle(apiKey, text, fromLang, toLang) {
 /**
  * Translate using DeepL API
  */
-async function translateWithDeepL(apiKey, text, fromLang, toLang) {
+// eslint-disable-next-line no-unused-vars
+async function translateWithDeepL(_apiKey, _text, _fromLang, _toLang) {
   // TODO: Implement DeepL API call
   // Example:
   // const response = await fetch('https://api-free.deepl.com/v2/translate', {
@@ -134,11 +135,11 @@ async function translateWithDeepL(apiKey, text, fromLang, toLang) {
   //     'Authorization': `DeepL-Auth-Key ${apiKey}`,
   //     'Content-Type': 'application/x-www-form-urlencoded'
   //   },
-  //   body: new URLSearchParams({ text, source_lang: fromLang.toUpperCase(), target_lang: toLang.toUpperCase() })
+  //   body: new URLSearchParams({ text: _text, source_lang: _fromLang.toUpperCase(), target_lang: _toLang.toUpperCase() })
   // });
   
   return {
-    translated: text, // Placeholder - replace with actual translation
+    translated: _text, // Placeholder - replace with actual translation
     pronunciation: null
   };
 }

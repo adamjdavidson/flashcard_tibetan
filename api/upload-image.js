@@ -82,7 +82,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Supabase client initialization failed' });
     }
 
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('card-images')
       .upload(filePath, buffer, {
         contentType: `image/${imageType}`,

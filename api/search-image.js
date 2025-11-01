@@ -86,7 +86,8 @@ export default async function handler(req, res) {
 /**
  * Fallback to AI image generation
  */
-async function generateImageFallback(service, apiKey, prompt) {
+// eslint-disable-next-line no-unused-vars
+async function generateImageFallback(_service, _apiKey, _prompt) {
   // Simple fallback - just return null for now
   // In production, you would call the actual image generation service
   return {

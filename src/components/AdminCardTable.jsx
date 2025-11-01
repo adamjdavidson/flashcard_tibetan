@@ -4,7 +4,7 @@
  * Supports sorting, pagination, and filtering
  */
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, memo } from 'react';
 import { mark, measure, clearMarks, clearMeasures, checkThreshold } from '../utils/performance.js';
 import './AdminCardTable.css';
 
@@ -196,6 +196,112 @@ export default function AdminCardTable({
     if (!card.categories || card.categories.length === 0) return 'None';
     return card.categories.map(cat => cat.name).join(', ');
   };
+
+  // Memoized table row component for performance optimization
+  const TableRow = memo(({ card, rowIndex, onEdit, onDelete, getBackContentSummary, getCategoriesDisplay, formatDate }) => {
+    const cellId = (colIndex) => `cell-${card.id}-${colIndex}`;
+    
+    return (
+      <tr aria-rowindex={rowIndex}>
+        <td 
+          className="type-cell" 
+          aria-colindex={1}
+          id={cellId(1)}
+          aria-describedby={cellId(1)}
+        >
+          <span className="card-type-badge">{card.type}</span>
+        </td>
+        <td 
+          className="front-cell" 
+          title={card.front}
+          aria-colindex={2}
+          id={cellId(2)}
+          aria-describedby={cellId(2)}
+        >
+          {card.front}
+        </td>
+        <td 
+          className="back-content-cell" 
+          title={getBackContentSummary(card)}
+          aria-colindex={3}
+          id={cellId(3)}
+          aria-describedby={cellId(3)}
+        >
+          {getBackContentSummary(card) || 'N/A'}
+        </td>
+        <td 
+          className="categories-cell"
+          aria-colindex={4}
+          id={cellId(4)}
+          aria-describedby={cellId(4)}
+        >
+          {getCategoriesDisplay(card)}
+        </td>
+        <td 
+          className="instruction-level-cell"
+          aria-colindex={5}
+          id={cellId(5)}
+          aria-describedby={cellId(5)}
+        >
+          {card.instructionLevel ? card.instructionLevel.name : 'None'}
+        </td>
+        <td 
+          className="created-date-cell"
+          aria-colindex={6}
+          id={cellId(6)}
+          aria-describedby={cellId(6)}
+        >
+          {formatDate(card.createdAt)}
+        </td>
+        <td 
+          className="actions-cell"
+          aria-colindex={7}
+          id={cellId(7)}
+          aria-describedby={cellId(7)}
+        >
+          <div className="table-actions">
+            {onEdit && (
+              <button
+                type="button"
+                className="btn-table-edit"
+                onClick={() => onEdit(card)}
+                aria-label={`Edit card ${card.front}`}
+                title="Edit card"
+              >
+                ✎
+              </button>
+            )}
+            {onDelete && (
+              <button
+                type="button"
+                className="btn-table-delete"
+                onClick={() => onDelete(card.id)}
+                aria-label={`Delete card ${card.front}`}
+                title="Delete card"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </td>
+      </tr>
+    );
+  }, (prevProps, nextProps) => {
+    // Custom comparison: only re-render if card data actually changed
+    return (
+      prevProps.card.id === nextProps.card.id &&
+      prevProps.card.updated_at === nextProps.card.updated_at &&
+      prevProps.card.front === nextProps.card.front &&
+      prevProps.card.type === nextProps.card.type &&
+      JSON.stringify(prevProps.card.categories) === JSON.stringify(nextProps.card.categories) &&
+      prevProps.card.instructionLevel?.id === nextProps.card.instructionLevel?.id &&
+      prevProps.rowIndex === nextProps.rowIndex &&
+      prevProps.onEdit === nextProps.onEdit &&
+      prevProps.onDelete === nextProps.onDelete
+    );
+  });
+  
+  TableRow.displayName = 'TableRow';
 
   // Enhanced keyboard navigation
   useEffect(() => {
@@ -389,92 +495,18 @@ export default function AdminCardTable({
           <tbody>
             {paginatedCards.map((card, index) => {
               const rowIndex = (currentPage - 1) * pageSize + index + 1;
-              const cellId = (colIndex) => `cell-${card.id}-${colIndex}`;
               
               return (
-                <tr key={card.id} aria-rowindex={rowIndex}>
-                  <td 
-                    className="type-cell" 
-                    aria-colindex={1}
-                    id={cellId(1)}
-                    aria-describedby={cellId(1)}
-                  >
-                    <span className="card-type-badge">{card.type}</span>
-                  </td>
-                  <td 
-                    className="front-cell" 
-                    title={card.front}
-                    aria-colindex={2}
-                    id={cellId(2)}
-                    aria-describedby={cellId(2)}
-                  >
-                    {card.front}
-                  </td>
-                  <td 
-                    className="back-content-cell" 
-                    title={getBackContentSummary(card)}
-                    aria-colindex={3}
-                    id={cellId(3)}
-                    aria-describedby={cellId(3)}
-                  >
-                    {getBackContentSummary(card) || 'N/A'}
-                  </td>
-                  <td 
-                    className="categories-cell"
-                    aria-colindex={4}
-                    id={cellId(4)}
-                    aria-describedby={cellId(4)}
-                  >
-                    {getCategoriesDisplay(card)}
-                  </td>
-                  <td 
-                    className="instruction-level-cell"
-                    aria-colindex={5}
-                    id={cellId(5)}
-                    aria-describedby={cellId(5)}
-                  >
-                    {card.instructionLevel ? card.instructionLevel.name : 'None'}
-                  </td>
-                  <td 
-                    className="created-date-cell"
-                    aria-colindex={6}
-                    id={cellId(6)}
-                    aria-describedby={cellId(6)}
-                  >
-                    {formatDate(card.createdAt)}
-                  </td>
-                  <td 
-                    className="actions-cell"
-                    aria-colindex={7}
-                    id={cellId(7)}
-                    aria-describedby={cellId(7)}
-                  >
-                    <div className="table-actions">
-                      {onEdit && (
-                        <button
-                          type="button"
-                          className="btn-table-edit"
-                          onClick={() => onEdit(card)}
-                          aria-label={`Edit card ${card.front}`}
-                          title="Edit card"
-                        >
-                          ✎
-                        </button>
-                      )}
-                      {onDelete && (
-                        <button
-                          type="button"
-                          className="btn-table-delete"
-                          onClick={() => onDelete(card.id)}
-                          aria-label={`Delete card ${card.front}`}
-                          title="Delete card"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                <TableRow
+                  key={card.id}
+                  card={card}
+                  rowIndex={rowIndex}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  getBackContentSummary={getBackContentSummary}
+                  getCategoriesDisplay={getCategoriesDisplay}
+                  formatDate={formatDate}
+                />
               );
             })}
           </tbody>
