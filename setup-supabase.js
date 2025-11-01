@@ -10,9 +10,8 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -36,7 +35,8 @@ if (!supabaseUrl || !supabaseServiceKey) {
 // Create Supabase client with service role key (has admin access)
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-async function runSQL(sql) {
+// eslint-disable-next-line no-unused-vars
+async function runSQL(_sql) {
   try {
     // Supabase REST API doesn't have direct SQL execution
     // We'll need to use the PostgREST API for table operations
@@ -66,7 +66,7 @@ async function checkBucket() {
   
   // Try to create bucket
   console.log('📦 Creating storage bucket "card-images"...');
-  const { data: bucketData, error: bucketError } = await supabase.storage.createBucket('card-images', {
+  const { error: bucketError } = await supabase.storage.createBucket('card-images', {
     public: true,
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
     fileSizeLimit: 5242880 // 5MB
@@ -82,6 +82,7 @@ async function checkBucket() {
   return true;
 }
 
+// eslint-disable-next-line no-unused-vars
 async function setupStoragePolicies() {
   console.log('📋 Setting up storage policies...');
   // Storage policies need to be set via SQL or dashboard
@@ -96,7 +97,7 @@ async function main() {
   
   // Test connection
   try {
-    const { data, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1 });
+    const { error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1 });
     if (error) throw error;
     console.log('✅ Connected to Supabase successfully\n');
   } catch (error) {

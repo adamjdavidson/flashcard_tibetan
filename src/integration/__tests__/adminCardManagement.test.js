@@ -10,7 +10,7 @@ import AdminCardTable from '../../components/AdminCardTable.jsx';
 import AdminClassificationManager from '../../components/AdminClassificationManager.jsx';
 import { loadCategories, createCategory } from '../../services/categoriesService.js';
 import { loadInstructionLevels, createInstructionLevel } from '../../services/instructionLevelsService.js';
-import { loadCards, saveCard, deleteCard } from '../../services/cardsService.js';
+import { loadCards, saveCard } from '../../services/cardsService.js';
 
 // Mock the services
 vi.mock('../../services/categoriesService.js');

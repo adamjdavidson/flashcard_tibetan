@@ -146,6 +146,7 @@ describe('categoriesService', () => {
       const { isSupabaseConfigured } = await import('../supabase.js');
       isSupabaseConfigured.mockReturnValue(true);
 
+      // eslint-disable-next-line no-unused-vars
       const mockEq = vi.fn(() => ({
         data: null,
         error: null

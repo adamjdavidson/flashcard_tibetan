@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { loadCards, saveCard, saveCards, deleteCard } from '../cardsService.js';
+import { loadCards, saveCard, deleteCard } from '../cardsService.js';
 
 // Mock supabase module (hoisted - must return factory function)
 vi.mock('../supabase.js', () => {
@@ -47,7 +47,7 @@ describe('cardsService', () => {
       });
 
       const fallbackLoad = vi.fn(() => []);
-      const result = await loadCards(fallbackLoad);
+      await loadCards(fallbackLoad);
       
       expect(mockSupabase.from).toHaveBeenCalledWith('cards');
       expect(fallbackLoad).not.toHaveBeenCalled();

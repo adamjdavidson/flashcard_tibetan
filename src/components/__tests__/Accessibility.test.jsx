@@ -162,7 +162,7 @@ describe('Accessibility Tests', () => {
 
       // Check rows have aria-rowindex
       const rows = container.querySelectorAll('tbody tr');
-      rows.forEach((row, index) => {
+      rows.forEach((row, _index) => {
         const rowIndex = row.getAttribute('aria-rowindex');
         expect(rowIndex).toBeTruthy();
         expect(parseInt(rowIndex || '0')).toBeGreaterThan(0);

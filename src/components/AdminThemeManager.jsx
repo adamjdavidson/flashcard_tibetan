@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase.js';
 import { useTheme } from '../contexts/ThemeContext.jsx';
-import { getDefaultThemeColors } from '../data/themeTokens.js';
 import './AdminThemeManager.css';
 
 /**
@@ -9,7 +8,7 @@ import './AdminThemeManager.css';
  * Allows admins to create, edit, and delete themes
  */
 export default function AdminThemeManager() {
-  const { themes: contextThemes, loadThemes } = useTheme();
+  const { loadThemes } = useTheme();
   const [themes, setThemes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,7 +40,7 @@ export default function AdminThemeManager() {
 
   async function handleCreateTheme(themeData) {
     try {
-      const { data, error: createError } = await supabase
+      const { error: createError } = await supabase
         .from('themes')
         .insert([themeData])
         .select()

@@ -30,7 +30,7 @@ describe('instructionLevelsService', () => {
 
       mockSupabase.from.mockReturnValueOnce({
         select: vi.fn(() => ({
-          order: vi.fn(() => ({
+          order: vi.fn(() => Promise.resolve({
             data: mockData,
             error: null
           }))
@@ -76,7 +76,7 @@ describe('instructionLevelsService', () => {
       mockSupabase.from.mockReturnValueOnce({
         insert: vi.fn(() => ({
           select: vi.fn(() => ({
-            single: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({
               data: mockData,
               error: null
             }))
@@ -100,7 +100,7 @@ describe('instructionLevelsService', () => {
       mockSupabase.from.mockReturnValueOnce({
         insert: vi.fn(() => ({
           select: vi.fn(() => ({
-            single: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({
               data: null,
               error
             }))
@@ -126,7 +126,7 @@ describe('instructionLevelsService', () => {
         update: vi.fn(() => ({
           eq: vi.fn(() => ({
             select: vi.fn(() => ({
-              single: vi.fn(() => ({
+              single: vi.fn(() => Promise.resolve({
                 data: mockData,
                 error: null
               }))
@@ -149,7 +149,7 @@ describe('instructionLevelsService', () => {
       const mockDelete = vi.fn(() => ({
         eq: vi.fn(() => ({
           select: vi.fn(() => ({
-            single: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({
               data: { id: '1', name: 'Expert' },
               error: null
             }))
@@ -157,23 +157,17 @@ describe('instructionLevelsService', () => {
         }))
       }));
 
-      // Mock card count check
+      // Mock card count check - select with count option, then eq returns Promise
       mockSupabase.from.mockReturnValueOnce({
         select: vi.fn(() => ({
-          count: vi.fn(() => ({
-            head: vi.fn(() => ({
-              count: 10,
-              error: null
-            }))
-          })),
-          eq: vi.fn(() => ({
-            data: null,
+          eq: vi.fn(() => Promise.resolve({
+            count: 10,
             error: null
           }))
         }))
       });
 
-      // Mock delete
+      // Mock delete - chain returns Promise
       mockSupabase.from.mockReturnValueOnce({
         delete: mockDelete
       });
@@ -193,18 +187,22 @@ describe('instructionLevelsService', () => {
         { id: '1', front: 'test', type: 'word', instruction_level_id: 'level1' }
       ];
 
+      // Mock the query chain - select returns chainable, eq returns Promise
+      const mockEq = vi.fn(() => Promise.resolve({
+        data: mockData,
+        error: null
+      }));
+
       mockSupabase.from.mockReturnValueOnce({
         select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            data: mockData,
-            error: null
-          }))
+          eq: mockEq
         }))
       });
 
       const result = await getCardsByInstructionLevel('level1');
       expect(result).toEqual(mockData);
       expect(mockSupabase.from).toHaveBeenCalledWith('cards');
+      expect(mockEq).toHaveBeenCalledWith('instruction_level_id', 'level1');
     });
   });
 });

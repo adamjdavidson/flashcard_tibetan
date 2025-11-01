@@ -15,7 +15,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname } from 'path';
 import readline from 'readline';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -105,7 +105,7 @@ async function resetPassword() {
     console.log(`✅ Found user: ${user.email} (UID: ${user.id})`);
     
     // Update user password using admin API
-    const { data, error } = await supabase.auth.admin.updateUserById(
+    const { error } = await supabase.auth.admin.updateUserById(
       user.id,
       { password: newPassword }
     );
