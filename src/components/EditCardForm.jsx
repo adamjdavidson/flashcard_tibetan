@@ -74,7 +74,7 @@ export default function EditCardForm({ card, onSave, onCancel }) {
     setError('');
 
     try {
-      const prompt = `${formData.backEnglish || formData.front}, simple illustration, educational, clean background`;
+      const prompt = formData.backEnglish || formData.front; // Let the API enhance it with photorealistic prompt
       const result = await generateAIImage(prompt);
       
       if (result.success && result.imageUrl) {

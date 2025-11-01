@@ -61,7 +61,7 @@ export default function QuickTranslateForm({ onAddCards }) {
     setError('');
 
     try {
-      const prompt = `${englishWord}, simple illustration, educational, clean background`;
+      const prompt = englishWord; // Let the API enhance it with photorealistic prompt
       const result = await generateAIImage(prompt);
       
       if (result.success && result.imageUrl) {

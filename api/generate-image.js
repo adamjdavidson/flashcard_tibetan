@@ -77,8 +77,8 @@ async function generateWithGemini(apiKey, prompt, style) {
     if (style) {
       enhancedPrompt = `${prompt}, ${style} style`;
     }
-    // Add educational context - Gemini works best with descriptive prompts
-    enhancedPrompt = `Create a simple illustration of ${enhancedPrompt}. The image should be educational and suitable for a flashcard, with a clean background and clear subject matter.`;
+    // Enhanced prompt: photorealistic, no text, clean background
+    enhancedPrompt = `A simple, photorealistic image of ${enhancedPrompt} on a clean white background. No text, labels, or decorative elements. Suitable for an educational flashcard.`;
 
     // Gemini REST API endpoint for image generation
     // Using gemini-2.5-flash-image model (official image generation model)
