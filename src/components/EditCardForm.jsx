@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createCard, validateCard } from '../data/cardSchema.js';
+import { translateText } from '../utils/translation.js';
 import { generateAIImage, searchImage, uploadImage, validateImageFile, createImagePreview, revokeImagePreview } from '../utils/images.js';
 import { uploadImage as uploadToSupabase } from '../services/imagesService.js';
 import './AddCardForm.css';
@@ -13,6 +14,7 @@ export default function EditCardForm({ card, onSave, onCancel }) {
     front: '',
     backArabic: '',
     backEnglish: '',
+    backTibetanScript: '',
     backTibetanSpelling: '',
     notes: ''
   });
@@ -21,6 +23,7 @@ export default function EditCardForm({ card, onSave, onCancel }) {
   const [generating, setGenerating] = useState(false);
   const [searching, setSearching] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [translating, setTranslating] = useState(false);
   const [error, setError] = useState('');
 
   // Populate form with card data when card changes
@@ -46,6 +49,7 @@ export default function EditCardForm({ card, onSave, onCancel }) {
         front: card.front || '',
         backArabic: card.backArabic || '',
         backEnglish: card.backEnglish || '',
+        backTibetanScript: card.backTibetanScript || '',
         backTibetanSpelling: card.backTibetanSpelling || '',
         notes: card.notes || ''
       });
@@ -61,6 +65,35 @@ export default function EditCardForm({ card, onSave, onCancel }) {
       ...prev,
       [name]: value
     }));
+  };
+
+  // Translation handler
+  const handleTranslate = async () => {
+    if (!formData.backEnglish.trim()) {
+      setError('Please enter an English word to translate');
+      return;
+    }
+
+    setTranslating(true);
+    setError('');
+
+    try {
+      const result = await translateText(formData.backEnglish.trim(), 'en', 'bo');
+      
+      if (result.success && result.translated) {
+        setFormData(prev => ({
+          ...prev,
+          backTibetanScript: result.translated
+        }));
+      } else {
+        setError(result.error || 'Translation failed');
+      }
+    } catch (err) {
+      console.error('Translation error:', err);
+      setError('Translation failed. Please try again.');
+    } finally {
+      setTranslating(false);
+    }
   };
 
   // Image handlers (similar to QuickTranslateForm)
@@ -237,6 +270,8 @@ export default function EditCardForm({ card, onSave, onCancel }) {
       front: formData.front,
       backArabic: (cardType === 'number' && formData.backArabic) ? formData.backArabic : (card.backArabic || null),
       backEnglish: formData.backEnglish,
+      backTibetanScript: (cardType === 'word' || cardType === 'phrase') ? (formData.backTibetanScript || null) : (card.backTibetanScript || null),
+      backTibetanNumeral: (cardType === 'number' && card.subcategory === 'script') ? (card.backTibetanNumeral || null) : null,
       backTibetanSpelling: formData.backTibetanSpelling,
       notes: formData.notes || null,
       tags: tags,
@@ -314,26 +349,54 @@ export default function EditCardForm({ card, onSave, onCancel }) {
           <label htmlFor="backEnglish">
             {(formData.type === 'numerals' || formData.type === 'numbers') ? 'English Word (Back, optional)' : 'English Translation (Back) *'}
           </label>
-          <input
-            type="text"
-            id="backEnglish"
-            name="backEnglish"
-            value={formData.backEnglish}
-            onChange={handleChange}
-            required={formData.type !== 'numerals' && formData.type !== 'numbers'}
-            placeholder="Enter English translation"
-          />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input
+              type="text"
+              id="backEnglish"
+              name="backEnglish"
+              value={formData.backEnglish}
+              onChange={handleChange}
+              required={formData.type !== 'numerals' && formData.type !== 'numbers'}
+              placeholder="Enter English translation"
+              style={{ flex: 1 }}
+            />
+            {(formData.type === 'word' || formData.type === 'phrase') && (
+              <button
+                type="button"
+                onClick={handleTranslate}
+                disabled={translating || !formData.backEnglish.trim()}
+                className="btn-secondary"
+              >
+                {translating ? 'Translating...' : 'Translate'}
+              </button>
+            )}
+          </div>
         </div>
 
+        {(formData.type === 'word' || formData.type === 'phrase') && (
+          <div className="form-group">
+            <label htmlFor="backTibetanScript">Tibetan Script (Back) *</label>
+            <input
+              type="text"
+              id="backTibetanScript"
+              name="backTibetanScript"
+              value={formData.backTibetanScript}
+              onChange={handleChange}
+              required
+              placeholder="Enter Tibetan script (or use Translate button)"
+            />
+          </div>
+        )}
+
         <div className="form-group">
-          <label htmlFor="backTibetanSpelling">Tibetan Spelling (Back) *</label>
+          <label htmlFor="backTibetanSpelling">Tibetan Spelling (Back) {formData.type === 'word' || formData.type === 'phrase' ? '(optional)' : '* '}</label>
           <input
             type="text"
             id="backTibetanSpelling"
             name="backTibetanSpelling"
             value={formData.backTibetanSpelling}
             onChange={handleChange}
-            required
+            required={formData.type === 'numerals' || formData.type === 'numbers'}
             placeholder="Enter Wylie or phonetic spelling"
           />
         </div>
