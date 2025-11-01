@@ -36,7 +36,9 @@ const EASY_EXIT_INTERVAL = 4; // days when exiting learning phase with Easy
 /**
  * Parses time string to minutes (e.g., "30m", "2h", "2d")
  */
+// eslint-disable-next-line no-unused-vars
 function parseTimeToMinutes(timeString) {
+  // Function is unused but kept for potential future use
   const match = timeString.match(/^(\d+)([mhd])$/);
   if (!match) return null;
   

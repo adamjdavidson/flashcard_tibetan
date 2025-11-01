@@ -95,6 +95,7 @@ export default async function handler(req, res) {
 
         result = { success: true, users: usersWithRoles };
         break;
+      }
 
       case 'create': {
         if (!email || !password) {
@@ -124,8 +125,9 @@ export default async function handler(req, res) {
 
         result = { success: true, user: createData.user };
         break;
+      }
 
-      case 'update':
+      case 'update': {
         if (!userId) {
           return res.status(400).json({ error: 'User ID required' });
         }
@@ -162,8 +164,9 @@ export default async function handler(req, res) {
 
         result = { success: true, user: updateResult.user };
         break;
+      }
 
-      case 'delete':
+      case 'delete': {
         if (!userId) {
           return res.status(400).json({ error: 'User ID required' });
         }
@@ -174,6 +177,7 @@ export default async function handler(req, res) {
 
         result = { success: true };
         break;
+      }
 
       default:
         return res.status(400).json({ error: 'Invalid action' });

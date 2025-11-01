@@ -2,7 +2,7 @@
 // These tests require the dev server to be running
 // Skip during unit test runs
 if (typeof test !== 'undefined') {
-  const { test, expect } = require('@playwright/test');
+  const { test } = require('@playwright/test');
 
   test.describe('Card Management E2E', () => {
   test.beforeEach(async ({ page }) => {
@@ -28,5 +28,5 @@ if (typeof test !== 'undefined') {
       // Cards should be filtered
     }
   });
+  });
 }
-

@@ -33,7 +33,7 @@ export async function testConnection() {
   }
   
   try {
-    const { data, error } = await supabase.from('cards').select('count').limit(1);
+    const { error } = await supabase.from('cards').select('count').limit(1);
     if (error) {
       return { success: false, error: error.message };
     }

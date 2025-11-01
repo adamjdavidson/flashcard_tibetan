@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext.jsx';
-import { useAuth } from '../hooks/useAuth.js';
 import { THEME_TOKENS, getTokensByCategory, getDefaultThemeColors } from '../data/themeTokens.js';
 import './ThemeSelector.css';
 
@@ -10,7 +9,6 @@ import './ThemeSelector.css';
  */
 export default function ThemeSelector() {
   const { themes, currentTheme, customColors, setUserTheme, loading } = useTheme();
-  const { user } = useAuth();
   const [selectedThemeId, setSelectedThemeId] = useState(null);
   const [showCustomEditor, setShowCustomEditor] = useState(false);
 

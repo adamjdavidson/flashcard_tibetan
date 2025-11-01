@@ -24,8 +24,10 @@ test.describe('Accessibility E2E Tests', () => {
 
     // Run accessibility scan
     const results = await page.evaluate(() => {
+      // axe is injected into the page context via script tag above
       return new Promise((resolve) => {
         if (typeof axe !== 'undefined') {
+          // eslint-disable-next-line no-undef
           axe.run(document, (err, results) => {
             if (err) resolve({ error: err.message });
             else resolve(results);

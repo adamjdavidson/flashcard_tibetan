@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { getSession, signIn, signOut, isAdmin, getCurrentUser, onAuthStateChange } from '../utils/auth.js';
+import { getSession, signIn, signOut, isAdmin, onAuthStateChange } from '../utils/auth.js';
 
 export function useAuth() {
   const [user, setUser] = useState(null);

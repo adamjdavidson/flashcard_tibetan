@@ -23,7 +23,7 @@ export async function uploadImage(file, path = null) {
     const filePath = fileName;
 
     // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('card-images')
       .upload(filePath, file, {
         cacheControl: '3600',
@@ -93,9 +93,10 @@ export async function deleteImage(imageUrl) {
  * @returns {Promise<File>}
  */
 export async function optimizeImage(file, options = {}) {
-  const maxWidth = options.maxWidth || 800;
-  const maxHeight = options.maxHeight || 800;
-  const quality = options.quality || 0.8;
+  // Placeholder function - optimization parameters not yet used
+  // const maxWidth = options.maxWidth || 800;
+  // const maxHeight = options.maxHeight || 800;
+  // const quality = options.quality || 0.8;
   const maxSizeMB = options.maxSizeMB || 1;
 
   // If file is already small enough, return as-is

@@ -87,7 +87,8 @@ export async function measureAsync(label, fn) {
     mark(endMark);
     const duration = measure(measureName, startMark, endMark);
     
-    if (duration !== null && process.env.NODE_ENV === 'development') {
+    // Only log in development (when not in production build)
+    if (duration !== null && import.meta.env?.DEV) {
       console.log(`⏱️ ${label}: ${duration.toFixed(2)}ms`);
     }
     
@@ -101,7 +102,8 @@ export async function measureAsync(label, fn) {
     mark(endMark);
     const duration = measure(measureName, startMark, endMark);
     
-    if (duration !== null && process.env.NODE_ENV === 'development') {
+    // Only log in development (when not in production build)
+    if (duration !== null && import.meta.env?.DEV) {
       console.log(`⏱️ ${label} (failed): ${duration.toFixed(2)}ms`);
     }
     
@@ -131,7 +133,8 @@ export function measureSync(label, fn) {
     mark(endMark);
     const duration = measure(measureName, startMark, endMark);
     
-    if (duration !== null && process.env.NODE_ENV === 'development') {
+    // Only log in development (when not in production build)
+    if (duration !== null && import.meta.env?.DEV) {
       console.log(`⏱️ ${label}: ${duration.toFixed(2)}ms`);
     }
     
@@ -144,7 +147,8 @@ export function measureSync(label, fn) {
     mark(endMark);
     const duration = measure(measureName, startMark, endMark);
     
-    if (duration !== null && process.env.NODE_ENV === 'development') {
+    // Only log in development (when not in production build)
+    if (duration !== null && import.meta.env?.DEV) {
       console.log(`⏱️ ${label} (failed): ${duration.toFixed(2)}ms`);
     }
     
@@ -179,7 +183,8 @@ export function checkThreshold(metric, duration) {
   
   const passed = duration <= threshold;
   
-  if (!passed && process.env.NODE_ENV === 'development') {
+  // Only log in development
+  if (!passed && import.meta.env?.DEV) {
     console.warn(`⚠️ Performance threshold exceeded: ${metric} took ${duration.toFixed(2)}ms (threshold: ${threshold}ms)`);
   }
   

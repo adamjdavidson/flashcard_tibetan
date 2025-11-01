@@ -2,7 +2,7 @@
 // These tests require the dev server to be running
 // Skip during unit test runs
 if (typeof test !== 'undefined') {
-  const { test, expect } = require('@playwright/test');
+  const { test } = require('@playwright/test');
 
   test.describe('Study Flow E2E', () => {
   test.beforeEach(async ({ page }) => {
@@ -23,10 +23,8 @@ if (typeof test !== 'undefined') {
       // Click to flip
       await flashcard.click();
       
-      // Should show back content
-      await expect(page.locator('.flashcard')).toContainText(/service|test/i, { timeout: 1000 }).catch(() => {
-        // Card might not have back text visible, that's okay
-      });
+      // Should show back content (card might not have back text visible)
+      // Note: Back content check removed as cards may vary
     }
   });
 
@@ -44,5 +42,5 @@ if (typeof test !== 'undefined') {
       await page.waitForTimeout(500);
     }
   });
+  });
 }
-

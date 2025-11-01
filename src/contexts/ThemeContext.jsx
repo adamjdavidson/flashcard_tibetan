@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
 import { supabase } from '../services/supabase.js';
-import { getDefaultThemeColors, applyThemeToDocument, getCSSVariableName } from '../data/themeTokens.js';
+import { getDefaultThemeColors, applyThemeToDocument } from '../data/themeTokens.js';
 
 const ThemeContext = createContext(null);
 
@@ -209,6 +209,7 @@ export function ThemeProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) {

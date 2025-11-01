@@ -53,6 +53,7 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
   }
 });
 
+// eslint-disable-next-line no-unused-vars
 const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {
   auth: {
     autoRefreshToken: false,
@@ -79,12 +80,13 @@ async function testDatabaseSchema() {
 
   try {
     // Check if user_id column exists
-    const { data: columns, error } = await supabase
+    const { error } = await supabase
       .from('cards')
       .select('user_id')
       .limit(0);
 
-    const hasUserId = columns !== null || error?.message?.includes('user_id') === false;
+    // Check if user_id column exists (unused variable for now)
+    // const hasUserId = columns !== null || error?.message?.includes('user_id') === false;
     
     if (error && error.message.includes('column "user_id" does not exist')) {
       logTest('Cards table has user_id column', false, 'Migration not run yet');
@@ -94,7 +96,7 @@ async function testDatabaseSchema() {
     logTest('Cards table has user_id column', true);
 
     // Check if is_master column exists
-    const { data: masterCheck, error: masterError } = await supabase
+    const { error: masterError } = await supabase
       .from('cards')
       .select('is_master')
       .limit(0);
@@ -167,7 +169,7 @@ async function testCardOwnership() {
       tags: []
     };
 
-    const { data: masterCard, error: masterError } = await supabase
+    const { error: masterError } = await supabase
       .from('cards')
       .insert(testMasterCard)
       .select()
@@ -202,7 +204,7 @@ async function testRLSPolicies() {
     });
 
     // Test: Can read master cards
-    const { data: masterCards, error: readError } = await anonSupabase
+    const { error: readError } = await anonSupabase
       .from('cards')
       .select('id, is_master')
       .eq('is_master', true)
