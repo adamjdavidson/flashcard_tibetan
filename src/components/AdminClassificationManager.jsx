@@ -254,24 +254,37 @@ export default function AdminClassificationManager() {
   };
 
   return (
-    <div className="admin-classification-manager">
-      <div className="classification-tabs">
+      <div className="admin-classification-manager">
+      <div className="classification-tabs" role="tablist" aria-label="Classification management tabs">
         <button
           className={`classification-tab ${activeTab === 'categories' ? 'active' : ''}`}
           onClick={() => setActiveTab('categories')}
+          role="tab"
+          aria-selected={activeTab === 'categories'}
+          aria-controls="categories-panel"
+          id="categories-tab"
         >
           Categories
         </button>
         <button
           className={`classification-tab ${activeTab === 'instruction-levels' ? 'active' : ''}`}
           onClick={() => setActiveTab('instruction-levels')}
+          role="tab"
+          aria-selected={activeTab === 'instruction-levels'}
+          aria-controls="instruction-levels-panel"
+          id="instruction-levels-tab"
         >
           Instruction Levels
         </button>
       </div>
 
       {activeTab === 'categories' && (
-        <div className="classification-content">
+        <div 
+          className="classification-content"
+          role="tabpanel"
+          id="categories-panel"
+          aria-labelledby="categories-tab"
+        >
           <div className="classification-header">
             <h2>Categories</h2>
             <button
@@ -289,14 +302,30 @@ export default function AdminClassificationManager() {
             </button>
           </div>
 
+          {/* ARIA live region for screen reader announcements */}
+          <div aria-live="polite" aria-atomic="true" className="sr-only">
+            {categoryError && `Error: ${categoryError}`}
+            {categorySuccess && `Success: ${categorySuccess}`}
+          </div>
+
           {categoryError && (
-            <div className="error-message" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', color: '#c33' }}>
+            <div 
+              className="error-message" 
+              role="alert"
+              aria-live="assertive"
+              style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', color: '#c33' }}
+            >
               {categoryError}
             </div>
           )}
 
           {categorySuccess && (
-            <div className="success-message" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#efe', border: '1px solid #cfc', borderRadius: '4px', color: '#3c3' }}>
+            <div 
+              className="success-message" 
+              role="status"
+              aria-live="polite"
+              style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#efe', border: '1px solid #cfc', borderRadius: '4px', color: '#3c3' }}
+            >
               {categorySuccess}
             </div>
           )}
@@ -385,7 +414,12 @@ export default function AdminClassificationManager() {
       )}
 
       {activeTab === 'instruction-levels' && (
-        <div className="classification-content">
+        <div 
+          className="classification-content"
+          role="tabpanel"
+          id="instruction-levels-panel"
+          aria-labelledby="instruction-levels-tab"
+        >
           <div className="classification-header">
             <h2>Instruction Levels</h2>
             <button
@@ -403,14 +437,30 @@ export default function AdminClassificationManager() {
             </button>
           </div>
 
+          {/* ARIA live region for screen reader announcements */}
+          <div aria-live="polite" aria-atomic="true" className="sr-only">
+            {levelError && `Error: ${levelError}`}
+            {levelSuccess && `Success: ${levelSuccess}`}
+          </div>
+
           {levelError && (
-            <div className="error-message" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', color: '#c33' }}>
+            <div 
+              className="error-message" 
+              role="alert"
+              aria-live="assertive"
+              style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', color: '#c33' }}
+            >
               {levelError}
             </div>
           )}
 
           {levelSuccess && (
-            <div className="success-message" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#efe', border: '1px solid #cfc', borderRadius: '4px', color: '#3c3' }}>
+            <div 
+              className="success-message" 
+              role="status"
+              aria-live="polite"
+              style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#efe', border: '1px solid #cfc', borderRadius: '4px', color: '#3c3' }}
+            >
               {levelSuccess}
             </div>
           )}

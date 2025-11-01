@@ -4,6 +4,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabase.js';
+import { retrySupabaseQuery } from '../utils/retry.js';
 
 /**
  * Load all cards from Supabase
@@ -19,24 +20,28 @@ export async function loadCards(fallbackLoad, currentUserId = null, isAdmin = fa
   try {
     // RLS policies handle filtering, but we select all columns including user_id and is_master
     // JOIN with instruction_levels and card_categories/categories for classification data
-    const { data, error } = await supabase
-      .from('cards')
-      .select(`
-        *,
-        instruction_levels(id, name, order),
-        card_categories(
-          categories(id, name)
-        )
-      `)
-      .order('created_at', { ascending: false });
+    const result = await retrySupabaseQuery(() =>
+      supabase
+        .from('cards')
+        .select(`
+          *,
+          instruction_levels(id, name, order),
+          card_categories(
+            categories(id, name)
+          )
+        `)
+        .order('created_at', { ascending: false })
+    );
 
-    if (error) {
-      console.error('Error loading cards from Supabase:', error);
+    if (result.error) {
+      console.error('Error loading cards from Supabase:', result.error);
       return fallbackLoad ? fallbackLoad() : [];
     }
+    
+    const data = result.data;
 
     // Transform database format to app format
-    const transformed = data.map(transformCardFromDB);
+    const transformed = (data || []).map(transformCardFromDB);
     
     // Additional client-side filtering for safety (RLS should handle this, but double-check)
     if (!isAdmin && currentUserId) {

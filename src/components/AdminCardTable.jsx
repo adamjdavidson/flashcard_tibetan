@@ -4,7 +4,8 @@
  * Supports sorting, pagination, and filtering
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { mark, measure, clearMarks, clearMeasures, checkThreshold } from '../utils/performance.js';
 import './AdminCardTable.css';
 
 export default function AdminCardTable({ 
@@ -20,10 +21,15 @@ export default function AdminCardTable({
   const [sortDirection, setSortDirection] = useState('asc'); // 'asc' or 'desc'
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const tableRef = useRef(null);
 
   // Filter cards based on type, category, and instruction level
   const filteredCards = useMemo(() => {
-    return cards.filter(card => {
+    // Performance monitoring for filtering
+    const filterStartMark = 'table-filter-start';
+    mark(filterStartMark);
+
+    const filtered = cards.filter(card => {
       if (filterType && card.type !== filterType) return false;
       if (filterCategory && card.categories) {
         const categoryIds = card.categories.map(cat => cat.id);
@@ -37,11 +43,28 @@ export default function AdminCardTable({
       }
       return true;
     });
+
+    // Measure filter performance
+    const filterEndMark = 'table-filter-end';
+    mark(filterEndMark);
+    const filterDuration = measure('table-filter-duration', filterStartMark, filterEndMark);
+    if (filterDuration !== null) {
+      checkThreshold('FILTER', filterDuration);
+      clearMarks(filterStartMark);
+      clearMarks(filterEndMark);
+      clearMeasures('table-filter-duration');
+    }
+
+    return filtered;
   }, [cards, filterType, filterCategory, filterInstructionLevel]);
 
   // Sort filtered cards
   const sortedCards = useMemo(() => {
     if (!sortColumn) return filteredCards;
+
+    // Performance monitoring for sorting
+    const sortStartMark = 'table-sort-start';
+    mark(sortStartMark);
 
     const sorted = [...filteredCards];
     sorted.sort((a, b) => {
@@ -87,6 +110,17 @@ export default function AdminCardTable({
       return 0;
     });
 
+    // Measure sort performance
+    const sortEndMark = 'table-sort-end';
+    mark(sortEndMark);
+    const sortDuration = measure('table-sort-duration', sortStartMark, sortEndMark);
+    if (sortDuration !== null) {
+      checkThreshold('SORT', sortDuration);
+      clearMarks(sortStartMark);
+      clearMarks(sortEndMark);
+      clearMeasures('table-sort-duration');
+    }
+
     return sorted;
   }, [filteredCards, sortColumn, sortDirection]);
 
@@ -96,6 +130,30 @@ export default function AdminCardTable({
     const endIndex = startIndex + pageSize;
     return sortedCards.slice(startIndex, endIndex);
   }, [sortedCards, currentPage, pageSize]);
+
+  // Measure table render performance when cards change
+  useEffect(() => {
+    if (cards.length > 0 && !loading) {
+      const renderStartMark = 'table-render-start';
+      mark(renderStartMark);
+      
+      // Use requestAnimationFrame to measure after render
+      requestAnimationFrame(() => {
+        const renderEndMark = 'table-render-end';
+        mark(renderEndMark);
+        const renderDuration = measure('table-render-duration', renderStartMark, renderEndMark);
+        if (renderDuration !== null) {
+          // Check threshold only for large datasets (1000+ cards)
+          if (cards.length >= 1000) {
+            checkThreshold('TABLE_RENDER', renderDuration);
+          }
+          clearMarks(renderStartMark);
+          clearMarks(renderEndMark);
+          clearMeasures('table-render-duration');
+        }
+      });
+    }
+  }, [cards.length, loading]);
 
   const totalPages = Math.ceil(sortedCards.length / pageSize);
 
@@ -139,6 +197,69 @@ export default function AdminCardTable({
     return card.categories.map(cat => cat.name).join(', ');
   };
 
+  // Enhanced keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!tableRef.current) return;
+
+      // Handle Enter key on sortable headers
+      if (e.key === 'Enter' && e.target.classList.contains('sortable-header')) {
+        e.preventDefault();
+        const button = e.target.closest('button');
+        if (button) {
+          const ariaLabel = button.getAttribute('aria-label') || '';
+          // Extract column name from aria-label (e.g., "Sort by front" -> "front")
+          const columnMatch = ariaLabel.match(/sort by ([\w\s]+)/i);
+          if (columnMatch) {
+            let colName = columnMatch[1].trim().toLowerCase().replace(/\s+/g, '');
+            // Map common names to actual column identifiers
+            const columnMap = {
+              type: 'type',
+              front: 'front',
+              backcontent: 'backContent',
+              categories: 'categories',
+              instructionlevel: 'instructionLevel',
+              createddate: 'createdAt'
+            };
+            const actualColumn = columnMap[colName] || colName;
+            handleSort(actualColumn);
+          }
+        }
+      }
+
+      // Handle Escape key to clear focus
+      if (e.key === 'Escape') {
+        if (document.activeElement) {
+          document.activeElement.blur();
+        }
+      }
+
+      // Handle Arrow keys for table navigation (only when focus is in table)
+      if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && tableRef.current.contains(document.activeElement)) {
+        const focusableElements = tableRef.current.querySelectorAll(
+          'button:not(:disabled), a, input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
+        );
+        const focusableArray = Array.from(focusableElements);
+        const currentIndex = focusableArray.indexOf(document.activeElement);
+
+        if (currentIndex !== -1) {
+          e.preventDefault();
+          const nextIndex = e.key === 'ArrowDown' 
+            ? Math.min(currentIndex + 1, focusableArray.length - 1)
+            : Math.max(currentIndex - 1, 0);
+          
+          focusableArray[nextIndex]?.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // handleSort is stable and doesn't need to be in dependencies
+
   if (loading) {
     return (
       <div className="admin-card-table-loading">
@@ -157,6 +278,13 @@ export default function AdminCardTable({
 
   return (
     <div className="admin-card-table">
+      {/* ARIA live region for screen reader announcements */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {loading && 'Loading cards'}
+        {!loading && cards.length > 0 && `Table displaying ${sortedCards.length} of ${cards.length} cards`}
+        {!loading && cards.length === 0 && 'No cards found'}
+      </div>
+      
       <div className="admin-card-table-header">
         <div className="table-info">
           <span>Showing {paginatedCards.length} of {sortedCards.length} cards</span>
@@ -184,7 +312,15 @@ export default function AdminCardTable({
       </div>
 
       <div className="table-container">
-        <table className="admin-table" role="table" aria-label="Card management table">
+        <table 
+          ref={tableRef}
+          className="admin-table" 
+          role="table" 
+          aria-label="Card management table"
+          tabIndex={0}
+          aria-rowcount={sortedCards.length}
+          aria-colcount={7}
+        >
           <thead>
             <tr>
               <th>
@@ -251,54 +387,96 @@ export default function AdminCardTable({
             </tr>
           </thead>
           <tbody>
-            {paginatedCards.map(card => (
-              <tr key={card.id}>
-                <td className="type-cell">
-                  <span className="card-type-badge">{card.type}</span>
-                </td>
-                <td className="front-cell" title={card.front}>
-                  {card.front}
-                </td>
-                <td className="back-content-cell" title={getBackContentSummary(card)}>
-                  {getBackContentSummary(card) || 'N/A'}
-                </td>
-                <td className="categories-cell">
-                  {getCategoriesDisplay(card)}
-                </td>
-                <td className="instruction-level-cell">
-                  {card.instructionLevel ? card.instructionLevel.name : 'None'}
-                </td>
-                <td className="created-date-cell">
-                  {formatDate(card.createdAt)}
-                </td>
-                <td className="actions-cell">
-                  <div className="table-actions">
-                    {onEdit && (
-                      <button
-                        type="button"
-                        className="btn-table-edit"
-                        onClick={() => onEdit(card)}
-                        aria-label={`Edit card ${card.front}`}
-                        title="Edit card"
-                      >
-                        ✎
-                      </button>
-                    )}
-                    {onDelete && (
-                      <button
-                        type="button"
-                        className="btn-table-delete"
-                        onClick={() => onDelete(card.id)}
-                        aria-label={`Delete card ${card.front}`}
-                        title="Delete card"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {paginatedCards.map((card, index) => {
+              const rowIndex = (currentPage - 1) * pageSize + index + 1;
+              const cellId = (colIndex) => `cell-${card.id}-${colIndex}`;
+              
+              return (
+                <tr key={card.id} aria-rowindex={rowIndex}>
+                  <td 
+                    className="type-cell" 
+                    aria-colindex={1}
+                    id={cellId(1)}
+                    aria-describedby={cellId(1)}
+                  >
+                    <span className="card-type-badge">{card.type}</span>
+                  </td>
+                  <td 
+                    className="front-cell" 
+                    title={card.front}
+                    aria-colindex={2}
+                    id={cellId(2)}
+                    aria-describedby={cellId(2)}
+                  >
+                    {card.front}
+                  </td>
+                  <td 
+                    className="back-content-cell" 
+                    title={getBackContentSummary(card)}
+                    aria-colindex={3}
+                    id={cellId(3)}
+                    aria-describedby={cellId(3)}
+                  >
+                    {getBackContentSummary(card) || 'N/A'}
+                  </td>
+                  <td 
+                    className="categories-cell"
+                    aria-colindex={4}
+                    id={cellId(4)}
+                    aria-describedby={cellId(4)}
+                  >
+                    {getCategoriesDisplay(card)}
+                  </td>
+                  <td 
+                    className="instruction-level-cell"
+                    aria-colindex={5}
+                    id={cellId(5)}
+                    aria-describedby={cellId(5)}
+                  >
+                    {card.instructionLevel ? card.instructionLevel.name : 'None'}
+                  </td>
+                  <td 
+                    className="created-date-cell"
+                    aria-colindex={6}
+                    id={cellId(6)}
+                    aria-describedby={cellId(6)}
+                  >
+                    {formatDate(card.createdAt)}
+                  </td>
+                  <td 
+                    className="actions-cell"
+                    aria-colindex={7}
+                    id={cellId(7)}
+                    aria-describedby={cellId(7)}
+                  >
+                    <div className="table-actions">
+                      {onEdit && (
+                        <button
+                          type="button"
+                          className="btn-table-edit"
+                          onClick={() => onEdit(card)}
+                          aria-label={`Edit card ${card.front}`}
+                          title="Edit card"
+                        >
+                          ✎
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button
+                          type="button"
+                          className="btn-table-delete"
+                          onClick={() => onDelete(card.id)}
+                          aria-label={`Delete card ${card.front}`}
+                          title="Delete card"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -1,9 +1,23 @@
+/* Screen reader only class for accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 .admin-card-table {
   width: 100%;
   background: var(--theme-bg-card);
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 4px var(--theme-shadow);
+  position: relative; /* For sr-only positioning */
 }
 
 .admin-card-table-header {
@@ -90,9 +104,15 @@
   background: var(--theme-btn-hover);
 }
 
-.sortable-header:focus {
+.sortable-header:focus,
+.sortable-header:focus-visible {
   outline: 2px solid var(--theme-accent-info);
   outline-offset: 2px;
+}
+
+/* Enhanced focus indicators for keyboard navigation */
+.sortable-header:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .actions-header {
@@ -211,9 +231,23 @@
 }
 
 .btn-table-edit:focus,
-.btn-table-delete:focus {
+.btn-table-edit:focus-visible,
+.btn-table-delete:focus,
+.btn-table-delete:focus-visible {
   outline: 2px solid var(--theme-accent-info);
   outline-offset: 2px;
+}
+
+.btn-table-edit:focus:not(:focus-visible),
+.btn-table-delete:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Enhanced focus for table rows */
+.admin-table tbody tr:focus-within {
+  background: var(--theme-btn-hover);
+  outline: 2px solid var(--theme-accent-info);
+  outline-offset: -2px;
 }
 
 .table-pagination {
@@ -248,9 +282,21 @@
   cursor: not-allowed;
 }
 
-.pagination-btn:focus {
+.pagination-btn:focus,
+.pagination-btn:focus-visible {
   outline: 2px solid var(--theme-accent-info);
   outline-offset: 2px;
+}
+
+.pagination-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.page-size-select:focus,
+.page-size-select:focus-visible {
+  outline: 2px solid var(--theme-accent-info);
+  outline-offset: 2px;
+  border-color: var(--theme-accent-info);
 }
 
 .pagination-info {

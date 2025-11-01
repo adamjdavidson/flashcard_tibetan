@@ -288,7 +288,8 @@ function App() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [view, currentCard, isFlipped, isTransitioning]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, currentCard, isFlipped, isTransitioning]); // handleCardFlip and handleRate are stable, don't need to be in deps
 
   const handleAddCard = async (newCard) => {
     // Set ownership: non-admin users own the card, admins create master cards
@@ -396,8 +397,6 @@ function App() {
     setMigrationPrompt(false);
     alert('Migration complete! Your cards and progress have been synced.');
   };
-
-  const stats = calculateStats(cards, progressMap);
 
   // Show auth screen if not logged in and trying to manage cards
   if (authLoading) {

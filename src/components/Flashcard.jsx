@@ -55,7 +55,6 @@ export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, 
   // Determine card type - check subcategory first, fallback to detection
   const isNumeralCard = card.subcategory === 'numerals' || /[\u0F20-\u0F29]/.test(card.front);
   const isScriptCard = card.subcategory === 'script' || (!isNumeralCard && card.front && /[\u0F00-\u0FFF]/.test(card.front));
-  const isWordCard = card.type === 'word' || (card.tags && card.tags.includes('Word'));
   const isEnglishToTibetan = card.subcategory === 'english_to_tibetan';
   const isTibetanToEnglish = card.subcategory === 'tibetan_to_english';
 

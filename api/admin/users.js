@@ -15,7 +15,8 @@ export default async function handler(req, res) {
 
   try {
     const { action, userId, email, password, role } = req.body;
-    const adminAuth = req.headers['x-admin-auth']; // Simple token check
+    // Simple token check - admin auth verified via service role key
+    // const adminAuth = req.headers['x-admin-auth'];
 
     // Verify admin - in production, use proper JWT verification
     // For now, we'll use the service role key as a simple auth check
@@ -52,7 +53,7 @@ export default async function handler(req, res) {
     let result;
 
     switch (action) {
-      case 'list':
+      case 'list': {
         // List all users
         const { data: usersData, error: listError } = await supabase.auth.admin.listUsers();
         if (listError) throw listError;
@@ -95,7 +96,7 @@ export default async function handler(req, res) {
         result = { success: true, users: usersWithRoles };
         break;
 
-      case 'create':
+      case 'create': {
         if (!email || !password) {
           return res.status(400).json({ error: 'Email and password required' });
         }

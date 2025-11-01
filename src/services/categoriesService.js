@@ -4,6 +4,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabase.js';
+import { retrySupabaseQuery } from '../utils/retry.js';
 
 /**
  * Load all categories from Supabase
@@ -15,17 +16,19 @@ export async function loadCategories() {
   }
 
   try {
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name', { ascending: true });
+    const result = await retrySupabaseQuery(() =>
+      supabase
+        .from('categories')
+        .select('*')
+        .order('name', { ascending: true })
+    );
 
-    if (error) {
-      console.error('Error loading categories from Supabase:', error);
+    if (result.error) {
+      console.error('Error loading categories from Supabase:', result.error);
       return [];
     }
 
-    return data || [];
+    return result.data || [];
   } catch (error) {
     console.error('Error loading categories:', error);
     return [];
@@ -41,22 +44,24 @@ export async function createCategory(category) {
   }
 
   try {
-    const { data, error } = await supabase
-      .from('categories')
-      .insert({
-        name: category.name,
-        description: category.description || null,
-        created_by: category.created_by || null,
-      })
-      .select()
-      .single();
+    const result = await retrySupabaseQuery(() =>
+      supabase
+        .from('categories')
+        .insert({
+          name: category.name,
+          description: category.description || null,
+          created_by: category.created_by || null,
+        })
+        .select()
+        .single()
+    );
 
-    if (error) {
-      console.error('Error creating category:', error);
-      return { success: false, error: error.message, code: error.code, details: error.details, hint: error.hint };
+    if (result.error) {
+      console.error('Error creating category:', result.error);
+      return { success: false, error: result.error.message, code: result.error.code, details: result.error.details, hint: result.error.hint };
     }
 
-    return { success: true, data };
+    return { success: true, data: result.data };
   } catch (error) {
     console.error('Error creating category:', error);
     return { success: false, error: error.message };
@@ -76,19 +81,21 @@ export async function updateCategory(id, updates) {
     if (updates.name !== undefined) updateData.name = updates.name;
     if (updates.description !== undefined) updateData.description = updates.description || null;
 
-    const { data, error } = await supabase
-      .from('categories')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+    const result = await retrySupabaseQuery(() =>
+      supabase
+        .from('categories')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single()
+    );
 
-    if (error) {
-      console.error('Error updating category:', error);
-      return { success: false, error: error.message, code: error.code, details: error.details, hint: error.hint };
+    if (result.error) {
+      console.error('Error updating category:', result.error);
+      return { success: false, error: result.error.message, code: result.error.code, details: result.error.details, hint: result.error.hint };
     }
 
-    return { success: true, data };
+    return { success: true, data: result.data };
   } catch (error) {
     console.error('Error updating category:', error);
     return { success: false, error: error.message };

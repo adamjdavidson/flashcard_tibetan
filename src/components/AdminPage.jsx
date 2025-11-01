@@ -7,6 +7,7 @@ import AdminCardModal from './AdminCardModal.jsx';
 import AdminClassificationManager from './AdminClassificationManager.jsx';
 import CardManager from './CardManager.jsx';
 import QuickTranslateForm from './QuickTranslateForm.jsx';
+import { ErrorBoundary } from '../ErrorBoundary.jsx';
 import { loadCards, saveCard, saveCards, deleteCard } from '../services/cardsService.js';
 import './AdminPage.css';
 
@@ -872,15 +873,17 @@ export default function AdminPage() {
 
           {/* View Mode Content */}
           {viewMode === 'table' ? (
-            <AdminCardTable
-              cards={cards}
-              loading={cardsLoading}
-              onEdit={handleEditCard}
-              onDelete={handleDeleteCard}
-              filterType={filterType}
-              filterCategory={filterCategory}
-              filterInstructionLevel={filterInstructionLevel}
-            />
+            <ErrorBoundary>
+              <AdminCardTable
+                cards={cards}
+                loading={cardsLoading}
+                onEdit={handleEditCard}
+                onDelete={handleDeleteCard}
+                filterType={filterType}
+                filterCategory={filterCategory}
+                filterInstructionLevel={filterInstructionLevel}
+              />
+            </ErrorBoundary>
           ) : (
             <CardManager
               cards={cards}

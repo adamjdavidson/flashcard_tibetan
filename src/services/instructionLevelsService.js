@@ -4,6 +4,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabase.js';
+import { retrySupabaseQuery } from '../utils/retry.js';
 
 /**
  * Load all instruction levels from Supabase
@@ -15,17 +16,19 @@ export async function loadInstructionLevels() {
   }
 
   try {
-    const { data, error } = await supabase
-      .from('instruction_levels')
-      .select('*')
-      .order('order', { ascending: true });
+    const result = await retrySupabaseQuery(() =>
+      supabase
+        .from('instruction_levels')
+        .select('*')
+        .order('order', { ascending: true })
+    );
 
-    if (error) {
-      console.error('Error loading instruction levels from Supabase:', error);
+    if (result.error) {
+      console.error('Error loading instruction levels from Supabase:', result.error);
       return [];
     }
 
-    return data || [];
+    return result.data || [];
   } catch (error) {
     console.error('Error loading instruction levels:', error);
     return [];
@@ -41,23 +44,25 @@ export async function createInstructionLevel(level) {
   }
 
   try {
-    const { data, error } = await supabase
-      .from('instruction_levels')
-      .insert({
-        name: level.name,
-        order: level.order,
-        description: level.description || null,
-        is_default: level.is_default || false,
-      })
-      .select()
-      .single();
+    const result = await retrySupabaseQuery(() =>
+      supabase
+        .from('instruction_levels')
+        .insert({
+          name: level.name,
+          order: level.order,
+          description: level.description || null,
+          is_default: level.is_default || false,
+        })
+        .select()
+        .single()
+    );
 
-    if (error) {
-      console.error('Error creating instruction level:', error);
-      return { success: false, error: error.message, code: error.code, details: error.details, hint: error.hint };
+    if (result.error) {
+      console.error('Error creating instruction level:', result.error);
+      return { success: false, error: result.error.message, code: result.error.code, details: result.error.details, hint: result.error.hint };
     }
 
-    return { success: true, data };
+    return { success: true, data: result.data };
   } catch (error) {
     console.error('Error creating instruction level:', error);
     return { success: false, error: error.message };
@@ -78,19 +83,21 @@ export async function updateInstructionLevel(id, updates) {
     if (updates.order !== undefined) updateData.order = updates.order;
     if (updates.description !== undefined) updateData.description = updates.description || null;
 
-    const { data, error } = await supabase
-      .from('instruction_levels')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+    const result = await retrySupabaseQuery(() =>
+      supabase
+        .from('instruction_levels')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single()
+    );
 
-    if (error) {
-      console.error('Error updating instruction level:', error);
-      return { success: false, error: error.message, code: error.code, details: error.details, hint: error.hint };
+    if (result.error) {
+      console.error('Error updating instruction level:', result.error);
+      return { success: false, error: result.error.message, code: result.error.code, details: result.error.details, hint: result.error.hint };
     }
 
-    return { success: true, data };
+    return { success: true, data: result.data };
   } catch (error) {
     console.error('Error updating instruction level:', error);
     return { success: false, error: error.message };

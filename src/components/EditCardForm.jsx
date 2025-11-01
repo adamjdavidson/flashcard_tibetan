@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createCard, validateCard } from '../data/cardSchema.js';
+import { validateCard } from '../data/cardSchema.js';
 import { translateText } from '../utils/translation.js';
 import { generateAIImage, searchImage, uploadImage, validateImageFile, createImagePreview, revokeImagePreview } from '../utils/images.js';
 import { uploadImage as uploadToSupabase } from '../services/imagesService.js';
@@ -338,28 +338,6 @@ export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }
     }
   };
 
-  const handlePasteImage = async (e) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (item.type.startsWith('image/')) {
-        e.preventDefault();
-        const file = item.getAsFile();
-        if (file) {
-          const validation = validateImageFile(file);
-          if (!validation.valid) {
-            setError(validation.error || 'Invalid image file');
-            return;
-          }
-          const fakeEvent = { target: { files: [file], value: '' } };
-          await handleImageUpload(fakeEvent);
-        }
-        break;
-      }
-    }
-  };
 
   const handleRemoveImage = () => {
     if (imagePreview && imagePreview.startsWith('blob:')) {
