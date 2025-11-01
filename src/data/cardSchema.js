@@ -57,16 +57,18 @@ export function createCard(data) {
  * Validates a card object
  */
 export function validateCard(card) {
-  if (!card.front || !card.backTibetanSpelling) {
+  if (!card.front) {
     return false;
   }
-  // For number cards, need backArabic; for others, need backEnglish
+  // For number cards, need backArabic and backTibetanSpelling
   if (card.type === 'number') {
-    if (!card.backArabic) {
+    if (!card.backArabic || !card.backTibetanSpelling) {
       return false;
     }
   } else {
-    if (!card.backEnglish) {
+    // For word/phrase cards, need backEnglish and backTibetanScript
+    // backTibetanSpelling is optional for word/phrase cards
+    if (!card.backEnglish || !card.backTibetanScript) {
       return false;
     }
   }
