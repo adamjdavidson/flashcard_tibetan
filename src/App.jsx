@@ -6,6 +6,7 @@ import CardManager from './components/CardManager.jsx';
 import CardFilter from './components/CardFilter.jsx';
 import Auth from './components/Auth.jsx';
 import AdminPage from './components/AdminPage.jsx';
+import ThemeSelector from './components/ThemeSelector.jsx';
 import { useAuth } from './hooks/useAuth.js';
 import { convertNumbersToCards } from './data/tibetanNumbers.js';
 import { convertWordsToCards } from './data/tibetanWords.js';
@@ -39,7 +40,7 @@ function App() {
   const [currentCard, setCurrentCard] = useState(null);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [view, setView] = useState('study'); // 'study', 'manage', or 'admin'
+  const [view, setView] = useState('study'); // 'study', 'manage', 'admin', or 'settings'
   const [selectedTags, setSelectedTags] = useState(['all']); // Filter tags
   const [useSupabase, setUseSupabase] = useState(false);
   const [migrationPrompt, setMigrationPrompt] = useState(false);
@@ -380,12 +381,18 @@ function App() {
           >
             Study
           </button>
-          <button 
-            className={`nav-button ${view === 'manage' ? 'active' : ''}`}
-            onClick={() => setView('manage')}
-          >
-            Manage Cards
-          </button>
+            <button
+              className={`nav-button ${view === 'manage' ? 'active' : ''}`}
+              onClick={() => setView('manage')}
+            >
+              Manage Cards
+            </button>
+            <button
+              className={`nav-button ${view === 'settings' ? 'active' : ''}`}
+              onClick={() => setView('settings')}
+            >
+              Settings
+            </button>
           {isAdmin && user && (
             <button 
               className={`nav-button ${view === 'admin' ? 'active' : ''}`}
@@ -445,6 +452,8 @@ function App() {
           </div>
         ) : view === 'admin' ? (
           <AdminPage />
+        ) : view === 'settings' ? (
+          <ThemeSelector />
         ) : (
           <CardManager 
             cards={cards}

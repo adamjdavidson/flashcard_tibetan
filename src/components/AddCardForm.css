@@ -2,14 +2,14 @@
   max-width: 600px;
   margin: 0 auto;
   padding: 2rem;
-  background: white;
+  background: var(--theme-bg-card);
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px var(--theme-shadow);
 }
 
 .add-card-form h2 {
   margin-bottom: 1.5rem;
-  color: #333;
+  color: var(--theme-text-primary);
 }
 
 .form-group {
@@ -19,7 +19,7 @@
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #555;
+  color: var(--theme-text-secondary);
   font-weight: 500;
 }
 
@@ -28,18 +28,20 @@
 .form-group textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--theme-border-dark);
   border-radius: 6px;
   font-size: 1rem;
   font-family: inherit;
   transition: border-color 0.2s;
+  background: var(--theme-bg-card);
+  color: var(--theme-text-primary);
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--theme-accent-info);
 }
 
 .form-group textarea {
@@ -64,20 +66,20 @@
 }
 
 .tag-checkbox:hover {
-  background-color: #f3f4f6;
+  background-color: var(--theme-btn-secondary);
 }
 
 .tag-checkbox input[type="checkbox"] {
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: #667eea;
+  accent-color: var(--theme-accent-info);
 }
 
 .form-hint {
   display: block;
   margin-top: 0.5rem;
-  color: #6b7280;
+  color: var(--theme-text-secondary);
   font-size: 0.875rem;
 }
 
@@ -100,22 +102,22 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--theme-btn-primary);
+  color: var(--theme-text-on-gradient);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 8px var(--theme-shadow-hover);
 }
 
 .btn-secondary {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--theme-btn-secondary);
+  color: var(--theme-text-primary);
 }
 
 .btn-secondary:hover {
-  background: #d1d5db;
+  background: var(--theme-btn-hover);
 }
 
 @media (max-width: 600px) {

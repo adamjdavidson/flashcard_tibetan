@@ -2,19 +2,19 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--theme-bg-primary);
 }
 
 .app-header {
   padding: 2rem;
   text-align: center;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--theme-bg-secondary);
   backdrop-filter: blur(10px);
 }
 
 .app-header h1 {
   margin: 0 0 1.5rem 0;
-  color: white;
+  color: var(--theme-text-on-gradient);
   font-size: 2rem;
   font-weight: bold;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -29,9 +29,9 @@
 
 .nav-button {
   padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: var(--theme-bg-secondary);
+  color: var(--theme-text-on-gradient);
+  border: 2px solid var(--theme-border);
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
@@ -40,14 +40,14 @@
 }
 
 .nav-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: var(--theme-btn-hover);
+  border-color: var(--theme-border);
 }
 
 .nav-button.active {
-  background: white;
-  color: #667eea;
-  border-color: white;
+  background: var(--theme-btn-active);
+  color: var(--theme-text-primary);
+  border-color: var(--theme-btn-active);
 }
 
 .user-info {
@@ -58,8 +58,8 @@
 }
 
 .admin-badge {
-  background: #10b981;
-  color: white;
+  background: var(--theme-accent-success);
+  color: var(--theme-text-on-gradient);
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.75rem;
@@ -68,7 +68,7 @@
 }
 
 .user-email {
-  color: #ffffff;
+  color: var(--theme-text-on-gradient);
   font-size: 0.875rem;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
@@ -78,7 +78,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  color: white;
+  color: var(--theme-text-on-gradient);
   font-size: 1.5rem;
 }
 
@@ -135,12 +135,12 @@
 }
 
 .no-cards-message {
-  background: white;
+  background: var(--theme-bg-card);
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px var(--theme-shadow);
   text-align: center;
-  color: #666;
+  color: var(--theme-text-secondary);
 }
 
 .no-cards-message p {
@@ -151,8 +151,8 @@
 .app-footer {
   padding: 1.5rem;
   text-align: center;
-  background: rgba(0, 0, 0, 0.1);
-  color: rgba(255, 255, 255, 0.95);
+  background: var(--theme-bg-secondary);
+  color: var(--theme-text-hint);
 }
 
 .app-footer p {

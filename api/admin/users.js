@@ -20,12 +20,20 @@ export default async function handler(req, res) {
     // For now, we'll use the service role key as a simple auth check
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceRoleKey) {
-      return res.status(500).json({ error: 'Admin API not configured' });
+      console.error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
+      return res.status(500).json({ 
+        error: 'Admin API not configured',
+        details: 'Missing SUPABASE_SERVICE_ROLE_KEY. Check Vercel environment variables.'
+      });
     }
 
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
     if (!supabaseUrl) {
-      return res.status(500).json({ error: 'Supabase URL not configured' });
+      console.error('Missing SUPABASE_URL environment variable');
+      return res.status(500).json({ 
+        error: 'Supabase URL not configured',
+        details: 'Missing SUPABASE_URL. Check Vercel environment variables.'
+      });
     }
 
     // Create admin client with service role key
@@ -51,17 +59,26 @@ export default async function handler(req, res) {
         // Get roles for each user
         const usersWithRoles = await Promise.all(
           usersData.users.map(async (user) => {
-            const { data: roleData } = await supabase
+            const { data: roleData, error: roleError } = await supabase
               .from('user_roles')
               .select('role')
               .eq('user_id', user.id)
               .single();
             
+            if (roleError && roleError.code !== 'PGRST116') {
+              // PGRST116 = no rows found, which is okay (user has no role)
+              console.error(`Error fetching role for user ${user.id}:`, roleError);
+            }
+            
             // Get user stats
-            const { count: progressCount } = await supabase
+            const { count: progressCount, error: progressError } = await supabase
               .from('card_progress')
               .select('*', { count: 'exact', head: true })
               .eq('user_id', user.id);
+
+            if (progressError) {
+              console.error(`Error fetching progress for user ${user.id}:`, progressError);
+            }
 
             return {
               id: user.id,
@@ -163,8 +180,13 @@ export default async function handler(req, res) {
     return res.status(200).json(result);
   } catch (error) {
     console.error('Admin API error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
     return res.status(500).json({ 
-      error: error.message || 'Admin operation failed' 
+      error: error.message || 'Admin operation failed',
+      code: error.code || 'UNKNOWN',
+      details: error.details || error.hint || 'No additional details',
+      hint: error.hint
     });
   }
 }

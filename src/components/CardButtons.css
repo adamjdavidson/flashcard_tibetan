@@ -15,14 +15,14 @@
   cursor: pointer;
   transition: all 0.2s;
   background-color: var(--button-color);
-  color: white;
+  color: var(--theme-text-on-gradient);
   min-width: 120px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--theme-shadow);
 }
 
 .rating-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px var(--theme-shadow-hover);
 }
 
 .rating-button:active:not(:disabled) {

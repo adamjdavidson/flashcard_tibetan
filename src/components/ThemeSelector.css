@@ -1,0 +1,218 @@
+.theme-selector {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--theme-bg-card);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px var(--theme-shadow);
+}
+
+.theme-selector h2 {
+  margin: 0 0 2rem 0;
+  color: var(--theme-text-primary);
+}
+
+.theme-presets {
+  margin-bottom: 3rem;
+}
+
+.theme-presets h3 {
+  margin: 0 0 1.5rem 0;
+  color: var(--theme-text-primary);
+  font-size: 1.25rem;
+}
+
+.themes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.theme-preview-card {
+  background: var(--theme-bg-card);
+  border: 2px solid var(--theme-border-dark);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px var(--theme-shadow);
+}
+
+.theme-preview-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px var(--theme-shadow-hover);
+  border-color: var(--theme-accent-info);
+}
+
+.theme-preview-card.selected {
+  border-color: var(--theme-accent-info);
+  border-width: 3px;
+  box-shadow: 0 4px 12px var(--theme-shadow-hover);
+}
+
+.preview-header {
+  height: 100px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.custom-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+}
+
+.preview-mini-card {
+  width: 70%;
+  height: 50px;
+  background: var(--theme-bg-card);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.preview-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.custom-icon {
+  font-size: 1.5rem;
+}
+
+.preview-info {
+  padding: 1rem;
+}
+
+.preview-info h4 {
+  margin: 0 0 0.25rem 0;
+  color: var(--theme-text-primary);
+  font-size: 1rem;
+}
+
+.preview-info p {
+  margin: 0;
+  color: var(--theme-text-secondary);
+  font-size: 0.875rem;
+}
+
+.custom-theme-editor {
+  background: var(--theme-bg-card);
+  border: 1px solid var(--theme-border-dark);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.custom-theme-editor h3 {
+  margin: 0 0 1rem 0;
+  color: var(--theme-text-primary);
+}
+
+.editor-description {
+  margin: 0 0 2rem 0;
+  color: var(--theme-text-secondary);
+  font-size: 0.875rem;
+}
+
+.editor-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.editor-category {
+  border: 1px solid var(--theme-border-dark);
+  border-radius: 8px;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.editor-category h4 {
+  margin: 0 0 1rem 0;
+  color: var(--theme-text-primary);
+  font-size: 1.125rem;
+  border-bottom: 2px solid var(--theme-border-dark);
+  padding-bottom: 0.5rem;
+}
+
+.category-colors {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.color-editor-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.color-editor-item label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.color-label {
+  font-weight: 600;
+  color: var(--theme-text-primary);
+  font-size: 0.875rem;
+}
+
+.color-desc {
+  font-size: 0.75rem;
+  color: var(--theme-text-secondary);
+  font-style: italic;
+}
+
+.color-inputs {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.color-picker {
+  width: 60px;
+  height: 40px;
+  border: 1px solid var(--theme-border-dark);
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.color-text-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--theme-border-dark);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: var(--theme-bg-card);
+  color: var(--theme-text-primary);
+}
+
+.color-text-input:focus {
+  outline: none;
+  border-color: var(--theme-accent-info);
+}
+
+.color-preview {
+  width: 100%;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--theme-border-dark);
+  margin-top: 0.25rem;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--theme-border-dark);
+}
+

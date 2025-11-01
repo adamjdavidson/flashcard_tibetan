@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
 import AdminCardReview from './AdminCardReview.jsx';
+import AdminThemeManager from './AdminThemeManager.jsx';
 import './AdminPage.css';
 
 /**
@@ -271,10 +272,11 @@ export default function AdminPage() {
   useEffect(() => {
     if (!isAdminUser) return; // Early return inside useEffect is OK
     
-    if (activeTab === 'stats') {
+    // Only auto-load if we haven't tried before (to avoid spamming errors)
+    if (activeTab === 'stats' && !stats && !loading) {
       loadStats();
     } else if (activeTab === 'users' || activeTab === 'password') {
-      if (users.length === 0) {
+      if (users.length === 0 && !loading) {
         loadUsers();
       }
     }
@@ -327,6 +329,12 @@ export default function AdminPage() {
         >
           Card Review
         </button>
+        <button
+          className={`admin-tab ${activeTab === 'themes' ? 'active' : ''}`}
+          onClick={() => setActiveTab('themes')}
+        >
+          Themes
+        </button>
       </div>
 
       {/* Messages */}
@@ -347,7 +355,14 @@ export default function AdminPage() {
       {activeTab === 'stats' && (
         <div className="admin-tab-content">
           <h2>System Statistics</h2>
-          {loading && !stats ? (
+          {error && !stats ? (
+            <div className="admin-message admin-error">
+              <p><strong>Failed to load statistics:</strong> {error}</p>
+              <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                This usually means the admin API is not configured. Check that <code>SUPABASE_SERVICE_ROLE_KEY</code> is set in Vercel environment variables and redeploy.
+              </p>
+            </div>
+          ) : loading && !stats ? (
             <p>Loading...</p>
           ) : stats ? (
             <div className="stats-grid">
@@ -606,6 +621,13 @@ export default function AdminPage() {
       {activeTab === 'cards' && (
         <div className="admin-tab-content">
           <AdminCardReview isAdmin={isAdminUser} />
+        </div>
+      )}
+
+      {/* Themes Tab */}
+      {activeTab === 'themes' && (
+        <div className="admin-tab-content">
+          <AdminThemeManager />
         </div>
       )}
     </div>

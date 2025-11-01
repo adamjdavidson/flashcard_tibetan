@@ -20,9 +20,9 @@
 
 .turn-button {
   padding: 0.75rem 1.25rem;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: var(--theme-bg-secondary);
+  color: var(--theme-text-on-gradient);
+  border: 2px solid var(--theme-border);
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
@@ -33,8 +33,8 @@
 }
 
 .turn-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.6);
+  background: var(--theme-btn-hover);
+  border-color: var(--theme-border);
   transform: translateX(-2px);
 }
 
@@ -58,7 +58,7 @@
   height: 100%;
   backface-visibility: hidden;
   border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px var(--theme-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,13 +66,15 @@
 }
 
 .flashcard-front {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--theme-card-front-bg);
+  color: var(--theme-text-primary);
+  border: 1px solid var(--theme-card-border);
 }
 
 .flashcard-back {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
+  background: var(--theme-card-back-bg);
+  color: var(--theme-text-primary);
+  border: 1px solid var(--theme-card-border);
   transform: rotateY(180deg);
 }
 
@@ -92,7 +94,7 @@
   margin-bottom: 1rem;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px var(--theme-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -162,7 +164,7 @@
 
 .hint {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--theme-text-hint);
   margin-top: 1rem;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }

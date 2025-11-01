@@ -1,0 +1,50 @@
+/**
+ * Theme CSS Variables
+ * All themeable colors are defined here as CSS custom properties
+ * These values are overridden by ThemeContext based on user preference
+ */
+
+:root {
+  /* Background colors */
+  --theme-bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --theme-bg-secondary: rgba(255, 255, 255, 0.1);
+  --theme-bg-card: #ffffff;
+  --theme-bg-overlay: rgba(0, 0, 0, 0.5);
+
+  /* Text colors */
+  --theme-text-primary: #333333;
+  --theme-text-secondary: #666666;
+  --theme-text-on-gradient: #ffffff;
+  --theme-text-hint: rgba(255, 255, 255, 0.9);
+
+  /* Button colors */
+  --theme-btn-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --theme-btn-secondary: #e5e7eb;
+  --theme-btn-hover: rgba(255, 255, 255, 0.3);
+  --theme-btn-active: #ffffff;
+
+  /* Flashcard colors */
+  --theme-card-front-bg: #ffffff;
+  --theme-card-back-bg: #f9fafb;
+  --theme-card-border: #e5e7eb;
+  --theme-card-shadow: rgba(0, 0, 0, 0.1);
+
+  /* Accent colors */
+  --theme-accent-success: #10b981;
+  --theme-accent-warning: #fbbf24;
+  --theme-accent-error: #ef4444;
+  --theme-accent-info: #3b82f6;
+
+  /* Rating button colors */
+  --theme-rating-forgot: #ef4444;
+  --theme-rating-partial: #f59e0b;
+  --theme-rating-hard: #10b981;
+  --theme-rating-easy: #3b82f6;
+
+  /* Borders and shadows */
+  --theme-border: rgba(255, 255, 255, 0.3);
+  --theme-border-dark: #e5e7eb;
+  --theme-shadow: rgba(0, 0, 0, 0.1);
+  --theme-shadow-hover: rgba(0, 0, 0, 0.2);
+}
+

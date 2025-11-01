@@ -30,7 +30,8 @@
     "test:all": "npm run test:run && npm run test:e2e",
     "test:gemini": "node test-gemini-api.js",
     "test:user-cards": "node test-user-cards.js",
-    "migrate:user-cards": "node apply-user-cards-migration.js"
+    "migrate:user-cards": "node apply-user-cards-migration.js",
+    "migrate:themes": "node apply-themes-migration.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.2",

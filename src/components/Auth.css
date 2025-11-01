@@ -3,28 +3,28 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--theme-bg-primary);
   padding: 2rem;
 }
 
 .auth-card {
-  background: white;
+  background: var(--theme-bg-card);
   border-radius: 12px;
   padding: 2.5rem;
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px var(--theme-shadow), 0 10px 10px -5px var(--theme-shadow);
 }
 
 .auth-card h2 {
   margin: 0 0 0.5rem 0;
   font-size: 2rem;
-  color: #1a202c;
+  color: var(--theme-text-primary);
 }
 
 .auth-subtitle {
   margin: 0 0 2rem 0;
-  color: #718096;
+  color: var(--theme-text-secondary);
   font-size: 0.875rem;
 }
 
@@ -35,7 +35,7 @@
 .auth-card .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #4a5568;
+  color: var(--theme-text-secondary);
   font-weight: 500;
   font-size: 0.875rem;
 }
@@ -43,27 +43,30 @@
 .auth-card .form-group input {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--theme-border-dark);
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.2s;
   box-sizing: border-box;
+  background: var(--theme-bg-card);
+  color: var(--theme-text-primary);
 }
 
 .auth-card .form-group input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--theme-accent-info);
 }
 
 .auth-card .form-group input:disabled {
-  background-color: #f7fafc;
+  background-color: var(--theme-btn-secondary);
   cursor: not-allowed;
 }
 
 .error-message {
-  background-color: #fee;
-  border: 1px solid #fcc;
-  color: #c33;
+  background-color: var(--theme-accent-error);
+  opacity: 0.1;
+  border: 1px solid var(--theme-accent-error);
+  color: var(--theme-accent-error);
   padding: 0.75rem;
   border-radius: 8px;
   margin-bottom: 1rem;
@@ -79,6 +82,12 @@
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s;
+  background: var(--theme-btn-primary);
+  color: var(--theme-text-on-gradient);
+}
+
+.btn-login:hover:not(:disabled) {
+  opacity: 0.9;
 }
 
 .btn-login:disabled {

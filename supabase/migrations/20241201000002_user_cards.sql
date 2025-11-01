@@ -25,6 +25,7 @@ DROP POLICY IF EXISTS "Admins can delete cards" ON cards;
 -- New RLS policies for user-owned cards
 
 -- Users can read master cards (is_master = true) + their own cards
+DROP POLICY IF EXISTS "Users can read master and own cards" ON cards;
 CREATE POLICY "Users can read master and own cards"
   ON cards FOR SELECT
   USING (
@@ -33,6 +34,7 @@ CREATE POLICY "Users can read master and own cards"
   );
 
 -- Users can insert their own cards
+DROP POLICY IF EXISTS "Users can insert own cards" ON cards;
 CREATE POLICY "Users can insert own cards"
   ON cards FOR INSERT
   WITH CHECK (
@@ -41,6 +43,7 @@ CREATE POLICY "Users can insert own cards"
   );
 
 -- Users can update their own cards (but cannot change is_master)
+DROP POLICY IF EXISTS "Users can update own cards" ON cards;
 CREATE POLICY "Users can update own cards"
   ON cards FOR UPDATE
   USING (user_id = auth.uid() AND is_master = false)
@@ -51,11 +54,13 @@ CREATE POLICY "Users can update own cards"
   );
 
 -- Users can delete their own cards
+DROP POLICY IF EXISTS "Users can delete own cards" ON cards;
 CREATE POLICY "Users can delete own cards"
   ON cards FOR DELETE
   USING (user_id = auth.uid() AND is_master = false);
 
 -- Admins can read all cards
+DROP POLICY IF EXISTS "Admins can read all cards" ON cards;
 CREATE POLICY "Admins can read all cards"
   ON cards FOR SELECT
   USING (
@@ -67,6 +72,7 @@ CREATE POLICY "Admins can read all cards"
   );
 
 -- Admins can insert any card (master or user-owned)
+DROP POLICY IF EXISTS "Admins can insert any card" ON cards;
 CREATE POLICY "Admins can insert any card"
   ON cards FOR INSERT
   WITH CHECK (
@@ -78,6 +84,7 @@ CREATE POLICY "Admins can insert any card"
   );
 
 -- Admins can update any card
+DROP POLICY IF EXISTS "Admins can update any card" ON cards;
 CREATE POLICY "Admins can update any card"
   ON cards FOR UPDATE
   USING (
@@ -89,6 +96,7 @@ CREATE POLICY "Admins can update any card"
   );
 
 -- Admins can delete any card
+DROP POLICY IF EXISTS "Admins can delete any card" ON cards;
 CREATE POLICY "Admins can delete any card"
   ON cards FOR DELETE
   USING (

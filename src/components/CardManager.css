@@ -17,14 +17,14 @@
 }
 
 .card-manager-header h2 {
-  color: #333;
+  color: var(--theme-text-primary);
   margin: 0;
 }
 
 .btn-add-card {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--theme-btn-primary);
+  color: var(--theme-text-on-gradient);
   border: none;
   border-radius: 6px;
   font-size: 1rem;
@@ -35,7 +35,7 @@
 
 .btn-add-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 8px var(--theme-shadow-hover);
 }
 
 .filters {
@@ -52,15 +52,17 @@
 }
 
 .filter-group label {
-  color: #555;
+  color: var(--theme-text-secondary);
   font-weight: 500;
 }
 
 .filter-group select {
   padding: 0.5rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--theme-border-dark);
   border-radius: 6px;
   font-size: 0.875rem;
+  background: var(--theme-bg-card);
+  color: var(--theme-text-primary);
 }
 
 .cards-list {
@@ -69,14 +71,14 @@
 
 .cards-count {
   margin-bottom: 1rem;
-  color: #666;
+  color: var(--theme-text-secondary);
   font-size: 0.875rem;
 }
 
 .no-cards {
   text-align: center;
   padding: 3rem;
-  color: #999;
+  color: var(--theme-text-secondary);
   font-size: 1.125rem;
 }
 
@@ -87,17 +89,17 @@
 }
 
 .card-item {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--theme-bg-card);
+  border: 1px solid var(--theme-border-dark);
   border-radius: 8px;
   padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px var(--theme-shadow);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .card-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px var(--theme-shadow-hover);
 }
 
 .card-item-header {
@@ -124,8 +126,8 @@
 }
 
 .card-type {
-  background: #667eea;
-  color: white;
+  background: var(--theme-accent-info);
+  color: var(--theme-text-on-gradient);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -134,16 +136,16 @@
 }
 
 .card-category {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--theme-btn-secondary);
+  color: var(--theme-text-primary);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
 }
 
 .card-tag {
-  background: #10b981;
-  color: white;
+  background: var(--theme-accent-success);
+  color: var(--theme-text-on-gradient);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -159,19 +161,19 @@
 }
 
 .master-badge {
-  background: #fbbf24;
-  color: #78350f;
+  background: var(--theme-accent-warning);
+  color: var(--theme-text-primary);
 }
 
 .user-badge {
-  background: #3b82f6;
-  color: white;
+  background: var(--theme-accent-info);
+  color: var(--theme-text-on-gradient);
   font-weight: 500;
 }
 
 .btn-edit {
-  background: #3b82f6;
-  color: white;
+  background: var(--theme-accent-info);
+  color: var(--theme-text-on-gradient);
   border: none;
   border-radius: 4px;
   width: 24px;
@@ -186,12 +188,13 @@
 }
 
 .btn-edit:hover {
-  background: #2563eb;
+  background: var(--theme-accent-info);
+  opacity: 0.8;
 }
 
 .btn-delete {
-  background: #ef4444;
-  color: white;
+  background: var(--theme-accent-error);
+  color: var(--theme-text-on-gradient);
   border: none;
   border-radius: 4px;
   width: 24px;
@@ -206,7 +209,8 @@
 }
 
 .btn-delete:hover {
-  background: #dc2626;
+  background: var(--theme-accent-error);
+  opacity: 0.8;
 }
 
 .card-item-front {
@@ -218,32 +222,32 @@
 }
 
 .card-item-back {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--theme-border-dark);
   padding-top: 0.75rem;
 }
 
 .card-item-english {
   font-weight: 600;
-  color: #333;
+  color: var(--theme-text-primary);
   margin-bottom: 0.25rem;
 }
 
 .card-item-spelling {
   font-size: 0.875rem;
-  color: #666;
+  color: var(--theme-text-secondary);
   font-style: italic;
 }
 
 .card-item-tibetan-script {
   font-size: 1rem;
-  color: #333;
+  color: var(--theme-text-primary);
   font-family: 'Noto Sans Tibetan', 'Tibetan Machine Uni', sans-serif;
   margin-top: 0.5rem;
 }
 
 .card-item-tibetan-numeral {
   font-size: 1.25rem;
-  color: #333;
+  color: var(--theme-text-primary);
   font-family: 'Noto Sans Tibetan', 'Tibetan Machine Uni', sans-serif;
   margin-top: 0.5rem;
   letter-spacing: 0.1em;

@@ -6,11 +6,19 @@ import './CardButtons.css';
  */
 export default function CardButtons({ onRate, disabled }) {
   const buttons = [
-    { type: 'forgot', label: 'Forgot', quality: 0, color: '#ef4444' },
-    { type: 'partial', label: 'Partial Recall', quality: 1, color: '#f59e0b' },
-    { type: 'hard', label: 'Hard Recall', quality: 3, color: '#10b981' },
-    { type: 'easy', label: 'Easy Recall', quality: 5, color: '#3b82f6' },
+    { type: 'forgot', label: 'Forgot', quality: 0 },
+    { type: 'partial', label: 'Partial Recall', quality: 1 },
+    { type: 'hard', label: 'Hard Recall', quality: 3 },
+    { type: 'easy', label: 'Easy Recall', quality: 5 },
   ];
+
+  // Map button types to CSS variable names
+  const colorMap = {
+    forgot: 'var(--theme-rating-forgot)',
+    partial: 'var(--theme-rating-partial)',
+    hard: 'var(--theme-rating-hard)',
+    easy: 'var(--theme-rating-easy)',
+  };
 
   return (
     <div className="card-buttons">
@@ -20,7 +28,7 @@ export default function CardButtons({ onRate, disabled }) {
           className={`rating-button ${button.type}`}
           onClick={() => onRate(button.type)}
           disabled={disabled}
-          style={{ '--button-color': button.color }}
+          style={{ '--button-color': colorMap[button.type] }}
         >
           {button.label}
         </button>
