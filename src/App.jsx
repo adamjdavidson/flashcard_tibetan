@@ -391,7 +391,6 @@ function App() {
               selectedTags={selectedTags}
               onTagToggle={setSelectedTags}
             />
-            <ProgressStats stats={calculateStats(filteredCards, progressMap)} />
             
             {currentCard ? (
               <div style={{ opacity: isTransitioning ? 0 : 1, transition: 'opacity 0.3s' }}>
@@ -412,6 +411,8 @@ function App() {
                 <p>No cards available. Add some cards in the Manage Cards section!</p>
               </div>
             )}
+            
+            <ProgressStats stats={calculateStats(filteredCards, progressMap)} />
           </div>
         ) : view === 'admin' ? (
           <AdminPage />

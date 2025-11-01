@@ -11,20 +11,20 @@ export default function ProgressStats({ stats }) {
   return (
     <div className="progress-stats">
       <div className="stat-item">
-        <div className="stat-value">{stats.totalCards}</div>
         <div className="stat-label">Total Cards</div>
+        <div className="stat-value">{stats.totalCards}</div>
       </div>
       <div className="stat-item">
-        <div className="stat-value">{stats.cardsDue}</div>
         <div className="stat-label">Cards Due</div>
+        <div className="stat-value">{stats.cardsDue}</div>
       </div>
       <div className="stat-item">
-        <div className="stat-value">{stats.cardsLearned}</div>
         <div className="stat-label">Cards Learned</div>
+        <div className="stat-value">{stats.cardsLearned}</div>
       </div>
       <div className="stat-item">
-        <div className="stat-value">{stats.totalReviews}</div>
         <div className="stat-label">Total Reviews</div>
+        <div className="stat-value">{stats.totalReviews}</div>
       </div>
     </div>
   );
