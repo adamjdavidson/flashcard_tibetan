@@ -1,0 +1,30 @@
+# flashcards Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2025-11-01
+
+## Active Technologies
+
+- JavaScript (ES6+), React 19.1.1, Node.js 20.x (001-advanced-card-management)
+
+## Project Structure
+
+```text
+backend/
+frontend/
+tests/
+```
+
+## Commands
+
+npm test && npm run lint
+
+## Code Style
+
+JavaScript (ES6+), React 19.1.1, Node.js 20.x: Follow standard conventions
+
+## Recent Changes
+
+- 001-advanced-card-management: Added JavaScript (ES6+), React 19.1.1, Node.js 20.x
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

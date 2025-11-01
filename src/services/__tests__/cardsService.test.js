@@ -31,7 +31,9 @@ describe('cardsService', () => {
           front: 'test',
           type: 'word',
           user_id: null,
-          is_master: true
+          is_master: true,
+          instruction_levels: null,
+          card_categories: []
         }
       ];
 
@@ -68,9 +70,9 @@ describe('cardsService', () => {
       isSupabaseConfigured.mockReturnValue(true);
 
       const mockData = [
-        { id: '1', front: 'test1', user_id: 'user1', is_master: false },
-        { id: '2', front: 'test2', user_id: null, is_master: true },
-        { id: '3', front: 'test3', user_id: 'user2', is_master: false }
+        { id: '1', front: 'test1', user_id: 'user1', is_master: false, instruction_levels: null, card_categories: [] },
+        { id: '2', front: 'test2', user_id: null, is_master: true, instruction_levels: null, card_categories: [] },
+        { id: '3', front: 'test3', user_id: 'user2', is_master: false, instruction_levels: null, card_categories: [] }
       ];
 
       mockSupabase.from.mockReturnValueOnce({
@@ -97,15 +99,42 @@ describe('cardsService', () => {
         backEnglish: 'test'
       };
 
+      const mockEq = vi.fn(() => ({
+        single: vi.fn(() => ({
+          data: { ...card, user_id: null, is_master: false, instruction_levels: null, card_categories: [] },
+          error: null
+        }))
+      }));
+      
+      const mockSelect = vi.fn(() => ({
+        eq: mockEq
+      }));
+
+      // Mock upsert
       mockSupabase.from.mockReturnValueOnce({
         upsert: vi.fn(() => ({
           select: vi.fn(() => ({
             single: vi.fn(() => ({
-              data: { ...card, user_id: null, is_master: false },
+              data: { ...card, user_id: null, is_master: false, id: card.id },
               error: null
             }))
           }))
         }))
+      });
+
+      // Mock delete for card_categories (may be called if card has categories)
+      mockSupabase.from.mockReturnValueOnce({
+        delete: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            data: null,
+            error: null
+          }))
+        }))
+      });
+
+      // Mock reload with classification data
+      mockSupabase.from.mockReturnValueOnce({
+        select: mockSelect
       });
 
       const result = await saveCard(card);

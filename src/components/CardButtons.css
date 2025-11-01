@@ -34,6 +34,18 @@
   cursor: not-allowed;
 }
 
+.button-label {
+  display: inline-block;
+}
+
+.button-shortcut {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  opacity: 0.8;
+  font-weight: 400;
+}
+
 @media (max-width: 600px) {
   .card-buttons {
     gap: 0.5rem;

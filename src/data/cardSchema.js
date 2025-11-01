@@ -71,11 +71,14 @@ export function validateCard(card) {
       return false;
     }
   } else {
-    // For word/phrase cards, need backEnglish and backTibetanScript
+    // For word/phrase cards, need backEnglish
+    // backTibetanScript is optional - can be populated by translation tool
     // backTibetanSpelling is optional for word/phrase cards
-    if (!card.backEnglish || !card.backTibetanScript) {
+    if (!card.backEnglish) {
       return false;
     }
+    // Note: backTibetanScript is optional - translation tool should populate it
+    // Cards can be created with just English, and Tibetan script added via translation
   }
   if (!['number', 'word', 'phrase'].includes(card.type)) {
     return false;

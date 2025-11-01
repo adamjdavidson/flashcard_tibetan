@@ -7,7 +7,7 @@ import './CardManager.css';
 /**
  * CardManager component for viewing and managing cards
  */
-export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, onDeleteCard, isAdmin = false, currentUserId = null }) {
+export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, onDeleteCard, isAdmin = false, currentUserId = null, showHeader = true, showQuickTranslate = true }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
   const [filterType, setFilterType] = useState('');
@@ -43,19 +43,21 @@ export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, 
 
   return (
     <div className="card-manager">
-      <div className="card-manager-header">
-        <h2>Card Library</h2>
-        <div className="card-manager-actions">
-          <button 
-            className="btn-add-card"
-            onClick={() => setShowAddForm(!showAddForm)}
-          >
-            {showAddForm ? 'Cancel' : '+ Add Card'}
-          </button>
+      {showHeader && (
+        <div className="card-manager-header">
+          <h2>Card Library</h2>
+          <div className="card-manager-actions">
+            <button 
+              className="btn-add-card"
+              onClick={() => setShowAddForm(!showAddForm)}
+            >
+              {showAddForm ? 'Cancel' : '+ Add Card'}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {isAdmin && onAddCards && (
+      {showQuickTranslate && isAdmin && onAddCards && (
         <QuickTranslateForm onAddCards={onAddCards} isAdmin={isAdmin} />
       )}
 

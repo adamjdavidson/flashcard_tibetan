@@ -6,10 +6,10 @@ import './CardButtons.css';
  */
 export default function CardButtons({ onRate, disabled }) {
   const buttons = [
-    { type: 'forgot', label: 'Forgot', quality: 0 },
-    { type: 'partial', label: 'Partial Recall', quality: 1 },
-    { type: 'hard', label: 'Hard Recall', quality: 3 },
-    { type: 'easy', label: 'Easy Recall', quality: 5 },
+    { type: 'forgot', label: 'Forgot', quality: 0, shortcut: '1' },
+    { type: 'partial', label: 'Partial Recall', quality: 1, shortcut: '2' },
+    { type: 'hard', label: 'Hard Recall', quality: 3, shortcut: '3' },
+    { type: 'easy', label: 'Easy Recall', quality: 5, shortcut: '4' },
   ];
 
   // Map button types to CSS variable names
@@ -29,8 +29,10 @@ export default function CardButtons({ onRate, disabled }) {
           onClick={() => onRate(button.type)}
           disabled={disabled}
           style={{ '--button-color': colorMap[button.type] }}
+          title={`${button.label} (Press ${button.shortcut})`}
         >
-          {button.label}
+          <span className="button-label">{button.label}</span>
+          <span className="button-shortcut" aria-label={`Press ${button.shortcut}`}>[{button.shortcut}]</span>
         </button>
       ))}
     </div>

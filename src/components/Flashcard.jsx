@@ -7,17 +7,34 @@ import './Flashcard.css';
  * 1. Numeral cards: Front = Tibetan numerals → Back = Arabic number + Tibetan Script
  * 2. Script cards: Front = Tibetan Script → Back = Arabic number + Tibetan Numerals
  */
-export default function Flashcard({ card, onFlip }) {
-  const [isFlipped, setIsFlipped] = useState(false);
+export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, onFlipChange }) {
+  // Use external isFlipped if provided, otherwise use internal state
+  const [internalIsFlipped, setInternalIsFlipped] = useState(false);
+  const isFlipped = externalIsFlipped !== undefined ? externalIsFlipped : internalIsFlipped;
 
-  // Reset flip state when card changes
+  // Reset flip state when card changes (only on card ID change, not flip state change)
   useEffect(() => {
-    setIsFlipped(false);
-  }, [card?.id]);
+    if (externalIsFlipped !== undefined) {
+      // Controlled: external state handles reset
+      if (onFlipChange) {
+        onFlipChange(false);
+      }
+    } else {
+      // Uncontrolled: reset internal state
+      setInternalIsFlipped(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [card?.id]); // Only reset when card ID changes, not when flip state changes
 
   const handleClick = () => {
     if (!isFlipped) {
-      setIsFlipped(true);
+      if (externalIsFlipped !== undefined && onFlipChange) {
+        // Controlled: update external state
+        onFlipChange(true);
+      } else {
+        // Uncontrolled: update internal state
+        setInternalIsFlipped(true);
+      }
       if (onFlip) {
         onFlip();
       }
@@ -26,7 +43,13 @@ export default function Flashcard({ card, onFlip }) {
 
   const handleTurnBack = (e) => {
     e.stopPropagation(); // Prevent card flip when clicking button
-    setIsFlipped(false);
+    if (externalIsFlipped !== undefined && onFlipChange) {
+      // Controlled: update external state
+      onFlipChange(false);
+    } else {
+      // Uncontrolled: update internal state
+      setInternalIsFlipped(false);
+    }
   };
 
   // Determine card type - check subcategory first, fallback to detection
@@ -71,7 +94,7 @@ export default function Flashcard({ card, onFlip }) {
             ) : (
               <div className="english-word">{card.front}</div>
             )}
-            <div className="hint">Click to reveal answer</div>
+            <div className="hint">Click or press Space to reveal answer</div>
           </div>
         </div>
         <div className="flashcard-back">

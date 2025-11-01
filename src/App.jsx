@@ -244,6 +244,52 @@ function App() {
     }, 300);
   };
 
+  // Keyboard shortcuts for study view
+  useEffect(() => {
+    // Only handle keyboard shortcuts in study view
+    if (view !== 'study' || !currentCard) {
+      return;
+    }
+
+    const handleKeyDown = (e) => {
+      // Don't handle keyboard shortcuts if user is typing in an input/textarea
+      const activeElement = document.activeElement;
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'SELECT' || activeElement.isContentEditable)) {
+        return;
+      }
+
+      // Space key: Flip card (only when not flipped and not transitioning)
+      if (e.key === ' ' && !isFlipped && !isTransitioning) {
+        e.preventDefault();
+        handleCardFlip();
+      }
+
+      // Number keys 1-4: Rate card (only when flipped and not transitioning)
+      if (isFlipped && !isTransitioning && ['1', '2', '3', '4'].includes(e.key)) {
+        e.preventDefault();
+        
+        // Map number keys to button types
+        const buttonTypeMap = {
+          '1': 'forgot',
+          '2': 'partial',
+          '3': 'hard',
+          '4': 'easy'
+        };
+        
+        const buttonType = buttonTypeMap[e.key];
+        if (buttonType) {
+          handleRate(buttonType);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [view, currentCard, isFlipped, isTransitioning]);
+
   const handleAddCard = async (newCard) => {
     // Set ownership: non-admin users own the card, admins create master cards
     if (user && !isAdmin) {
@@ -435,6 +481,8 @@ function App() {
                   key={currentCard.id}
                   card={currentCard} 
                   onFlip={handleCardFlip}
+                  isFlipped={isFlipped}
+                  onFlipChange={setIsFlipped}
                 />
                 {isFlipped && !isTransitioning && (
                   <CardButtons 

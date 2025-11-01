@@ -1,0 +1,89 @@
+.admin-card-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.admin-card-modal {
+  position: relative;
+  background: var(--theme-bg-card);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--theme-btn-secondary);
+  color: var(--theme-text-primary);
+  border: 1px solid var(--theme-border-dark);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: var(--theme-btn-hover);
+  transform: scale(1.1);
+}
+
+.modal-close-btn:focus {
+  outline: 2px solid var(--theme-accent-info);
+  outline-offset: 2px;
+}
+
+.admin-card-modal .add-card-form {
+  margin: 0;
+  padding: 2rem;
+  box-shadow: none;
+  border-radius: 0;
+  max-width: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-card-modal {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .admin-card-modal-backdrop {
+    padding: 0;
+  }
+}
+

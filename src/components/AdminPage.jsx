@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
 import AdminCardReview from './AdminCardReview.jsx';
 import AdminThemeManager from './AdminThemeManager.jsx';
+import AdminCardTable from './AdminCardTable.jsx';
+import AdminCardModal from './AdminCardModal.jsx';
+import AdminClassificationManager from './AdminClassificationManager.jsx';
+import CardManager from './CardManager.jsx';
+import QuickTranslateForm from './QuickTranslateForm.jsx';
+import { loadCards, saveCard, saveCards, deleteCard } from '../services/cardsService.js';
 import './AdminPage.css';
 
 /**
@@ -28,6 +34,17 @@ export default function AdminPage() {
   const [newUser, setNewUser] = useState({ email: '', password: '', role: 'user' });
   const [passwordForm, setPasswordForm] = useState({ userId: '', newPassword: '', confirmPassword: '' });
 
+  // Card Management state
+  const [cards, setCards] = useState([]);
+  const [cardsLoading, setCardsLoading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState('add'); // 'add' | 'edit'
+  const [editingCard, setEditingCard] = useState(null);
+  const [filterType, setFilterType] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterInstructionLevel, setFilterInstructionLevel] = useState('');
+  const [viewMode, setViewMode] = useState('table'); // 'table' | 'card'
+
   const clearMessages = () => {
     setError('');
     setSuccess('');
@@ -39,6 +56,17 @@ export default function AdminPage() {
     clearMessages();
     try {
       const response = await fetch('/api/admin/stats');
+      
+      // Check if response is ok and is JSON
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Response is not JSON');
+      }
+      
       const data = await response.json();
       if (data.success) {
         setStats(data.stats);
@@ -46,8 +74,8 @@ export default function AdminPage() {
         setError(data.error || 'Failed to load stats');
       }
     } catch (err) {
-      setError('Failed to load statistics');
-      console.error(err);
+      console.error('Error loading stats:', err);
+      setError(err.message || 'Failed to load statistics');
     } finally {
       setLoading(false);
     }
@@ -63,6 +91,17 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'list' })
       });
+      
+      // Check if response is ok and is JSON
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Response is not JSON');
+      }
+      
       const data = await response.json();
       if (data.success) {
         setUsers(data.users || []);
@@ -70,8 +109,8 @@ export default function AdminPage() {
         setError(data.error || 'Failed to load users');
       }
     } catch (err) {
-      setError('Failed to load users');
-      console.error(err);
+      console.error('Error loading users:', err);
+      setError(err.message || 'Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -268,16 +307,131 @@ export default function AdminPage() {
     await handleUpdateUser(userId, { role: newRole });
   };
 
+  // Load cards for Card Management tab
+  const loadCardsData = async () => {
+    setCardsLoading(true);
+    clearMessages();
+    try {
+      const loadedCards = await loadCards(() => [], user?.id, isAdminUser);
+      setCards(loadedCards || []);
+    } catch (err) {
+      console.error('Error loading cards:', err);
+      setError('Failed to load cards: ' + err.message);
+    } finally {
+      setCardsLoading(false);
+    }
+  };
+
+  // Handle add card
+  const handleAddCard = () => {
+    setModalMode('add');
+    setEditingCard(null);
+    setModalOpen(true);
+  };
+
+  // Handle edit card
+  const handleEditCard = (card) => {
+    setModalMode('edit');
+    setEditingCard(card);
+    setModalOpen(true);
+  };
+
+  // Handle save card (add or edit)
+  const handleSaveCard = async (card) => {
+    setLoading(true);
+    clearMessages();
+    try {
+      const result = await saveCard(card, () => {});
+      if (result.success) {
+        setSuccess(modalMode === 'add' ? 'Card added successfully' : 'Card updated successfully');
+        setModalOpen(false);
+        setEditingCard(null);
+        await loadCardsData();
+      } else {
+        setError(result.error || 'Failed to save card');
+      }
+    } catch (err) {
+      console.error('Error saving card:', err);
+      setError('Failed to save card: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle add cards (batch from QuickTranslateForm)
+  const handleAddCards = async (newCards) => {
+    setLoading(true);
+    clearMessages();
+    try {
+      const result = await saveCards(newCards, () => {});
+      if (result.success) {
+        setSuccess(`${newCards.length} card(s) added successfully`);
+        await loadCardsData();
+      } else {
+        setError(result.error || 'Failed to add cards');
+      }
+    } catch (err) {
+      console.error('Error adding cards:', err);
+      setError('Failed to add cards: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle delete card
+  const handleDeleteCard = async (cardId) => {
+    if (!confirm('Are you sure you want to delete this card? This cannot be undone.')) {
+      return;
+    }
+
+    setLoading(true);
+    clearMessages();
+    try {
+      const result = await deleteCard(cardId, () => {});
+      if (result.success) {
+        setSuccess('Card deleted successfully');
+        await loadCardsData();
+      } else {
+        setError(result.error || 'Failed to delete card');
+      }
+    } catch (err) {
+      console.error('Error deleting card:', err);
+      setError('Failed to delete card: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle modal cancel
+  const handleModalCancel = () => {
+    setModalOpen(false);
+    setEditingCard(null);
+  };
+
   // Load stats on mount - AFTER all function definitions, BEFORE conditional return
   useEffect(() => {
     if (!isAdminUser) return; // Early return inside useEffect is OK
     
+    // Check if we're in development (API endpoints won't work locally)
+    const isDevelopment = import.meta.env.DEV;
+    
     // Only auto-load if we haven't tried before (to avoid spamming errors)
     if (activeTab === 'stats' && !stats && !loading) {
-      loadStats();
+      // Skip loading in development to avoid 404 errors
+      if (!isDevelopment) {
+        loadStats();
+      }
     } else if (activeTab === 'users' || activeTab === 'password') {
       if (users.length === 0 && !loading) {
-        loadUsers();
+        // Skip loading in development to avoid 404 errors
+        if (!isDevelopment) {
+          loadUsers();
+        }
+      }
+    } else if (activeTab === 'card-management') {
+      // Card Management uses direct Supabase, so it works in development
+      if (cards.length === 0 && !cardsLoading) {
+        loadCardsData();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -330,11 +484,23 @@ export default function AdminPage() {
           Card Review
         </button>
         <button
-          className={`admin-tab ${activeTab === 'themes' ? 'active' : ''}`}
-          onClick={() => setActiveTab('themes')}
+          className={`admin-tab ${activeTab === 'card-management' ? 'active' : ''}`}
+          onClick={() => setActiveTab('card-management')}
         >
-          Themes
+          Card Management
         </button>
+          <button
+            className={`admin-tab ${activeTab === 'themes' ? 'active' : ''}`}
+            onClick={() => setActiveTab('themes')}
+          >
+            Themes
+          </button>
+          <button
+            className={`admin-tab ${activeTab === 'organization' ? 'active' : ''}`}
+            onClick={() => setActiveTab('organization')}
+          >
+            Organization
+          </button>
       </div>
 
       {/* Messages */}
@@ -624,10 +790,133 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* Card Management Tab */}
+      {activeTab === 'card-management' && (
+        <div className="admin-tab-content">
+          <div className="card-management-header">
+            <h2>Card Management</h2>
+            <div className="card-management-actions">
+              {/* View Toggle */}
+              <div className="view-toggle">
+                <button
+                  className={`view-toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
+                  onClick={() => setViewMode('table')}
+                  title="Table/Spreadsheet View"
+                >
+                  Table
+                </button>
+                <button
+                  className={`view-toggle-btn ${viewMode === 'card' ? 'active' : ''}`}
+                  onClick={() => setViewMode('card')}
+                  title="Card/Grid View"
+                >
+                  Cards
+                </button>
+              </div>
+              <button
+                className="btn-primary"
+                onClick={handleAddCard}
+                disabled={loading || cardsLoading}
+              >
+                + Add Card
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Translate Form (for admins, only in card view) */}
+          {viewMode === 'card' && (
+            <QuickTranslateForm 
+              onAddCards={handleAddCards} 
+              isAdmin={isAdminUser} 
+            />
+          )}
+          
+          {/* Filters */}
+          <div className="card-management-filters">
+            <div className="filter-group">
+              <label htmlFor="filter-type">Filter by Type:</label>
+              <select
+                id="filter-type"
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+              >
+                <option value="">All Types</option>
+                <option value="word">Word</option>
+                <option value="phrase">Phrase</option>
+                <option value="number">Number</option>
+              </select>
+            </div>
+            <div className="filter-group">
+              <label htmlFor="filter-category">Filter by Category:</label>
+              <select
+                id="filter-category"
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+              >
+                <option value="">All Categories</option>
+                {/* Categories would be loaded from categoriesService */}
+              </select>
+            </div>
+            <div className="filter-group">
+              <label htmlFor="filter-instruction-level">Filter by Instruction Level:</label>
+              <select
+                id="filter-instruction-level"
+                value={filterInstructionLevel}
+                onChange={(e) => setFilterInstructionLevel(e.target.value)}
+              >
+                <option value="">All Levels</option>
+                {/* Instruction levels would be loaded from instructionLevelsService */}
+              </select>
+            </div>
+          </div>
+
+          {/* View Mode Content */}
+          {viewMode === 'table' ? (
+            <AdminCardTable
+              cards={cards}
+              loading={cardsLoading}
+              onEdit={handleEditCard}
+              onDelete={handleDeleteCard}
+              filterType={filterType}
+              filterCategory={filterCategory}
+              filterInstructionLevel={filterInstructionLevel}
+            />
+          ) : (
+            <CardManager
+              cards={cards}
+              onAddCard={handleSaveCard}
+              onAddCards={handleAddCards}
+              onEditCard={handleEditCard}
+              onDeleteCard={handleDeleteCard}
+              isAdmin={isAdminUser}
+              currentUserId={user?.id || null}
+              showHeader={false}
+              showQuickTranslate={false}
+            />
+          )}
+
+          <AdminCardModal
+            isOpen={modalOpen}
+            mode={modalMode}
+            card={editingCard}
+            onSave={handleSaveCard}
+            onCancel={handleModalCancel}
+            isAdmin={isAdminUser}
+          />
+        </div>
+      )}
+
       {/* Themes Tab */}
       {activeTab === 'themes' && (
         <div className="admin-tab-content">
           <AdminThemeManager />
+        </div>
+      )}
+
+      {/* Organization Tab */}
+      {activeTab === 'organization' && (
+        <div className="admin-tab-content">
+          <AdminClassificationManager />
         </div>
       )}
     </div>

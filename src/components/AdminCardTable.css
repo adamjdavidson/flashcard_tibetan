@@ -1,0 +1,309 @@
+.admin-card-table {
+  width: 100%;
+  background: var(--theme-bg-card);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px var(--theme-shadow);
+}
+
+.admin-card-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.table-info {
+  color: var(--theme-text-secondary);
+  font-size: 0.875rem;
+}
+
+.filtered-info {
+  color: var(--theme-text-hint);
+  font-style: italic;
+}
+
+.table-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.table-pagination-controls label {
+  color: var(--theme-text-secondary);
+  font-size: 0.875rem;
+}
+
+.page-size-select {
+  padding: 0.5rem;
+  border: 1px solid var(--theme-border-dark);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: var(--theme-bg-card);
+  color: var(--theme-text-primary);
+}
+
+.table-container {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--theme-bg-card);
+}
+
+.admin-table thead {
+  background: var(--theme-bg-secondary);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.admin-table th {
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--theme-text-on-gradient);
+  border-bottom: 2px solid var(--theme-border);
+}
+
+.sortable-header {
+  background: none;
+  border: none;
+  color: var(--theme-text-on-gradient);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sortable-header:hover {
+  background: var(--theme-btn-hover);
+}
+
+.sortable-header:focus {
+  outline: 2px solid var(--theme-accent-info);
+  outline-offset: 2px;
+}
+
+.actions-header {
+  text-align: center;
+}
+
+.admin-table tbody tr {
+  border-bottom: 1px solid var(--theme-border);
+  transition: background 0.2s;
+}
+
+.admin-table tbody tr:hover {
+  background: var(--theme-btn-hover);
+}
+
+.admin-table td {
+  padding: 0.75rem;
+  color: var(--theme-text-primary);
+  font-size: 0.875rem;
+}
+
+.type-cell {
+  min-width: 80px;
+}
+
+.card-type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: var(--theme-accent-info);
+  color: var(--theme-text-on-gradient);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.front-cell {
+  min-width: 150px;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'Noto Sans Tibetan', 'Tibetan Machine Uni', sans-serif;
+}
+
+.back-content-cell {
+  min-width: 150px;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.categories-cell {
+  min-width: 150px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.instruction-level-cell {
+  min-width: 120px;
+}
+
+.created-date-cell {
+  min-width: 100px;
+  color: var(--theme-text-secondary);
+  font-size: 0.8125rem;
+}
+
+.actions-cell {
+  text-align: center;
+  min-width: 100px;
+}
+
+.table-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-table-edit,
+.btn-table-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+}
+
+.btn-table-edit {
+  color: var(--theme-accent-info);
+}
+
+.btn-table-edit:hover {
+  background: var(--theme-accent-info);
+  color: var(--theme-text-on-gradient);
+}
+
+.btn-table-delete {
+  color: var(--theme-accent-error);
+}
+
+.btn-table-delete:hover {
+  background: var(--theme-accent-error);
+  color: var(--theme-text-on-gradient);
+}
+
+.btn-table-edit:focus,
+.btn-table-delete:focus {
+  outline: 2px solid var(--theme-accent-info);
+  outline-offset: 2px;
+}
+
+.table-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--theme-border);
+}
+
+.pagination-btn {
+  padding: 0.5rem 1rem;
+  background: var(--theme-btn-secondary);
+  color: var(--theme-text-primary);
+  border: 1px solid var(--theme-border-dark);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--theme-btn-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px var(--theme-shadow);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn:focus {
+  outline: 2px solid var(--theme-accent-info);
+  outline-offset: 2px;
+}
+
+.pagination-info {
+  color: var(--theme-text-secondary);
+  font-size: 0.875rem;
+}
+
+.admin-card-table-loading {
+  text-align: center;
+  padding: 3rem;
+  color: var(--theme-text-secondary);
+}
+
+.loading-spinner {
+  font-size: 1rem;
+}
+
+.admin-card-table-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--theme-text-secondary);
+  font-size: 1.125rem;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .admin-card-table {
+    padding: 1rem;
+  }
+
+  .table-container {
+    overflow-x: scroll;
+  }
+
+  .admin-table {
+    min-width: 800px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-card-table-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .table-pagination-controls {
+    justify-content: center;
+  }
+
+  .table-pagination {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+

@@ -13,9 +13,19 @@ global.__mockUseAuthValue = {
   logout: vi.fn()
 };
 
-// Mock useAuth hook - access global variable directly
+// Mock useAuth hook - use a getter function to always read current value
 vi.mock('../hooks/useAuth.js', () => ({
-  useAuth: () => global.__mockUseAuthValue
+  useAuth: () => {
+    // Always read the current value, not a captured reference
+    return global.__mockUseAuthValue || {
+      user: null,
+      isAdmin: false,
+      loading: false,
+      error: null,
+      login: vi.fn(),
+      logout: vi.fn()
+    };
+  }
 }));
 
 describe('AdminPage', () => {

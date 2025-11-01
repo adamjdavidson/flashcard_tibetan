@@ -340,3 +340,87 @@
   margin-top: 10px;
 }
 
+/* Card Management */
+.card-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.card-management-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.card-management-filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.card-management-filters .filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-management-filters .filter-group label {
+  color: #666;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.card-management-filters .filter-group select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  color: #333;
+}
+
+.card-management-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+}
+
+.view-toggle-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: white;
+  color: #666;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  border-right: 1px solid #ddd;
+}
+
+.view-toggle-btn:last-child {
+  border-right: none;
+}
+
+.view-toggle-btn:hover {
+  background: #f5f5f5;
+}
+
+.view-toggle-btn.active {
+  background: #007bff;
+  color: white;
+}
+
+.view-toggle-btn.active:hover {
+  background: #0056b3;
+}
+

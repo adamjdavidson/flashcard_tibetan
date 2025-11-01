@@ -94,6 +94,15 @@ export async function translateText(text, fromLang = 'en', toLang = 'bo') {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}: Translation failed` }));
       console.error('Translation API error:', response.status, errorData);
+      
+      // Better error message for 404 (local development)
+      if (response.status === 404) {
+        return { 
+          success: false, 
+          error: 'Translation API not available in local development. Translation works in production on Vercel.' 
+        };
+      }
+      
       return { success: false, error: errorData.error || `Translation failed (HTTP ${response.status})` };
     }
 
@@ -118,7 +127,7 @@ export async function translateText(text, fromLang = 'en', toLang = 'bo') {
     if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
       return { 
         success: false, 
-        error: 'API route not found. For local development, please run: npm install -g vercel && vercel dev' 
+        error: 'Translation API not available in local development. Translation works in production on Vercel.' 
       };
     }
     return { success: false, error: error.message || 'Translation request failed' };
