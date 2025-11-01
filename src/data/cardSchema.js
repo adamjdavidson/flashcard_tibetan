@@ -60,9 +60,14 @@ export function validateCard(card) {
   if (!card.front) {
     return false;
   }
-  // For number cards, need backArabic and backTibetanSpelling
+  // For number cards, need backArabic and either backTibetanScript or backTibetanNumeral
+  // backTibetanSpelling is optional for all card types
   if (card.type === 'number') {
-    if (!card.backArabic || !card.backTibetanSpelling) {
+    if (!card.backArabic) {
+      return false;
+    }
+    // Number cards should have either Tibetan script (for numeral cards) or Tibetan numerals (for script cards)
+    if (!card.backTibetanScript && !card.backTibetanNumeral) {
       return false;
     }
   } else {

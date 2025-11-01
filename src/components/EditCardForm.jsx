@@ -389,14 +389,13 @@ export default function EditCardForm({ card, onSave, onCancel }) {
         )}
 
         <div className="form-group">
-          <label htmlFor="backTibetanSpelling">Tibetan Spelling (Back) {formData.type === 'word' || formData.type === 'phrase' ? '(optional)' : '* '}</label>
+          <label htmlFor="backTibetanSpelling">Tibetan Spelling (Back) (optional)</label>
           <input
             type="text"
             id="backTibetanSpelling"
             name="backTibetanSpelling"
             value={formData.backTibetanSpelling}
             onChange={handleChange}
-            required={formData.type === 'numerals' || formData.type === 'numbers'}
             placeholder="Enter Wylie or phonetic spelling"
           />
         </div>
