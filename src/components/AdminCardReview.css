@@ -1,0 +1,120 @@
+.admin-card-review {
+  padding: 20px;
+}
+
+.admin-card-review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.admin-card-review-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.admin-card-review-description {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.admin-card-review-loading {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+}
+
+.admin-card-review-empty {
+  padding: 40px;
+  text-align: center;
+  color: #999;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.admin-card-review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-card-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.admin-card-content {
+  flex: 1;
+}
+
+.admin-card-field {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.admin-card-field strong {
+  color: #555;
+  margin-right: 8px;
+}
+
+.admin-card-meta {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.admin-card-meta small {
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.admin-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 150px;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .admin-card-item {
+    flex-direction: column;
+  }
+  
+  .admin-card-actions {
+    width: 100%;
+    flex-direction: row;
+  }
+  
+  .admin-card-actions button {
+    flex: 1;
+  }
+}
+

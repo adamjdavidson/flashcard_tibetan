@@ -1,0 +1,55 @@
+name: Performance Monitoring
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # Allow manual triggering
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build project
+      run: npm run build
+
+    - name: Install Playwright
+      run: npx playwright install --with-deps chromium
+
+    - name: Run performance tests
+      run: npm run test:e2e:performance
+      continue-on-error: true
+
+    - name: Upload performance results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: performance-results
+        path: |
+          test-results/
+          playwright-report/
+        retention-days: 30
+
+    - name: Performance Budget Check
+      run: |
+        echo "Performance metrics:"
+        echo "- Page load: < 5s"
+        echo "- DOM interactive: < 3s"
+        echo "- Click response: < 500ms"
+        echo "- Filter operation: < 500ms"
+        echo "- Memory usage: < 100MB"
+

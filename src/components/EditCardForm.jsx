@@ -8,7 +8,7 @@ import './AddCardForm.css';
 /**
  * EditCardForm component for editing existing cards
  */
-export default function EditCardForm({ card, onSave, onCancel }) {
+export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }) {
   const [formData, setFormData] = useState({
     type: 'word',
     front: '',
@@ -417,23 +417,27 @@ export default function EditCardForm({ card, onSave, onCancel }) {
           <label>Image (Optional)</label>
           
           <div className="image-actions">
-            <button
-              type="button"
-              onClick={handleGenerateAIImage}
-              disabled={generating || (!formData.front.trim() && !formData.backEnglish.trim())}
-              className="btn-secondary"
-            >
-              {generating ? 'Generating...' : 'Generate AI Image'}
-            </button>
-            
-            <button
-              type="button"
-              onClick={handleSearchUnsplash}
-              disabled={searching || (!formData.front.trim() && !formData.backEnglish.trim())}
-              className="btn-secondary"
-            >
-              {searching ? 'Searching...' : 'Search Unsplash'}
-            </button>
+            {isAdmin && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleGenerateAIImage}
+                  disabled={generating || (!formData.front.trim() && !formData.backEnglish.trim())}
+                  className="btn-secondary"
+                >
+                  {generating ? 'Generating...' : 'Generate AI Image'}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleSearchUnsplash}
+                  disabled={searching || (!formData.front.trim() && !formData.backEnglish.trim())}
+                  className="btn-secondary"
+                >
+                  {searching ? 'Searching...' : 'Search Unsplash'}
+                </button>
+              </>
+            )}
             
             <label className="btn-secondary btn-upload">
               {uploading ? 'Uploading...' : 'Upload Image'}

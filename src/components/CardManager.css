@@ -147,6 +147,25 @@
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
+}
+
+.card-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.master-badge {
+  background: #fbbf24;
+  color: #78350f;
+}
+
+.user-badge {
+  background: #3b82f6;
+  color: white;
   font-weight: 500;
 }
 

@@ -12,7 +12,25 @@
     "preview": "vite preview",
     "setup:supabase": "bash setup-supabase-complete.sh",
     "setup:storage": "bash setup-storage-policies.sh",
-    "test:gemini": "node test-gemini-api.js"
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch",
+    "test:components": "vitest run src/components/__tests__",
+    "test:integration": "vitest run src/integration/__tests__",
+    "test:performance": "vitest run src/utils/__tests__/performance.test.js",
+    "test:accessibility": "vitest run src/components/__tests__/Accessibility.test.jsx",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:admin": "playwright test src/integration/e2e/adminWorkflows.spec.js",
+    "test:e2e:visual": "playwright test src/integration/e2e/visualRegression.spec.js",
+    "test:e2e:accessibility": "playwright test src/integration/e2e/accessibility.spec.js",
+    "test:e2e:performance": "playwright test src/integration/e2e/performance.spec.js",
+    "test:all": "npm run test:run && npm run test:e2e",
+    "test:gemini": "node test-gemini-api.js",
+    "test:user-cards": "node test-user-cards.js",
+    "migrate:user-cards": "node apply-user-cards-migration.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.2",
@@ -20,16 +38,27 @@
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "@axe-core/react": "^4.11.0",
     "@eslint/js": "^9.36.0",
+    "@playwright/test": "^1.56.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.4",
+    "@vitest/ui": "^4.0.6",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.22",
     "globals": "^16.4.0",
+    "happy-dom": "^20.0.10",
+    "jest-axe": "^10.0.0",
+    "jsdom": "^27.1.0",
+    "playwright": "^1.56.1",
     "supabase": "^2.54.11",
     "vercel": "^48.8.0",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "vitest": "^4.0.6"
   }
 }

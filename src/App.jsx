@@ -65,7 +65,7 @@ function App() {
         // Try Supabase first if configured and user available
         if (useSupabase && user) {
           try {
-            existingCards = await loadCardsSupabase(() => loadCards()) || [];
+            existingCards = await loadCardsSupabase(() => loadCards(), user.id, isAdmin) || [];
             existingProgress = await loadProgressSupabase(user.id, () => loadProgress()) || {};
           } catch (err) {
             console.warn('Error loading from Supabase, falling back to localStorage:', err);
@@ -243,12 +243,22 @@ function App() {
   };
 
   const handleAddCard = async (newCard) => {
+    // Set ownership: non-admin users own the card, admins create master cards
+    if (user && !isAdmin) {
+      newCard.userId = user.id;
+      newCard.isMaster = false;
+    } else if (isAdmin) {
+      // Admins create master cards by default
+      newCard.userId = null;
+      newCard.isMaster = true;
+    }
+
     // Optimistic update
     const updatedCards = [...cards, newCard];
     setCards(updatedCards);
 
-    // Save to backend
-    if (useSupabase && user && isAdmin) {
+    // Save to backend (all authenticated users can save)
+    if (useSupabase && user) {
       await saveCardSupabase(newCard, () => saveCards(updatedCards));
     } else {
       saveCards(updatedCards);
@@ -256,12 +266,24 @@ function App() {
   };
 
   const handleAddCards = async (newCards) => {
+    // Set ownership for each card
+    newCards.forEach(card => {
+      if (user && !isAdmin) {
+        card.userId = user.id;
+        card.isMaster = false;
+      } else if (isAdmin) {
+        // Admins create master cards by default
+        card.userId = null;
+        card.isMaster = true;
+      }
+    });
+
     // Optimistic update
     const updatedCards = [...cards, ...newCards];
     setCards(updatedCards);
 
-    // Save to backend
-    if (useSupabase && user && isAdmin) {
+    // Save to backend (all authenticated users can save)
+    if (useSupabase && user) {
       await saveCardsSupabase(newCards, () => saveCards(updatedCards));
     } else {
       saveCards(updatedCards);
@@ -269,14 +291,21 @@ function App() {
   };
 
   const handleEditCard = async (updatedCard) => {
+    // Preserve ownership if not set
+    const originalCard = cards.find(c => c.id === updatedCard.id);
+    if (originalCard && !updatedCard.userId) {
+      updatedCard.userId = originalCard.userId;
+      updatedCard.isMaster = originalCard.isMaster;
+    }
+
     // Optimistic update
     const updatedCards = cards.map(card => 
       card.id === updatedCard.id ? updatedCard : card
     );
     setCards(updatedCards);
 
-    // Save to backend
-    if (useSupabase && user && isAdmin) {
+    // Save to backend (all authenticated users can save their own cards)
+    if (useSupabase && user) {
       await saveCardSupabase(updatedCard, () => saveCards(updatedCards));
     } else {
       saveCards(updatedCards);
@@ -294,8 +323,8 @@ function App() {
       delete newProgressMap[cardId];
       setProgressMap(newProgressMap);
 
-      // Save to backend
-      if (useSupabase && user && isAdmin) {
+      // Save to backend (all authenticated users can delete their own cards)
+      if (useSupabase && user) {
         await deleteCardSupabase(cardId, () => saveCards(updatedCards));
       } else {
         saveCards(updatedCards);
@@ -331,8 +360,8 @@ function App() {
     );
   }
 
-  // Show auth screen for card management (admin only)
-  if (view === 'manage' && (!user || !isAdmin)) {
+  // Show auth screen for card management (requires login, not just admin)
+  if (view === 'manage' && !user) {
     return (
       <div className="app">
         <Auth onLogin={() => {}} />
@@ -424,6 +453,7 @@ function App() {
             onEditCard={handleEditCard}
             onDeleteCard={handleDeleteCard}
             isAdmin={isAdmin}
+            currentUserId={user?.id || null}
           />
         )}
       </main>

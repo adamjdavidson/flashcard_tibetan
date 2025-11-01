@@ -10,7 +10,7 @@ import './QuickTranslateForm.css';
  * Allows admin to quickly add word cards by entering English word
  * Automatically translates and can add images
  */
-export default function QuickTranslateForm({ onAddCards }) {
+export default function QuickTranslateForm({ onAddCards, isAdmin = false }) {
   const [englishWord, setEnglishWord] = useState('');
   const [tibetanScript, setTibetanScript] = useState('');
   const [imageUrl, setImageUrl] = useState(null);
@@ -296,23 +296,27 @@ export default function QuickTranslateForm({ onAddCards }) {
         <label>Image (Optional)</label>
         
         <div className="image-actions">
-          <button
-            type="button"
-            onClick={handleGenerateAIImage}
-            disabled={generating || !englishWord.trim()}
-            className="btn-secondary"
-          >
-            {generating ? 'Generating...' : 'Generate AI Image'}
-          </button>
-          
-          <button
-            type="button"
-            onClick={handleSearchUnsplash}
-            disabled={searching || !englishWord.trim()}
-            className="btn-secondary"
-          >
-            {searching ? 'Searching...' : 'Search Unsplash'}
-          </button>
+          {isAdmin && (
+            <>
+              <button
+                type="button"
+                onClick={handleGenerateAIImage}
+                disabled={generating || !englishWord.trim()}
+                className="btn-secondary"
+              >
+                {generating ? 'Generating...' : 'Generate AI Image'}
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleSearchUnsplash}
+                disabled={searching || !englishWord.trim()}
+                className="btn-secondary"
+              >
+                {searching ? 'Searching...' : 'Search Unsplash'}
+              </button>
+            </>
+          )}
           
           <label className="btn-secondary btn-upload">
             {uploading ? 'Uploading...' : 'Upload Image'}

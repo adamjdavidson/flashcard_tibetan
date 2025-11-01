@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
+import AdminCardReview from './AdminCardReview.jsx';
 import './AdminPage.css';
 
 /**
@@ -320,6 +321,12 @@ export default function AdminPage() {
         >
           Reset Progress
         </button>
+        <button
+          className={`admin-tab ${activeTab === 'cards' ? 'active' : ''}`}
+          onClick={() => setActiveTab('cards')}
+        >
+          Card Review
+        </button>
       </div>
 
       {/* Messages */}
@@ -592,6 +599,13 @@ export default function AdminPage() {
               Reset Progress for ALL Users
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Card Review Tab */}
+      {activeTab === 'cards' && (
+        <div className="admin-tab-content">
+          <AdminCardReview isAdmin={isAdminUser} />
         </div>
       )}
     </div>

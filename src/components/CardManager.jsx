@@ -7,7 +7,7 @@ import './CardManager.css';
 /**
  * CardManager component for viewing and managing cards
  */
-export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, onDeleteCard, isAdmin = false }) {
+export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, onDeleteCard, isAdmin = false, currentUserId = null }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
   const [filterType, setFilterType] = useState('');
@@ -36,27 +36,30 @@ export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, 
   const types = [...new Set(cards.map(c => c.type))];
   const categories = [...new Set(cards.map(c => c.category).filter(Boolean))];
 
+  // Check if user can edit/delete a card (own card or admin)
+  const canEditCard = (card) => {
+    return isAdmin || (currentUserId && card.userId === currentUserId);
+  };
+
   return (
     <div className="card-manager">
       <div className="card-manager-header">
         <h2>Card Library</h2>
         <div className="card-manager-actions">
-          {isAdmin && (
-            <button 
-              className="btn-add-card"
-              onClick={() => setShowAddForm(!showAddForm)}
-            >
-              {showAddForm ? 'Cancel' : '+ Add Card'}
-            </button>
-          )}
+          <button 
+            className="btn-add-card"
+            onClick={() => setShowAddForm(!showAddForm)}
+          >
+            {showAddForm ? 'Cancel' : '+ Add Card'}
+          </button>
         </div>
       </div>
 
       {isAdmin && onAddCards && (
-        <QuickTranslateForm onAddCards={onAddCards} />
+        <QuickTranslateForm onAddCards={onAddCards} isAdmin={isAdmin} />
       )}
 
-      {showAddForm && isAdmin && (
+      {showAddForm && (
         <AddCardForm 
           onAdd={handleAddCard} 
           onCancel={() => setShowAddForm(false)}
@@ -68,6 +71,7 @@ export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, 
           card={editingCard}
           onSave={handleEditCard}
           onCancel={handleCancelEdit}
+          isAdmin={isAdmin}
         />
       )}
 
@@ -124,7 +128,13 @@ export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, 
                         )}
                       </div>
                       <div className="card-item-actions">
-                        {onEditCard && (
+                        {card.isMaster && (
+                          <span className="card-badge master-badge" title="Master Library Card">★ Master</span>
+                        )}
+                        {card.userId && !card.isMaster && (
+                          <span className="card-badge user-badge" title="Your Card">My Card</span>
+                        )}
+                        {canEditCard(card) && onEditCard && (
                           <button
                             className="btn-edit"
                             onClick={() => setEditingCard(card)}
@@ -133,7 +143,7 @@ export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, 
                             ✎
                           </button>
                         )}
-                        {onDeleteCard && (
+                        {canEditCard(card) && onDeleteCard && (
                           <button
                             className="btn-delete"
                             onClick={() => onDeleteCard(card.id)}

@@ -8,14 +8,16 @@ import { supabase, isSupabaseConfigured } from './supabase.js';
 /**
  * Load all cards from Supabase
  * Falls back to localStorage if Supabase not configured
+ * RLS policies automatically filter: users see master + own cards, admins see all
  */
-export async function loadCards(fallbackLoad) {
+export async function loadCards(fallbackLoad, currentUserId = null, isAdmin = false) {
   if (!isSupabaseConfigured()) {
     // Fallback to localStorage
     return fallbackLoad ? fallbackLoad() : [];
   }
 
   try {
+    // RLS policies handle filtering, but we select all columns including user_id and is_master
     const { data, error } = await supabase
       .from('cards')
       .select('*')
@@ -27,7 +29,16 @@ export async function loadCards(fallbackLoad) {
     }
 
     // Transform database format to app format
-    return data.map(transformCardFromDB);
+    const transformed = data.map(transformCardFromDB);
+    
+    // Additional client-side filtering for safety (RLS should handle this, but double-check)
+    if (!isAdmin && currentUserId) {
+      return transformed.filter(card => 
+        card.isMaster || card.userId === currentUserId
+      );
+    }
+    
+    return transformed;
   } catch (error) {
     console.error('Error loading cards:', error);
     return fallbackLoad ? fallbackLoad() : [];
@@ -172,7 +183,9 @@ function transformCardFromDB(dbCard) {
     subcategory: dbCard.subcategory || null,
     notes: dbCard.notes || null,
     imageUrl: dbCard.image_url || null,
-    createdAt: dbCard.created_at ? new Date(dbCard.created_at).getTime() : Date.now()
+    createdAt: dbCard.created_at ? new Date(dbCard.created_at).getTime() : Date.now(),
+    userId: dbCard.user_id || null,
+    isMaster: dbCard.is_master || false
   };
 }
 
@@ -194,7 +207,9 @@ function transformCardToDB(card) {
     notes: card.notes || null,
     image_url: card.imageUrl || null,
     created_at: card.createdAt ? new Date(card.createdAt).toISOString() : new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    user_id: card.userId || null,
+    is_master: card.isMaster !== undefined ? card.isMaster : (card.userId === null || card.userId === undefined)
   };
 }
 
