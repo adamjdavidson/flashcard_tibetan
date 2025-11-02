@@ -2,6 +2,7 @@
 import { test, expect } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
+import process from 'node:process';
 
 const authFile = 'playwright/.auth/admin.json';
 
