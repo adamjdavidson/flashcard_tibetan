@@ -32,11 +32,13 @@ test('authenticate', async ({ page }) => {
   if (!email || !password) throw new Error('Set PLAYWRIGHT_ADMIN_EMAIL and PLAYWRIGHT_ADMIN_PASSWORD');
 
   // Prefer fast/auth via Supabase API to avoid UI brittle flows in CI
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+  // Sanitize env (secrets may include accidental quotes/whitespace)
+  const sanitize = (v) => (v || '').trim().replace(/^['"]|['"]$/g, '');
+  const supabaseUrl = sanitize(process.env.VITE_SUPABASE_URL);
+  const supabaseKey = sanitize(process.env.VITE_SUPABASE_ANON_KEY);
   if (supabaseUrl && supabaseKey) {
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: sanitize(email), password: sanitize(password) });
     if (error) {
       throw new Error(`Supabase auth failed: ${error.message}`);
     }
