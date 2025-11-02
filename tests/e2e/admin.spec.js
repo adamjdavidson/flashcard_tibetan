@@ -5,8 +5,8 @@ test.describe('Admin page', () => {
     await page.goto('/admin');
     await page.waitForLoadState('networkidle');
 
-    // Admin shell visible (tabs or page container)
-    await expect(page.locator('.admin-page,.admin-tabs')).toBeVisible({ timeout: 20000 });
+    // Admin shell visible (tabs or page container) - use first() for strict mode
+    await expect(page.locator('.admin-page,.admin-tabs').first()).toBeVisible({ timeout: 20000 });
     // No access denied
     await expect(page.locator('text=/access denied/i')).toHaveCount(0);
   });
