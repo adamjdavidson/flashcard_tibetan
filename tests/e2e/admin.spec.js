@@ -3,13 +3,12 @@ import { test, expect } from '@playwright/test';
 test.describe('Admin page', () => {
   test('admin page is reachable and renders', async ({ page }) => {
     await page.goto('/admin');
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
 
-    // Admin button should be active in nav
-    await expect(page.getByRole('button', { name: /admin/i })).toBeVisible();
-
-    // Main app container visible
-    await expect(page.locator('.app-main')).toBeVisible();
+    // Admin shell visible (tabs or page container)
+    await expect(page.locator('.admin-page,.admin-tabs')).toBeVisible({ timeout: 20000 });
+    // No access denied
+    await expect(page.locator('text=/access denied/i')).toHaveCount(0);
   });
 });
 

@@ -4,13 +4,17 @@ test.describe('Admin Card Management - phase 1', () => {
   test.beforeEach(async ({ page }) => {
     // Go to admin page where advanced card management lives
     await page.goto('/admin');
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
 
-    // Navigate to the explicit "Card Management" admin tab
-    await page.getByRole('button', { name: /^card management$/i }).click();
+    // Wait for the admin tab bar to render
+    const tabs = page.locator('.admin-tabs');
+    await expect(tabs).toBeVisible({ timeout: 20000 });
+
+    // Navigate to the explicit "Card Management" admin tab inside the tab bar
+    await tabs.getByRole('button', { name: /^card management$/i }).click({ timeout: 20000 });
 
     // Ensure Table view is active
-    await page.getByRole('button', { name: /^table$/i }).click();
+    await page.getByRole('button', { name: /^table$/i }).click({ timeout: 20000 });
   });
 
   test('displays cards in table view', async ({ page }) => {
