@@ -127,6 +127,57 @@ test('authenticate', async ({ page }) => {
       return items;
     });
     logDiag('storage item preview', preview);
+
+    // Promote CI user to admin using service role (if provided), then verify via anon client
+    const serviceRole = sanitize(process.env.SUPABASE_SERVICE_ROLE_KEY);
+    if (serviceRole) {
+      try {
+        const adminClient = createClient(supabaseUrl, serviceRole);
+        const userId = safeSession.user?.id || data.session.user?.id;
+        const { error: upsertErr } = await adminClient
+          .from('user_roles')
+          .upsert({ user_id: userId, role: 'admin' }, { onConflict: 'user_id' });
+        if (upsertErr) logDiag('Promote-admin upsert error', upsertErr.message);
+
+        // Poll until row is visible to the admin client (existence), short window
+        const start = Date.now();
+        let gotAdmin = false;
+        while (Date.now() - start < 8000) {
+          const { data: roleRow } = await adminClient
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', userId)
+            .maybeSingle();
+          if (roleRow?.role === 'admin') { gotAdmin = true; break; }
+          await new Promise(r => setTimeout(r, 250));
+        }
+        logDiag('Promote-admin result', { userId, gotAdmin });
+      } catch (e) {
+        logDiag('Promote-admin exception', e && (e.message || String(e)));
+      }
+    } else {
+      logDiag('Promote-admin skipped', 'SUPABASE_SERVICE_ROLE_KEY not set');
+    }
+
+    // Verify the role as seen by the browser anon client (this is what the app uses)
+    try {
+      const roleViaAnon = await page.evaluate(async ({ url, key }) => {
+        try {
+          const mod = await import('https://esm.sh/@supabase/supabase-js@2');
+          const s = mod.createClient(url, key);
+          const me = await s.auth.getUser();
+          const uid = me?.data?.user?.id || null;
+          if (!uid) return { uid: null, role: null };
+          const row = await s.from('user_roles').select('role').eq('user_id', uid).maybeSingle();
+          return { uid, role: row.data?.role || null };
+        } catch (err) {
+          return { error: err && (err.message || String(err)) };
+        }
+      }, { url: supabaseUrl, key: supabaseKey });
+      logDiag('role via anon client', roleViaAnon);
+    } catch (e) {
+      logDiag('role via anon client exception', e && (e.message || String(e)));
+    }
   } else {
     // Fallback UI login only if Supabase env is not provided (should not happen in CI)
     page.on('console', (msg) => console.log('BROWSER:', msg.type(), msg.text()));
