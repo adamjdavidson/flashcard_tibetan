@@ -81,7 +81,8 @@ describe('AddCardForm', () => {
     render(<AddCardForm onAdd={mockOnAdd} onCancel={mockOnCancel} />);
 
     // Submit with empty required fields
-    const submitButton = screen.getByRole('button', { name: /add|submit/i });
+    // Use specific button name to avoid matching "Add" buttons for categories/instruction levels
+    const submitButton = screen.getByRole('button', { name: /^add card$/i });
     await user.click(submitButton);
 
     await waitFor(() => {
