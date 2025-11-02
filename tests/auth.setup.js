@@ -5,6 +5,10 @@ import path from 'path';
 import process from 'node:process';
 import { createClient } from '@supabase/supabase-js';
 
+function logDiag(label, obj) {
+  try { console.log(`[AUTH-SETUP] ${label}:`, obj); } catch {}
+}
+
 const authFile = 'playwright/.auth/admin.json';
 
 test('authenticate', async ({ page }) => {
@@ -36,6 +40,22 @@ test('authenticate', async ({ page }) => {
   const sanitize = (v) => (v || '').trim().replace(/^['"]|['"]$/g, '');
   const supabaseUrl = sanitize(process.env.VITE_SUPABASE_URL);
   const supabaseKey = sanitize(process.env.VITE_SUPABASE_ANON_KEY);
+  // Pre-flight diagnostics (lengths only; no secrets)
+  logDiag('ENV lengths', {
+    urlHost: (() => { try { return new URL(supabaseUrl).host; } catch { return 'invalid-url'; } })(),
+    anonKeyLen: supabaseKey.length,
+    emailLen: sanitize(email).length,
+    pwdLen: sanitize(password).length
+  });
+  const supaHost = (() => { try { return new URL(supabaseUrl).host; } catch { return ''; } })();
+  page.on('response', (resp) => {
+    try {
+      const u = new URL(resp.url());
+      if (supaHost && u.host.includes(supaHost)) {
+        console.log(`[NET] ${resp.status()} ${resp.request().method()} ${resp.url()}`);
+      }
+    } catch {}
+  });
   if (supabaseUrl && supabaseKey) {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const { data, error } = await supabase.auth.signInWithPassword({ email: sanitize(email), password: sanitize(password) });
@@ -57,7 +77,10 @@ test('authenticate', async ({ page }) => {
       };
       localStorage.setItem(key, JSON.stringify(value));
     }, { key: storageKey, session: data.session });
-    // Ensure app reads the injected session
+    // Confirm storage and ensure app reads the injected session
+    const keys = await page.evaluate(() => Object.keys(localStorage));
+    logDiag('localStorage keys', keys);
+    logDiag('auth storage key present', keys.includes(storageKey));
     await page.reload();
   } else {
     // Fallback UI login only if Supabase env is not provided (should not happen in CI)
@@ -72,6 +95,14 @@ test('authenticate', async ({ page }) => {
   }
 
   // Verify UI shows logged-in user
+  try {
+    const headerText = await page.evaluate(() => {
+      const h = document.querySelector('.app-header') || document.body;
+      return (h && h.textContent ? h.textContent.slice(0, 500) : 'no header text');
+    });
+    logDiag('headerText snippet', headerText);
+  } catch {}
+  await page.screenshot({ path: 'playwright/setup-after-reload.png', fullPage: true }).catch(() => {});
   await expect(page.locator('.user-email')).toBeVisible({ timeout: 20000 });
 
   fs.mkdirSync('playwright/.auth', { recursive: true });

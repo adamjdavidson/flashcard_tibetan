@@ -35,8 +35,15 @@ jobs:
       - name: Install Playwright browsers and deps
         run: npx playwright install --with-deps
 
+      - name: Debug env presence (lengths only)
+        run: |
+          node -e "try{const u=new URL(process.env.VITE_SUPABASE_URL||'');console.log('URL host:',u.host||'invalid')}catch{console.log('URL host: invalid')}"
+          node -e "console.log('ANON key len:', String((process.env.VITE_SUPABASE_ANON_KEY||'').trim().length))"
+          node -e "console.log('Email len:', String((process.env.PLAYWRIGHT_ADMIN_EMAIL||'').trim().length))"
+          node -e "console.log('Pwd len:', String((process.env.PLAYWRIGHT_ADMIN_PASSWORD||'').trim().length))"
+
       - name: Run Playwright (Chromium + Firefox)
-        run: npx playwright test --project=chromium --project=firefox
+        run: npx playwright test --project=chromium --project=firefox --trace=on
 
       - name: Upload HTML report
         if: always()
@@ -72,8 +79,15 @@ jobs:
       - name: Ensure browsers installed
         run: npx playwright install
 
+      - name: Debug env presence (lengths only)
+        run: |
+          node -e "try{const u=new URL(process.env.VITE_SUPABASE_URL||'');console.log('URL host:',u.host||'invalid')}catch{console.log('URL host: invalid')}"
+          node -e "console.log('ANON key len:', String((process.env.VITE_SUPABASE_ANON_KEY||'').trim().length))"
+          node -e "console.log('Email len:', String((process.env.PLAYWRIGHT_ADMIN_EMAIL||'').trim().length))"
+          node -e "console.log('Pwd len:', String((process.env.PLAYWRIGHT_ADMIN_PASSWORD||'').trim().length))"
+
       - name: Run Playwright (WebKit)
-        run: npx playwright test --project=webkit
+        run: npx playwright test --project=webkit --trace=on
 
       - name: Upload HTML report
         if: always()
