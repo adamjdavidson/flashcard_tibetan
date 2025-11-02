@@ -71,7 +71,38 @@ test('authenticate', async ({ page }) => {
     const projectRef = new URL(supabaseUrl).host.split('.')[0];
     const storageKey = `sb-${projectRef}-auth-token`;
     const safeSession = JSON.parse(JSON.stringify(data.session));
-    logDiag('Inject keys', { storageKey, sessionKeys: Object.keys(safeSession) });
+    const userId = safeSession.user?.id || data.session.user?.id;
+    logDiag('Inject keys', { storageKey, sessionKeys: Object.keys(safeSession), userId });
+
+    // PROMOTE TO ADMIN BEFORE APP BOOTS - app's first render will see admin role
+    const serviceRole = sanitize(process.env.SUPABASE_SERVICE_ROLE_KEY);
+    if (serviceRole) {
+      try {
+        const adminClient = createClient(supabaseUrl, serviceRole);
+        const { error: upsertErr } = await adminClient
+          .from('user_roles')
+          .upsert({ user_id: userId, role: 'admin' }, { onConflict: 'user_id' });
+        if (upsertErr) logDiag('Promote-admin upsert error', upsertErr.message);
+
+        // Confirm row exists via service client
+        const start = Date.now();
+        let gotAdmin = false;
+        while (Date.now() - start < 8000) {
+          const { data: roleRow } = await adminClient
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', userId)
+            .maybeSingle();
+          if (roleRow?.role === 'admin') { gotAdmin = true; break; }
+          await new Promise(r => setTimeout(r, 250));
+        }
+        logDiag('Promote-admin (before boot)', { userId, gotAdmin });
+      } catch (e) {
+        logDiag('Promote-admin exception', e && (e.message || String(e)));
+      }
+    } else {
+      logDiag('Promote-admin skipped', 'SUPABASE_SERVICE_ROLE_KEY not set');
+    }
 
     // Stamp BEFORE app boot - use the exact session format the SDK expects
     await page.addInitScript(({ storageKey, session }) => {
@@ -149,60 +180,24 @@ test('authenticate', async ({ page }) => {
     });
     logDiag('storage item preview', preview);
 
-    // Promote CI user to admin using service role (if provided)
-    const serviceRole = sanitize(process.env.SUPABASE_SERVICE_ROLE_KEY);
-    const userId = authRestored.userId || safeSession.user?.id || data.session.user?.id;
-
-    if (serviceRole) {
-      try {
-        const adminClient = createClient(supabaseUrl, serviceRole);
-        const { error: upsertErr } = await adminClient
-          .from('user_roles')
-          .upsert({ user_id: userId, role: 'admin' }, { onConflict: 'user_id' });
-        if (upsertErr) logDiag('Promote-admin upsert error', upsertErr.message);
-
-        // Poll until row is visible to the anon client (what the app uses) with longer timeout
-        const start = Date.now();
-        let gotAdmin = false;
-        while (Date.now() - start < 15000) {
-          // Check via anon client (RLS-filtered, like the app)
-          const roleCheck = await page.evaluate(async ({ url, key, uid }) => {
-            try {
-              const mod = await import('https://esm.sh/@supabase/supabase-js@2');
-              const s = mod.createClient(url, key);
-              const row = await s.from('user_roles').select('role').eq('user_id', uid).maybeSingle();
-              return { role: row.data?.role || null, error: row.error?.message };
-            } catch (err) {
-              return { error: err && (err.message || String(err)) };
-            }
-          }, { url: supabaseUrl, key: supabaseKey, uid: userId });
-
-          if (roleCheck.role === 'admin') {
-            gotAdmin = true;
-            break;
-          }
-          await new Promise(r => setTimeout(r, 500));
-        }
-        logDiag('Promote-admin result', { userId, gotAdmin });
-
-        if (!gotAdmin) {
-          console.warn('[AUTH-SETUP] WARNING: Admin role not confirmed via anon client - tests may fail');
-        }
-      } catch (e) {
-        logDiag('Promote-admin exception', e && (e.message || String(e)));
-      }
-    } else {
-      logDiag('Promote-admin skipped', 'SUPABASE_SERVICE_ROLE_KEY not set');
-    }
-
-    // Final verification: Check both user and role via anon client
+    // Verify role via anon client (poll for session hydration first)
+    // Since we promoted BEFORE boot, the app should already see admin role
     const finalCheck = await page.evaluate(async ({ url, key }) => {
       try {
         const mod = await import('https://esm.sh/@supabase/supabase-js@2');
         const s = mod.createClient(url, key);
-        const me = await s.auth.getUser();
-        const uid = me?.data?.user?.id || null;
+
+        // Poll for session hydration (avoid uid: null race condition)
+        let uid = null;
+        for (let i = 0; i < 12; i++) {
+          const sess = await s.auth.getSession();
+          uid = sess?.data?.session?.user?.id || null;
+          if (uid) break;
+          await new Promise(r => setTimeout(r, 250));
+        }
+
         if (!uid) return { uid: null, role: null, authenticated: false };
+
         const row = await s.from('user_roles').select('role').eq('user_id', uid).maybeSingle();
         return { uid, role: row.data?.role || null, authenticated: true };
       } catch (err) {
@@ -213,6 +208,10 @@ test('authenticate', async ({ page }) => {
 
     if (!finalCheck.authenticated) {
       throw new Error('User not authenticated after setup - session not persisting properly');
+    }
+
+    if (finalCheck.role !== 'admin') {
+      console.warn('[AUTH-SETUP] WARNING: Admin role not visible to anon client - tests may fail');
     }
   } else {
     // Fallback UI login only if Supabase env is not provided (should not happen in CI)
