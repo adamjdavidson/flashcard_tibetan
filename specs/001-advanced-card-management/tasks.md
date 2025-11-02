@@ -217,21 +217,21 @@ Phase 8: Polish ←────────────────────�
 3. Filters remain active when switching views
 4. Edit state is preserved or user is prompted to save/cancel when switching views
 
-- [ ] T096 [US5] Create `src/components/AdminCardManagement.jsx` main component that manages view state and shared filters
-- [ ] T097 [US5] Create `src/components/AdminCardManagement.css` with styling for main component
-- [ ] T098 [US5] Implement view toggle buttons (Card View / Table View) in AdminCardManagement
-- [ ] T099 [US5] Implement shared filter state (filterType, filterCategory, filterInstructionLevel) in AdminCardManagement
-- [ ] T100 [US5] Add AdminCardTable component rendering in AdminCardManagement (when table view active)
-- [ ] T101 [US5] Integrate existing CardManager component in AdminCardManagement (when card view active)
-- [ ] T102 [US5] Pass shared filters to both AdminCardTable and CardManager components
-- [ ] T103 [US5] Implement filter persistence when switching views (filters remain in AdminCardManagement state)
-- [ ] T104 [US5] Handle edit state when switching views (if editing, prompt to save/cancel or preserve edit state)
-- [ ] T105 [US5] Modify `src/components/AdminPage.jsx` to add "Advanced Card Management" tab
-- [ ] T106 [US5] Replace CardManager in AdminPage with AdminCardManagement component in Advanced Card Management tab
-- [ ] T107 [US5] Add component tests for `src/components/__tests__/AdminCardManagement.test.jsx` (view switching, filter persistence)
-- [ ] T108 [US5] Test view switching: card view → table view, filters preserved, same cards displayed
-- [ ] T109 [US5] Test view switching: table view → card view, filters preserved, same cards displayed
-- [ ] T110 [US5] Test edit state handling: editing card in one view, switching views prompts save/cancel
+- [x] T096 [US5] Create `src/components/AdminCardManagement.jsx` main component that manages view state and shared filters
+- [x] T097 [US5] Create `src/components/AdminCardManagement.css` with styling for main component
+- [x] T098 [US5] Implement view toggle buttons (Card View / Table View) in AdminCardManagement
+- [x] T099 [US5] Implement shared filter state (filterType, filterCategory, filterInstructionLevel) in AdminCardManagement
+- [x] T100 [US5] Add AdminCardTable component rendering in AdminCardManagement (when table view active)
+- [x] T101 [US5] Integrate existing CardManager component in AdminCardManagement (when card view active)
+- [x] T102 [US5] Pass shared filters to both AdminCardTable and CardManager components
+- [x] T103 [US5] Implement filter persistence when switching views (filters remain in AdminCardManagement state)
+- [x] T104 [US5] Handle edit state when switching views (if editing, prompt to save/cancel or preserve edit state)
+- [x] T105 [US5] Modify `src/components/AdminPage.jsx` to add "Advanced Card Management" tab
+- [x] T106 [US5] Replace CardManager in AdminPage with AdminCardManagement component in Advanced Card Management tab
+- [x] T107 [US5] Add component tests for `src/components/__tests__/AdminCardManagement.test.jsx` (view switching, filter persistence)
+- [x] T108 [US5] Test view switching: card view → table view, filters preserved, same cards displayed
+- [x] T109 [US5] Test view switching: table view → card view, filters preserved, same cards displayed
+- [x] T110 [US5] Test edit state handling: editing card in one view, switching views prompts save/cancel
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
@@ -239,21 +239,21 @@ Phase 8: Polish ←────────────────────�
 
 **Independent Test**: Verify accessibility compliance, error handling, performance benchmarks met, full integration tests pass.
 
-- [ ] T111 Add ARIA labels to all table elements (table, th, td, buttons) for screen reader compatibility
-- [ ] T112 Implement keyboard navigation for table (Arrow keys, Tab, Enter, Escape)
-- [ ] T113 Add focus indicators for all interactive elements (buttons, inputs, links)
-- [ ] T114 Verify color contrast ratios meet WCAG 2.1 AA standards for all text elements
-- [ ] T115 Add error boundary handling for AdminCardTable component (graceful error display)
-- [ ] T116 Implement retry logic for failed API calls (categoriesService, instructionLevelsService, cardsService)
-- [ ] T117 Add performance monitoring for table rendering (measure render time for 1000+ cards)
-- [ ] T118 Optimize table rendering with React.memo for table rows if needed
-- [ ] T119 Add integration tests for `src/integration/__tests__/adminCardManagement.test.js` (full workflow: create card with classification, edit, delete)
-- [ ] T120 Add E2E tests for `src/integration/e2e/adminCardManagement.spec.js` (Playwright tests for table view, CRUD, filtering, view switching)
-- [ ] T121 Test performance: Table loads 1000+ cards in <2 seconds (SC-001)
-- [ ] T122 Test performance: Sorting completes in <1 second (SC-006)
-- [ ] T123 Test performance: Filtering completes in <50ms (SC-003)
-- [ ] T124 Test performance: CRUD operations provide feedback within 500ms (SC-007)
-- [ ] T125 Update accessibility tests in `src/components/__tests__/Accessibility.test.jsx` to include AdminCardTable, AdminCategoryManager, AdminInstructionLevelManager
+- [x] T111 Add ARIA labels to all table elements (table, th, td, buttons) for screen reader compatibility
+- [x] T112 Implement keyboard navigation for table (Arrow keys, Tab, Enter, Escape)
+- [x] T113 Add focus indicators for all interactive elements (buttons, inputs, links)
+- [x] T114 Verify color contrast ratios meet WCAG 2.1 AA standards for all text elements
+- [x] T115 Add error boundary handling for AdminCardTable component (graceful error display)
+- [x] T116 Implement retry logic for failed API calls (categoriesService, instructionLevelsService, cardsService)
+- [x] T117 Add performance monitoring for table rendering (measure render time for 1000+ cards)
+- [x] T118 Optimize table rendering with React.memo for table rows if needed
+- [x] T119 Add integration tests for `src/integration/__tests__/adminCardManagement.test.js` (full workflow: create card with classification, edit, delete)
+- [x] T120 Add E2E tests for `src/integration/e2e/adminCardManagement.spec.js` (Playwright tests for table view, CRUD, filtering, view switching)
+- [x] T121 Test performance: Table loads 1000+ cards in <2 seconds (SC-001)
+- [x] T122 Test performance: Sorting completes in <1 second (SC-006)
+- [x] T123 Test performance: Filtering completes in <50ms (SC-003)
+- [x] T124 Test performance: CRUD operations provide feedback within 500ms (SC-007)
+- [x] T125 Update accessibility tests in `src/components/__tests__/Accessibility.test.jsx` to include AdminCardTable, AdminCategoryManager, AdminInstructionLevelManager
 
 ## Task Summary
 

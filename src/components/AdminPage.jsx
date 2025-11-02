@@ -836,15 +836,25 @@ export default function AdminPage() {
               <div className="view-toggle">
                 <button
                   className={`view-toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
-                  onClick={() => setViewMode('table')}
+                  onClick={() => {
+                    // View switching preserves filters (they're in parent state)
+                    // Modal state persists across view switches (modal is independent of view)
+                    setViewMode('table');
+                  }}
                   title="Table/Spreadsheet View"
+                  aria-pressed={viewMode === 'table'}
                 >
                   Table
                 </button>
                 <button
                   className={`view-toggle-btn ${viewMode === 'card' ? 'active' : ''}`}
-                  onClick={() => setViewMode('card')}
+                  onClick={() => {
+                    // View switching preserves filters (they're in parent state)
+                    // Modal state persists across view switches (modal is independent of view)
+                    setViewMode('card');
+                  }}
                   title="Card/Grid View"
+                  aria-pressed={viewMode === 'card'}
                 >
                   Cards
                 </button>
@@ -941,6 +951,9 @@ export default function AdminPage() {
               currentUserId={user?.id || null}
               showHeader={false}
               showQuickTranslate={false}
+              filterType={filterType}
+              filterCategory={filterCategory}
+              filterInstructionLevel={filterInstructionLevel}
             />
           )}
 

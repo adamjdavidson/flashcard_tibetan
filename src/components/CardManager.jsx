@@ -7,11 +7,30 @@ import './CardManager.css';
 /**
  * CardManager component for viewing and managing cards
  */
-export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, onDeleteCard, isAdmin = false, currentUserId = null, showHeader = true, showQuickTranslate = true }) {
+export default function CardManager({ 
+  cards, 
+  onAddCard, 
+  onAddCards, 
+  onEditCard, 
+  onDeleteCard, 
+  isAdmin = false, 
+  currentUserId = null, 
+  showHeader = true, 
+  showQuickTranslate = true,
+  // Shared filters from parent (AdminPage/AdminCardManagement)
+  filterType = '',
+  filterCategory = '',
+  filterInstructionLevel = ''
+}) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
-  const [filterType, setFilterType] = useState('');
-  const [filterCategory, setFilterCategory] = useState('');
+  // If filters not provided as props, use internal state (for backward compatibility)
+  const [internalFilterType, setInternalFilterType] = useState('');
+  const [internalFilterCategory, setInternalFilterCategory] = useState('');
+  
+  // Use props if provided, otherwise use internal state
+  const effectiveFilterType = filterType !== undefined ? filterType : internalFilterType;
+  const effectiveFilterCategory = filterCategory !== undefined ? filterCategory : internalFilterCategory;
 
   const handleAddCard = (card) => {
     onAddCard(card);
@@ -27,14 +46,50 @@ export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, 
     setEditingCard(null);
   };
 
+  // Filter cards - supports both old category system (card.category) and new classification system (card.categories array)
   const filteredCards = cards.filter(card => {
-    if (filterType && card.type !== filterType) return false;
-    if (filterCategory && card.category !== filterCategory) return false;
+    // Filter by type
+    if (effectiveFilterType && card.type !== effectiveFilterType) return false;
+    
+    // Filter by category (support both old and new systems)
+    if (effectiveFilterCategory) {
+      // New classification system: card.categories is an array of objects with id and name
+      if (card.categories && Array.isArray(card.categories)) {
+        const categoryIds = card.categories.map(cat => cat.id);
+        const categoryNames = card.categories.map(cat => cat.name);
+        if (!categoryIds.includes(effectiveFilterCategory) && !categoryNames.includes(effectiveFilterCategory)) {
+          return false;
+        }
+      } 
+      // Old system: card.category is a string
+      else if (card.category && card.category !== effectiveFilterCategory) {
+        return false;
+      }
+      // No category assigned
+      else if (!card.categories || card.categories.length === 0) {
+        return false;
+      }
+    }
+    
+    // Filter by instruction level
+    if (filterInstructionLevel && card.instructionLevelId !== filterInstructionLevel) {
+      return false;
+    }
+    
     return true;
   });
 
   const types = [...new Set(cards.map(c => c.type))];
-  const categories = [...new Set(cards.map(c => c.category).filter(Boolean))];
+  // Support both old category system (card.category string) and new (card.categories array)
+  const categories = [
+    ...new Set(
+      cards.flatMap(c => 
+        c.categories && Array.isArray(c.categories) 
+          ? c.categories.map(cat => cat.name) 
+          : (c.category ? [c.category] : [])
+      )
+    )
+  ].filter(Boolean);
 
   // Check if user can edit/delete a card (own card or admin)
   const canEditCard = (card) => {
@@ -79,39 +134,42 @@ export default function CardManager({ cards, onAddCard, onAddCards, onEditCard, 
 
       {!showAddForm && !editingCard && (
         <>
-          <div className="filters">
-            <div className="filter-group">
-              <label htmlFor="filter-type">Filter by Type:</label>
-              <select
-                id="filter-type"
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-              >
-                <option value="">All Types</option>
-                {types.map(type => (
-                  <option key={type} value={type}>
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Only show filters if not provided as props (backward compatibility) */}
+          {filterType === undefined && filterCategory === undefined && (
+            <div className="filters">
+              <div className="filter-group">
+                <label htmlFor="filter-type">Filter by Type:</label>
+                <select
+                  id="filter-type"
+                  value={internalFilterType}
+                  onChange={(e) => setInternalFilterType(e.target.value)}
+                >
+                  <option value="">All Types</option>
+                  {types.map(type => (
+                    <option key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="filter-group">
-              <label htmlFor="filter-category">Filter by Category:</label>
-              <select
-                id="filter-category"
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-              >
-                <option value="">All Categories</option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+              <div className="filter-group">
+                <label htmlFor="filter-category">Filter by Category:</label>
+                <select
+                  id="filter-category"
+                  value={internalFilterCategory}
+                  onChange={(e) => setInternalFilterCategory(e.target.value)}
+                >
+                  <option value="">All Categories</option>
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="cards-list">
             <div className="cards-count">
