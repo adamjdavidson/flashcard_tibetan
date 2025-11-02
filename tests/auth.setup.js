@@ -6,7 +6,7 @@ import process from 'node:process';
 import { createClient } from '@supabase/supabase-js';
 
 function logDiag(label, obj) {
-  try { console.log(`[AUTH-SETUP] ${label}:`, obj); } catch {}
+  try { console.log(`[AUTH-SETUP] ${label}:`, obj); } catch (e) { void e; }
 }
 
 const authFile = 'playwright/.auth/admin.json';
@@ -54,7 +54,7 @@ test('authenticate', async ({ page }) => {
       if (supaHost && u.host.includes(supaHost)) {
         console.log(`[NET] ${resp.status()} ${resp.request().method()} ${resp.url()}`);
       }
-    } catch {}
+    } catch (e) { void e; }
   });
   if (supabaseUrl && supabaseKey) {
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -66,22 +66,67 @@ test('authenticate', async ({ page }) => {
       throw new Error('Supabase auth returned no session');
     }
 
-    // Open app and inject session in the expected browser storage format
-    await page.goto('/');
+    // Compute keys/values for pre-boot injection
     const projectRef = new URL(supabaseUrl).host.split('.')[0];
     const storageKey = `sb-${projectRef}-auth-token`;
-    await page.evaluate(({ key, session }) => {
-      const value = {
-        currentSession: session,
-        expiresAt: Math.floor(Date.now() / 1000) + (session?.expires_in ?? 3600),
-      };
-      localStorage.setItem(key, JSON.stringify(value));
-    }, { key: storageKey, session: data.session });
-    // Confirm storage and ensure app reads the injected session
-    const keys = await page.evaluate(() => Object.keys(localStorage));
-    logDiag('localStorage keys', keys);
-    logDiag('auth storage key present', keys.includes(storageKey));
+    const legacyKey = 'supabase.auth.token';
+    const safeSession = JSON.parse(JSON.stringify(data.session));
+    const value = {
+      currentSession: safeSession,
+      expiresAt: Math.floor(Date.now() / 1000) + (safeSession?.expires_in ?? 3600),
+    };
+    logDiag('Inject keys', { storageKey, legacyKey });
+
+    // Stamp BEFORE app boot
+    await page.addInitScript(({ storageKey, legacyKey, value }) => {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(value));
+        localStorage.setItem(legacyKey, JSON.stringify(value));
+        console.log('[AUTH-SETUP] addInitScript stamped');
+      } catch (e) { console.error('[AUTH-SETUP] init inject failed:', e && (e.message || String(e))); }
+    }, { storageKey, legacyKey, value });
+
+    // Load the app
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+
+    // Verify storage immediately
+    const keysPost = await page.evaluate(() => Object.keys(localStorage));
+    logDiag('localStorage keys (post-boot)', keysPost);
+    logDiag('auth storage present (post-boot)', keysPost.includes(storageKey) || keysPost.includes(legacyKey));
+
+    // Ensure SDK knows about the session as well
+    await page.evaluate(async ({ url, key, session }) => {
+      try {
+        const mod = await import('https://esm.sh/@supabase/supabase-js@2');
+        const supa = mod.createClient(url, key);
+        const res = await supa.auth.setSession({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token
+        });
+        console.log('[AUTH-SETUP] setSession result', res && res.data ? 'ok' : 'no-data');
+      } catch (e) {
+        console.error('[AUTH-SETUP] setSession error', e && (e.message || String(e)));
+      }
+    }, { url: supabaseUrl, key: supabaseKey, session: safeSession });
+
+    // Give SDK time to persist, then reload fully
+    await page.waitForTimeout(1000);
     await page.reload();
+    await page.waitForLoadState('networkidle');
+
+    // Deep inspect storage values
+    const storageAfter = await page.evaluate(() => Object.keys(localStorage));
+    logDiag('localStorage keys after setSession', storageAfter);
+    const preview = await page.evaluate(() => {
+      const items = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        items[k] = (localStorage.getItem(k) || '').slice(0, 64) + '...';
+      }
+      return items;
+    });
+    logDiag('storage item preview', preview);
   } else {
     // Fallback UI login only if Supabase env is not provided (should not happen in CI)
     page.on('console', (msg) => console.log('BROWSER:', msg.type(), msg.text()));
@@ -101,9 +146,21 @@ test('authenticate', async ({ page }) => {
       return (h && h.textContent ? h.textContent.slice(0, 500) : 'no header text');
     });
     logDiag('headerText snippet', headerText);
-  } catch {}
+  } catch (e) { void e; }
   await page.screenshot({ path: 'playwright/setup-after-reload.png', fullPage: true }).catch(() => {});
-  await expect(page.locator('.user-email')).toBeVisible({ timeout: 20000 });
+  // Robust verification: multiple indicators
+  try {
+    await Promise.race([
+      expect(page.locator('.user-email')).toBeVisible({ timeout: 20000 }),
+      expect(page.locator('[data-testid="user-menu"]').first()).toBeVisible({ timeout: 20000 }),
+      page.waitForURL(u => !String(u).includes('/login'), { timeout: 20000 })
+    ]);
+  } catch (error) {
+    const pageContent = await page.evaluate(() => document.body.textContent?.slice(0, 500) || '');
+    logDiag('page content on failure', pageContent);
+    await page.screenshot({ path: 'playwright/auth-failed.png', fullPage: true }).catch(() => {});
+    throw new Error(`Authentication verification failed: ${error.message}`);
+  }
 
   fs.mkdirSync('playwright/.auth', { recursive: true });
   await page.context().storageState({ path: authFile });
