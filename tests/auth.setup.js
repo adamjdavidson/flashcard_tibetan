@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import process from 'node:process';
+import { createClient } from '@supabase/supabase-js';
 
 const authFile = 'playwright/.auth/admin.json';
 
@@ -30,32 +31,43 @@ test('authenticate', async ({ page }) => {
   const password = process.env.PLAYWRIGHT_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
   if (!email || !password) throw new Error('Set PLAYWRIGHT_ADMIN_EMAIL and PLAYWRIGHT_ADMIN_PASSWORD');
 
-  // Go straight to login route so App renders <Auth />
-  page.on('console', (msg) => console.log('BROWSER:', msg.type(), msg.text()));
-  page.on('pageerror', (err) => console.log('BROWSER pageerror:', err.message));
-  await page.goto('/login');
-  await page.waitForLoadState('domcontentloaded');
-  // Debug: log current URL and a snippet of HTML
-  const debugUrl = page.url();
-  const htmlSnippet = await page.content();
-  console.log('Setup debug URL:', debugUrl);
-  console.log('Setup debug HTML snippet:', htmlSnippet.slice(0, 500));
-  try {
-    await page.waitForSelector('.auth-container', { timeout: 20000 });
-  } catch (e) {
-    const bodyText = await page.evaluate(() => document.body && document.body.innerText ? document.body.innerText.slice(0, 2000) : 'no body text');
-    console.log('Setup debug body text snippet:', bodyText);
-    await page.screenshot({ path: 'playwright/auth-setup.png', fullPage: true }).catch(() => {});
-    throw e;
+  // Prefer fast/auth via Supabase API to avoid UI brittle flows in CI
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+  if (supabaseUrl && supabaseKey) {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      throw new Error(`Supabase auth failed: ${error.message}`);
+    }
+    if (!data?.session) {
+      throw new Error('Supabase auth returned no session');
+    }
+
+    // Open app and inject session in the expected browser storage format
+    await page.goto('/');
+    const projectRef = new URL(supabaseUrl).host.split('.')[0];
+    const storageKey = `sb-${projectRef}-auth-token`;
+    await page.evaluate(({ key, session }) => {
+      const value = {
+        currentSession: session,
+        expiresAt: Math.floor(Date.now() / 1000) + (session?.expires_in ?? 3600),
+      };
+      localStorage.setItem(key, JSON.stringify(value));
+    }, { key: storageKey, session: data.session });
+  } else {
+    // Fallback UI login only if Supabase env is not provided (should not happen in CI)
+    page.on('console', (msg) => console.log('BROWSER:', msg.type(), msg.text()));
+    page.on('pageerror', (err) => console.log('BROWSER pageerror:', err.message));
+    await page.goto('/login');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForSelector('input#email', { timeout: 20000 });
+    await page.fill('input#email', email);
+    await page.fill('input#password', password);
+    await page.getByRole('button', { name: /sign in/i }).click();
   }
 
-  await page.waitForSelector('input#email', { timeout: 10000 });
-
-  await page.fill('input#email', email);
-  await page.fill('input#password', password);
-  await page.getByRole('button', { name: /sign in/i }).click();
-
-  // Wait for logged-in UI (header shows .user-email)
+  // Verify UI shows logged-in user
   await expect(page.locator('.user-email')).toBeVisible({ timeout: 20000 });
 
   fs.mkdirSync('playwright/.auth', { recursive: true });

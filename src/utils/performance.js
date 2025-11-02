@@ -23,11 +23,21 @@ export function mark(name) {
 export function measure(name, startMark, endMark) {
   if (typeof performance !== 'undefined' && performance.measure) {
     try {
+      // Avoid throwing in test/JSDOM when marks are missing
+      const hasStart = !!performance.getEntriesByName?.(startMark)?.length;
+      const hasEnd = !!performance.getEntriesByName?.(endMark)?.length;
+      if (!hasStart || !hasEnd) {
+        return null;
+      }
       performance.measure(name, startMark, endMark);
       const measure = performance.getEntriesByName(name)[0];
       return measure ? measure.duration : null;
     } catch (error) {
-      console.warn('Performance measurement failed:', error);
+      // Only warn in development to keep CI logs clean
+      if (typeof import !== 'undefined' && (import.meta?.env?.DEV)) {
+        // eslint-disable-next-line no-console
+        console.warn('Performance measurement failed:', error);
+      }
       return null;
     }
   }
