@@ -1,3 +1,4 @@
+/* eslint-env node */
 import { test, expect } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
@@ -19,7 +20,10 @@ test('authenticate', async ({ page }) => {
         if (!process.env[key]) process.env[key] = value;
       });
     }
-  } catch {}
+  } catch (err) {
+    // Non-fatal: env file may not exist in CI.
+    console.warn('auth.setup: could not load .env.local:', err?.message || err);
+  }
 
   const email = process.env.PLAYWRIGHT_ADMIN_EMAIL || process.env.ADMIN_EMAIL;
   const password = process.env.PLAYWRIGHT_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
