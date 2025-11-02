@@ -122,24 +122,24 @@ Phase 8: Polish ←────────────────────�
 4. All CRUD operations provide clear success/error feedback
 5. Table updates immediately after successful operations
 
-- [ ] T045 [US2] Add "Add Card" button to AdminCardTable header
-- [ ] T046 [US2] Modify `src/components/AddCardForm.jsx` to include instruction_level_id and categories (multi-select) fields
-- [ ] T047 [US2] Update `src/data/cardSchema.js` to validate instruction_level_id (if provided, must exist) and categories array
-- [ ] T048 [US2] Implement add card handler in AdminCardTable (opens AddCardForm modal)
-- [ ] T049 [US2] Add "Edit" button to each table row Actions column
-- [ ] T050 [US2] Modify `src/components/EditCardForm.jsx` to include instruction_level_id and categories (multi-select) fields
-- [ ] T051 [US2] Implement edit card handler in AdminCardTable (opens EditCardForm modal with card data)
-- [ ] T052 [US2] Add "Delete" button to each table row Actions column
-- [ ] T053 [US2] Implement delete confirmation dialog (shows card front/back, confirms deletion)
-- [ ] T054 [US2] Implement delete card handler in AdminCardTable (calls cardsService.deleteCard, updates table)
-- [ ] T055 [US2] Add success notification toast/alert after successful add/edit/delete operations
-- [ ] T056 [US2] Add error notification toast/alert for failed operations (with error details)
-- [ ] T057 [US2] Implement table refresh after successful CRUD operations (reload cards from service)
-- [ ] T058 [US2] Add loading state during CRUD operations (disable buttons, show spinner)
-- [ ] T059 [US2] Update component tests for AdminCardTable to test add/edit/delete operations
-- [ ] T060 [US2] Test add card: modal opens, form submission creates card, table updates
-- [ ] T061 [US2] Test edit card: modal opens with pre-filled data, form submission updates card, table updates
-- [ ] T062 [US2] Test delete card: confirmation dialog appears, deletion removes card, table updates
+- [x] T045 [US2] Add "Add Card" button to AdminCardTable header
+- [x] T046 [US2] Modify `src/components/AddCardForm.jsx` to include instruction_level_id and categories (multi-select) fields
+- [x] T047 [US2] Update `src/data/cardSchema.js` to validate instruction_level_id (if provided, must exist) and categories array
+- [x] T048 [US2] Implement add card handler in AdminCardTable (opens AddCardForm modal)
+- [x] T049 [US2] Add "Edit" button to each table row Actions column
+- [x] T050 [US2] Modify `src/components/EditCardForm.jsx` to include instruction_level_id and categories (multi-select) fields
+- [x] T051 [US2] Implement edit card handler in AdminCardTable (opens EditCardForm modal with card data)
+- [x] T052 [US2] Add "Delete" button to each table row Actions column
+- [x] T053 [US2] Implement delete confirmation dialog (shows card front/back, confirms deletion)
+- [x] T054 [US2] Implement delete card handler in AdminCardTable (calls cardsService.deleteCard, updates table)
+- [x] T055 [US2] Add success notification toast/alert after successful add/edit/delete operations
+- [x] T056 [US2] Add error notification toast/alert for failed operations (with error details)
+- [x] T057 [US2] Implement table refresh after successful CRUD operations (reload cards from service)
+- [x] T058 [US2] Add loading state during CRUD operations (disable buttons, show spinner)
+- [x] T059 [US2] Update component tests for AdminCardTable to test add/edit/delete operations
+- [x] T060 [US2] Test add card: modal opens, form submission creates card, table updates
+- [x] T061 [US2] Test edit card: modal opens with pre-filled data, form submission updates card, table updates
+- [x] T062 [US2] Test delete card: confirmation dialog appears, deletion removes card, table updates
 
 ## Phase 5: US3 - Admin Manages Instruction Levels (P2)
 
@@ -155,22 +155,22 @@ Phase 8: Polish ←────────────────────�
 5. Admin can filter cards by instruction level
 6. Instruction level displays clearly in table and card views
 
-- [ ] T063 [P] [US3] Create `src/components/AdminInstructionLevelManager.jsx` component for managing instruction levels (list, create, edit, delete)
-- [ ] T064 [P] [US3] Create `src/components/AdminInstructionLevelManager.css` with styling for level management UI
-- [ ] T065 [US3] Implement list instruction levels in AdminInstructionLevelManager (displays all levels sorted by order)
-- [ ] T066 [US3] Implement create instruction level form (name, order, description) in AdminInstructionLevelManager
-- [ ] T067 [US3] Implement edit instruction level form (pre-filled with existing data) in AdminInstructionLevelManager
-- [ ] T068 [US3] Implement delete instruction level handler (check card count, show warning, confirm deletion) in AdminInstructionLevelManager
-- [ ] T069 [US3] Add instruction level selector dropdown to `src/components/AddCardForm.jsx` (loads levels from instructionLevelsService)
-- [ ] T070 [US3] Add instruction level selector dropdown to `src/components/EditCardForm.jsx` (pre-selects current level)
-- [ ] T071 [US3] Add instruction level filter dropdown to AdminCardTable filters section
-- [ ] T072 [US3] Implement instruction level filtering logic in AdminCardTable (filter cards by instruction_level_id)
-- [ ] T073 [US3] Display instruction level name in AdminCardTable Instruction Level column
-- [ ] T074 [US3] Update cardSchema validation to ensure instruction_level_id exists if provided (validate against instructionLevelsService)
-- [ ] T075 [US3] Add component tests for `src/components/__tests__/AdminInstructionLevelManager.test.jsx` (CRUD operations)
-- [ ] T076 [US3] Test instruction level creation: form submission creates level, appears in list
-- [ ] T077 [US3] Test instruction level assignment: select level in card form, save card, level appears in table
-- [ ] T078 [US3] Test instruction level filtering: select level in filter, table shows only cards with that level
+- [x] T063 [P] [US3] Create `src/components/AdminInstructionLevelManager.jsx` component for managing instruction levels (list, create, edit, delete)
+- [x] T064 [P] [US3] Create `src/components/AdminInstructionLevelManager.css` with styling for level management UI
+- [x] T065 [US3] Implement list instruction levels in AdminInstructionLevelManager (displays all levels sorted by order)
+- [x] T066 [US3] Implement create instruction level form (name, order, description) in AdminInstructionLevelManager
+- [x] T067 [US3] Implement edit instruction level form (pre-filled with existing data) in AdminInstructionLevelManager
+- [x] T068 [US3] Implement delete instruction level handler (check card count, show warning, confirm deletion) in AdminInstructionLevelManager
+- [x] T069 [US3] Add instruction level selector dropdown to `src/components/AddCardForm.jsx` (loads levels from instructionLevelsService)
+- [x] T070 [US3] Add instruction level selector dropdown to `src/components/EditCardForm.jsx` (pre-selects current level)
+- [x] T071 [US3] Add instruction level filter dropdown to AdminCardTable filters section
+- [x] T072 [US3] Implement instruction level filtering logic in AdminCardTable (filter cards by instruction_level_id)
+- [x] T073 [US3] Display instruction level name in AdminCardTable Instruction Level column
+- [x] T074 [US3] Update cardSchema validation to ensure instruction_level_id exists if provided (validate against instructionLevelsService)
+- [x] T075 [US3] Add component tests for `src/components/__tests__/AdminInstructionLevelManager.test.jsx` (CRUD operations)
+- [x] T076 [US3] Test instruction level creation: form submission creates level, appears in list
+- [x] T077 [US3] Test instruction level assignment: select level in card form, save card, level appears in table
+- [x] T078 [US3] Test instruction level filtering: select level in filter, table shows only cards with that level
 
 ## Phase 6: US4 - Admin Manages Categories (P2)
 
@@ -187,23 +187,23 @@ Phase 8: Polish ←────────────────────�
 6. Admin can filter cards by category
 7. Categories display clearly in table and card views
 
-- [ ] T079 [P] [US4] Create `src/components/AdminCategoryManager.jsx` component for managing categories (list, create, edit, delete)
-- [ ] T080 [P] [US4] Create `src/components/AdminCategoryManager.css` with styling for category management UI
-- [ ] T081 [US4] Implement list categories in AdminCategoryManager (displays all categories sorted by name)
-- [ ] T082 [US4] Implement create category form (name, description) in AdminCategoryManager
-- [ ] T083 [US4] Implement edit category form (pre-filled with existing data) in AdminCategoryManager
-- [ ] T084 [US4] Implement delete category handler (check card count via card_categories, show warning, confirm deletion) in AdminCategoryManager
-- [ ] T085 [US4] Add category multi-select dropdown to `src/components/AddCardForm.jsx` (loads categories from categoriesService, allows multiple selection)
-- [ ] T086 [US4] Add category multi-select dropdown to `src/components/EditCardForm.jsx` (pre-selects current categories)
-- [ ] T087 [US4] Add category filter dropdown to AdminCardTable filters section
-- [ ] T088 [US4] Implement category filtering logic in AdminCardTable (filter cards by category_id via card_categories junction)
-- [ ] T089 [US4] Display category names (comma-separated or tags) in AdminCardTable Categories column
-- [ ] T090 [US4] Update cardSchema validation to ensure category_ids exist if provided (validate against categoriesService)
-- [ ] T091 [US4] Implement category assignment logic in cardsService.saveCard (delete old card_categories associations, insert new ones)
-- [ ] T092 [US4] Add component tests for `src/components/__tests__/AdminCategoryManager.test.jsx` (CRUD operations)
-- [ ] T093 [US4] Test category creation: form submission creates category, appears in list
-- [ ] T094 [US4] Test category assignment: select categories in card form, save card, categories appear in table
-- [ ] T095 [US4] Test category filtering: select category in filter, table shows only cards with that category
+- [x] T079 [P] [US4] Create `src/components/AdminCategoryManager.jsx` component for managing categories (list, create, edit, delete)
+- [x] T080 [P] [US4] Create `src/components/AdminCategoryManager.css` with styling for category management UI
+- [x] T081 [US4] Implement list categories in AdminCategoryManager (displays all categories sorted by name)
+- [x] T082 [US4] Implement create category form (name, description) in AdminCategoryManager
+- [x] T083 [US4] Implement edit category form (pre-filled with existing data) in AdminCategoryManager
+- [x] T084 [US4] Implement delete category handler (check card count via card_categories, show warning, confirm deletion) in AdminCategoryManager
+- [x] T085 [US4] Add category multi-select dropdown to `src/components/AddCardForm.jsx` (loads categories from categoriesService, allows multiple selection)
+- [x] T086 [US4] Add category multi-select dropdown to `src/components/EditCardForm.jsx` (pre-selects current categories)
+- [x] T087 [US4] Add category filter dropdown to AdminCardTable filters section
+- [x] T088 [US4] Implement category filtering logic in AdminCardTable (filter cards by category_id via card_categories junction)
+- [x] T089 [US4] Display category names (comma-separated or tags) in AdminCardTable Categories column
+- [x] T090 [US4] Update cardSchema validation to ensure category_ids exist if provided (validate against categoriesService)
+- [x] T091 [US4] Implement category assignment logic in cardsService.saveCard (delete old card_categories associations, insert new ones)
+- [x] T092 [US4] Add component tests for `src/components/__tests__/AdminCategoryManager.test.jsx` (CRUD operations)
+- [x] T093 [US4] Test category creation: form submission creates category, appears in list
+- [x] T094 [US4] Test category assignment: select categories in card form, save card, categories appear in table
+- [x] T095 [US4] Test category filtering: select category in filter, table shows only cards with that category
 
 ## Phase 7: US5 - Admin Switches Between Card and Table Views (P3)
 

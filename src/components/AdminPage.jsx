@@ -9,6 +9,8 @@ import CardManager from './CardManager.jsx';
 import QuickTranslateForm from './QuickTranslateForm.jsx';
 import { ErrorBoundary } from '../ErrorBoundary.jsx';
 import { loadCards, saveCard, saveCards, deleteCard } from '../services/cardsService.js';
+import { loadCategories } from '../services/categoriesService.js';
+import { loadInstructionLevels } from '../services/instructionLevelsService.js';
 import './AdminPage.css';
 
 /**
@@ -45,6 +47,8 @@ export default function AdminPage() {
   const [filterCategory, setFilterCategory] = useState('');
   const [filterInstructionLevel, setFilterInstructionLevel] = useState('');
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'card'
+  const [categories, setCategories] = useState([]);
+  const [instructionLevels, setInstructionLevels] = useState([]);
 
   const clearMessages = () => {
     setError('');
@@ -323,6 +327,28 @@ export default function AdminPage() {
     }
   };
 
+  // Load categories for filtering
+  const loadCategoriesData = async () => {
+    try {
+      const data = await loadCategories();
+      setCategories(data || []);
+    } catch (err) {
+      console.error('Error loading categories:', err);
+      // Don't set error - filter will just be empty
+    }
+  };
+
+  // Load instruction levels for filtering
+  const loadInstructionLevelsData = async () => {
+    try {
+      const data = await loadInstructionLevels();
+      setInstructionLevels(data || []);
+    } catch (err) {
+      console.error('Error loading instruction levels:', err);
+      // Don't set error - filter will just be empty
+    }
+  };
+
   // Handle add card
   const handleAddCard = () => {
     setModalMode('add');
@@ -348,6 +374,8 @@ export default function AdminPage() {
         setModalOpen(false);
         setEditingCard(null);
         await loadCardsData();
+        // Reload categories and instruction levels in case new ones were created
+        await Promise.all([loadCategoriesData(), loadInstructionLevelsData()]);
       } else {
         setError(result.error || 'Failed to save card');
       }
@@ -433,6 +461,13 @@ export default function AdminPage() {
       // Card Management uses direct Supabase, so it works in development
       if (cards.length === 0 && !cardsLoading) {
         loadCardsData();
+      }
+      // Load categories and instruction levels for filtering
+      if (categories.length === 0) {
+        loadCategoriesData();
+      }
+      if (instructionLevels.length === 0) {
+        loadInstructionLevelsData();
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -855,7 +890,11 @@ export default function AdminPage() {
                 onChange={(e) => setFilterCategory(e.target.value)}
               >
                 <option value="">All Categories</option>
-                {/* Categories would be loaded from categoriesService */}
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="filter-group">
@@ -866,7 +905,13 @@ export default function AdminPage() {
                 onChange={(e) => setFilterInstructionLevel(e.target.value)}
               >
                 <option value="">All Levels</option>
-                {/* Instruction levels would be loaded from instructionLevelsService */}
+                {instructionLevels
+                  .sort((a, b) => (a.order || 0) - (b.order || 0))
+                  .map(level => (
+                    <option key={level.id} value={level.id}>
+                      {level.name}
+                    </option>
+                  ))}
               </select>
             </div>
           </div>
@@ -877,6 +922,7 @@ export default function AdminPage() {
               <AdminCardTable
                 cards={cards}
                 loading={cardsLoading}
+                onAdd={handleAddCard}
                 onEdit={handleEditCard}
                 onDelete={handleDeleteCard}
                 filterType={filterType}

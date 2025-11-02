@@ -257,6 +257,51 @@ describe('AdminCardTable', () => {
   });
 
   describe('actions', () => {
+    it('renders Add Card button when onAdd provided', () => {
+      const mockOnAdd = vi.fn();
+      render(
+        <AdminCardTable
+          cards={mockCards}
+          onAdd={mockOnAdd}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      );
+
+      const addButton = screen.getByRole('button', { name: /add new card/i });
+      expect(addButton).toBeInTheDocument();
+    });
+
+    it('does not render Add Card button when onAdd not provided', () => {
+      render(
+        <AdminCardTable
+          cards={mockCards}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      );
+
+      const addButton = screen.queryByRole('button', { name: /add new card/i });
+      expect(addButton).not.toBeInTheDocument();
+    });
+
+    it('calls onAdd when Add Card button clicked', () => {
+      const mockOnAdd = vi.fn();
+      render(
+        <AdminCardTable
+          cards={mockCards}
+          onAdd={mockOnAdd}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />
+      );
+
+      const addButton = screen.getByRole('button', { name: /add new card/i });
+      fireEvent.click(addButton);
+
+      expect(mockOnAdd).toHaveBeenCalledTimes(1);
+    });
+
     it('calls onEdit when edit button clicked', () => {
       render(
         <AdminCardTable

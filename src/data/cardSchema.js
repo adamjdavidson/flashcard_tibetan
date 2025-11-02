@@ -49,12 +49,15 @@ export function createCard(data) {
     tags: tags,
     subcategory: data.subcategory || (data.type === 'numerals' ? 'numerals' : data.type === 'numbers' ? 'script' : null),
     imageUrl: data.imageUrl || null, // URL to image
-    createdAt: data.createdAt || Date.now()
+    createdAt: data.createdAt || Date.now(),
+    // Classification data (optional)
+    categoryIds: data.categoryIds || [],
+    instructionLevelId: data.instructionLevelId || data.instruction_level_id || null
   };
 }
 
 /**
- * Validates a card object
+ * Validates a card object (basic synchronous validation)
  */
 export function validateCard(card) {
   if (!card.front) {
@@ -83,6 +86,56 @@ export function validateCard(card) {
   if (!['number', 'word', 'phrase'].includes(card.type)) {
     return false;
   }
+  
+  // Basic validation for classification data structure
+  // Note: Actual existence validation is done async in services
+  if (card.categoryIds && !Array.isArray(card.categoryIds)) {
+    return false;
+  }
+  if (card.instructionLevelId && typeof card.instructionLevelId !== 'string') {
+    return false;
+  }
+  
   return true;
+}
+
+/**
+ * Async validation helper - validates that instruction level and categories exist
+ * This should be called before saving cards to ensure classification data is valid
+ */
+export async function validateCardClassification(card, loadInstructionLevels, loadCategories) {
+  const errors = [];
+  
+  // Validate instruction level exists if provided
+  if (card.instructionLevelId) {
+    try {
+      const levels = await loadInstructionLevels();
+      const levelExists = levels.some(level => level.id === card.instructionLevelId);
+      if (!levelExists) {
+        errors.push(`Instruction level with ID ${card.instructionLevelId} does not exist`);
+      }
+    } catch (err) {
+      errors.push(`Failed to validate instruction level: ${err.message}`);
+    }
+  }
+  
+  // Validate categories exist if provided
+  if (card.categoryIds && card.categoryIds.length > 0) {
+    try {
+      const categories = await loadCategories();
+      const categoryIds = categories.map(cat => cat.id);
+      const invalidCategories = card.categoryIds.filter(id => !categoryIds.includes(id));
+      if (invalidCategories.length > 0) {
+        errors.push(`Categories with IDs ${invalidCategories.join(', ')} do not exist`);
+      }
+    } catch (err) {
+      errors.push(`Failed to validate categories: ${err.message}`);
+    }
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors
+  };
 }
 

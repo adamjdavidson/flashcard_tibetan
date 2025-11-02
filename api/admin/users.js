@@ -69,7 +69,7 @@ export default async function handler(req, res) {
             
             if (roleError && roleError.code !== 'PGRST116') {
               // PGRST116 = no rows found, which is okay (user has no role)
-              console.error(`Error fetching role for user ${user.id}:`, roleError);
+              console.error('Error fetching role for user:', user.id, roleError);
             }
             
             // Get user stats
@@ -79,7 +79,7 @@ export default async function handler(req, res) {
               .eq('user_id', user.id);
 
             if (progressError) {
-              console.error(`Error fetching progress for user ${user.id}:`, progressError);
+              console.error('Error fetching progress for user:', user.id, progressError);
             }
 
             return {

@@ -11,6 +11,7 @@ import './AdminCardTable.css';
 export default function AdminCardTable({ 
   cards, 
   loading = false,
+  onAdd,
   onEdit,
   onDelete,
   filterType = '',
@@ -398,22 +399,35 @@ export default function AdminCardTable({
             <span className="filtered-info"> (filtered from {cards.length} total)</span>
           )}
         </div>
-        <div className="table-pagination-controls">
-          <label htmlFor="page-size-select">Rows per page:</label>
-          <select
-            id="page-size-select"
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="page-size-select"
-          >
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-            <option value="200">200</option>
-          </select>
+        <div className="table-header-actions">
+          {onAdd && (
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={onAdd}
+              aria-label="Add new card"
+              title="Add Card"
+            >
+              + Add Card
+            </button>
+          )}
+          <div className="table-pagination-controls">
+            <label htmlFor="page-size-select">Rows per page:</label>
+            <select
+              id="page-size-select"
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="page-size-select"
+            >
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="200">200</option>
+            </select>
+          </div>
         </div>
       </div>
 

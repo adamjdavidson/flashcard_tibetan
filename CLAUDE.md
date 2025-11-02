@@ -6,6 +6,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A Tibetan language learning flashcard application with spaced repetition (SM-2 algorithm). React 19 + Vite frontend with Supabase backend, supporting offline-first operation with cloud sync.
 
+## Critical Guidelines for AI Assistance
+
+### Tool Usage Policy
+
+**CRITICAL: When working on this codebase, you MUST follow these rules:**
+
+1. **Only use tools explicitly requested by the user** - Never decide on your own to use a different tool or approach
+2. **If a requested tool fails**, you MUST:
+   - Report the error to the user
+   - Explain what failed
+   - **Ask for permission** before trying any alternative approach
+   - Never automatically fall back to a different tool without explicit user approval
+
+3. **Examples of violations to avoid:**
+   - ❌ User asks for Playwright MCP → MCP fails → Automatically use terminal `npx playwright test` instead
+   - ❌ User asks for Semgrep MCP → MCP fails → Automatically use a different security scanner
+   - ❌ User asks for a specific API tool → Tool fails → Automatically switch to a different API approach
+
+4. **Correct behavior:**
+   - ✅ User asks for Playwright MCP → MCP fails → Report error → Ask user what they'd like to do next
+   - ✅ User asks for a specific tool → Tool fails → Explain the issue → Wait for user direction
+
+**This is non-negotiable. Tool choice and fallback strategies must always be approved by the user.**
+
 ## Common Commands
 
 ### Development
