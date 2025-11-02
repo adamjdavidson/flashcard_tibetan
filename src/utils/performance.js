@@ -34,10 +34,10 @@ export function measure(name, startMark, endMark) {
       return measure ? measure.duration : null;
     } catch (error) {
       // Only warn in development to keep CI logs clean
-      const isDev = (typeof process !== 'undefined' && process?.env?.NODE_ENV !== 'production')
+      const hasProcess = typeof globalThis !== 'undefined' && !!globalThis.process;
+      const isDev = (hasProcess && globalThis.process.env && globalThis.process.env.NODE_ENV !== 'production')
         || (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV);
       if (isDev) {
-        // eslint-disable-next-line no-console
         console.warn('Performance measurement failed:', error);
       }
       return null;

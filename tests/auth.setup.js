@@ -57,6 +57,8 @@ test('authenticate', async ({ page }) => {
       };
       localStorage.setItem(key, JSON.stringify(value));
     }, { key: storageKey, session: data.session });
+    // Ensure app reads the injected session
+    await page.reload();
   } else {
     // Fallback UI login only if Supabase env is not provided (should not happen in CI)
     page.on('console', (msg) => console.log('BROWSER:', msg.type(), msg.text()));
