@@ -1,0 +1,86 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-chromium-firefox:
+    name: Chromium + Firefox
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      PLAYWRIGHT_ADMIN_EMAIL: ${{ secrets.PLAYWRIGHT_ADMIN_EMAIL }}
+      PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Install Playwright browsers and deps
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright (Chromium + Firefox)
+        run: npx playwright test --project=chromium --project=firefox
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-chromium-firefox
+          path: playwright-report
+          if-no-files-found: ignore
+
+  e2e-webkit:
+    name: WebKit (container)
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.56.1-jammy
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      PLAYWRIGHT_ADMIN_EMAIL: ${{ secrets.PLAYWRIGHT_ADMIN_EMAIL }}
+      PLAYWRIGHT_ADMIN_PASSWORD: ${{ secrets.PLAYWRIGHT_ADMIN_PASSWORD }}
+      WEBKIT: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Ensure browsers installed
+        run: npx playwright install
+
+      - name: Run Playwright (WebKit)
+        run: npx playwright test --project=webkit
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-webkit
+          path: playwright-report
+          if-no-files-found: ignore
+
+
