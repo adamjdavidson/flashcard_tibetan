@@ -1,15 +1,14 @@
 import { useState } from 'react';
-import { useAuth } from '../hooks/useAuth.js';
 import './Auth.css';
 
 /**
  * Auth component for admin login
  */
-export default function Auth({ onLogin }) {
+export default function Auth({ onLogin, loginFn, loading: externalLoading, error: externalError }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState('');
-  const { login, loading, error } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,7 +19,9 @@ export default function Auth({ onLogin }) {
       return;
     }
 
-    const result = await login(email, password);
+    setIsSubmitting(true);
+    const result = await loginFn(email, password);
+    setIsSubmitting(false);
     
     if (result.success) {
       // Check if user is admin
@@ -33,7 +34,8 @@ export default function Auth({ onLogin }) {
     }
   };
 
-  const displayError = localError || error;
+  const displayError = localError || externalError;
+  const loading = isSubmitting || externalLoading;
 
   return (
     <div className="auth-container">

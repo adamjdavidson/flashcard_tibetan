@@ -47,3 +47,5 @@ playwright/.cache/
 # Build artifacts
 build/
 out/
+
+playwright/.auth

@@ -34,16 +34,62 @@ import {
 import './App.css';
 
 function App() {
-  const { user, isAdmin, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading: authLoading, error: authError, login } = useAuth();
   const [cards, setCards] = useState([]);
   const [progressMap, setProgressMap] = useState({});
   const [currentCard, setCurrentCard] = useState(null);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [view, setView] = useState('study'); // 'study', 'manage', 'admin', or 'settings'
+  
+  // Initialize view from URL
+  const [view, setView] = useState(() => {
+    if (typeof window === 'undefined') return 'study';
+    const path = window.location.pathname;
+    if (path === '/login') return 'login';
+    if (path === '/admin') return 'admin';
+    if (path === '/manage' || path === '/manage-cards') return 'manage';
+    if (path === '/settings') return 'settings';
+    return 'study';
+  });
   const [selectedTags, setSelectedTags] = useState(['all']); // Filter tags
   const [useSupabase, setUseSupabase] = useState(false);
   const [migrationPrompt, setMigrationPrompt] = useState(false);
+
+  // Sync URL with view state
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const pathMap = {
+      'study': '/',
+      'login': '/login',
+      'manage': '/manage',
+      'admin': '/admin',
+      'settings': '/settings'
+    };
+    const newPath = pathMap[view] || '/';
+    // Only update if path is actually different
+    if (window.location.pathname !== newPath) {
+      window.history.replaceState({}, '', newPath); // Use replaceState instead of pushState
+    }
+  }, [view]);
+
+  // Handle browser back/forward navigation - register once
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      let newView = 'study';
+      if (path === '/login') newView = 'login';
+      else if (path === '/admin') newView = 'admin';
+      else if (path === '/manage' || path === '/manage-cards') newView = 'manage';
+      else if (path === '/settings') newView = 'settings';
+      setView(newView);
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []); // Empty dependency array - register once
 
   // Determine if we should use Supabase
   useEffect(() => {
@@ -407,11 +453,16 @@ function App() {
     );
   }
 
-  // Show auth screen for card management (requires login, not just admin)
-  if (view === 'manage' && !user) {
+  // Show auth screen for login route or when trying to access protected routes
+  if (view === 'login' || ((view === 'manage' || view === 'admin') && !user)) {
     return (
       <div className="app">
-        <Auth onLogin={() => {}} />
+        <Auth 
+          onLogin={() => setView('study')} 
+          loginFn={login}
+          loading={authLoading}
+          error={authError}
+        />
       </div>
     );
   }
