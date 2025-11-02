@@ -120,7 +120,7 @@ test('authenticate', async ({ page }) => {
     // Verify storage immediately
     const keysPost = await page.evaluate(() => Object.keys(localStorage));
     logDiag('localStorage keys (post-boot)', keysPost);
-    logDiag('auth storage present (post-boot)', keysPost.includes(storageKey) || keysPost.includes(legacyKey));
+    logDiag('auth storage present (post-boot)', keysPost.includes(storageKey));
 
     // Ensure SDK knows about the session as well
     await page.evaluate(async ({ url, key, session }) => {
@@ -154,7 +154,7 @@ test('authenticate', async ({ page }) => {
           if (user?.id) {
             return { success: true, userId: user.id, elapsed: Date.now() - start };
           }
-        } catch (e) {
+        } catch {
           // SDK might not be ready yet
         }
         await new Promise(r => setTimeout(r, 200));
