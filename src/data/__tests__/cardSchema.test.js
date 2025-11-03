@@ -73,8 +73,21 @@ describe('cardSchema', () => {
       expect(validateCard(card)).toBe(true);
     });
 
-    it('rejects card without front', () => {
-      const card = { type: 'word', backEnglish: 'test' };
+    it('rejects word card without front or new bidirectional fields', () => {
+      // Word card needs either front/backEnglish OR tibetanText/englishText
+      const card = { type: 'word' };
+      expect(validateCard(card)).toBe(false);
+    });
+
+    it('accepts word card with new bidirectional fields (no front)', () => {
+      // Word card can use new bidirectional fields instead of front
+      const card = { type: 'word', tibetanText: 'ཞབས་ཏོག', englishText: 'service' };
+      expect(validateCard(card)).toBe(true);
+    });
+
+    it('rejects number card without front', () => {
+      // Number cards still require front
+      const card = { type: 'number', backArabic: '25' };
       expect(validateCard(card)).toBe(false);
     });
 

@@ -91,8 +91,7 @@ describe('CardManager', () => {
     expect(screen.getByText(/showing 3 of 3 cards/i)).toBeInTheDocument();
   });
 
-  it('filters cards by type', async () => {
-    const user = userEvent.setup();
+  it('filters cards by type', () => {
     render(
       <CardManager
         cards={mockCards}
@@ -100,11 +99,9 @@ describe('CardManager', () => {
         onEditCard={mockOnEditCard}
         onDeleteCard={mockOnDeleteCard}
         currentUserId={null}
+        filterType="word"
       />
     );
-
-    const typeSelect = screen.getByLabelText(/filter by type/i);
-    await user.selectOptions(typeSelect, 'word');
 
     // Should show only word cards
     expect(screen.getByText('ཞབས་ཏོག')).toBeInTheDocument();
@@ -311,15 +308,13 @@ describe('CardManager', () => {
       {
         id: 'card4',
         type: 'word',
-        front: 'test',
-        backEnglish: 'test',
-        backTibetanScript: 'test',
-        category: 'Animals',
+        tibetanText: 'test',
+        englishText: 'test',
+        categories: [{ id: 'cat1', name: 'Animals' }],
         tags: ['Word']
       }
     ];
 
-    const user = userEvent.setup();
     render(
       <CardManager
         cards={cardsWithCategory}
@@ -327,11 +322,9 @@ describe('CardManager', () => {
         onEditCard={mockOnEditCard}
         onDeleteCard={mockOnDeleteCard}
         currentUserId={null}
+        filterCategory="Animals"
       />
     );
-
-    const categorySelect = screen.getByLabelText(/filter by category/i);
-    await user.selectOptions(categorySelect, 'Animals');
 
     // Should show only cards with Animals category
     // The card count should show 1 card

@@ -1,47 +1,73 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import CardFilter from '../CardFilter.jsx';
 
 describe('CardFilter', () => {
   const mockOnTagToggle = vi.fn();
 
-  it('renders filter checkboxes', () => {
+  it('renders filter dropdown', () => {
     render(<CardFilter selectedTags={[]} onTagToggle={mockOnTagToggle} />);
 
-    expect(screen.getByLabelText(/all cards/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/numerals/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/numbers/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/words/i)).toBeInTheDocument();
+    expect(screen.getByText(/study:/i)).toBeInTheDocument();
+    expect(screen.getByText(/all cards/i)).toBeInTheDocument();
   });
 
-  it('calls onTagToggle when tag is selected', () => {
+  it('calls onTagToggle when tag is selected', async () => {
     render(<CardFilter selectedTags={[]} onTagToggle={mockOnTagToggle} />);
 
-    const wordCheckbox = screen.getByLabelText(/words/i);
-    fireEvent.click(wordCheckbox);
+    // Open dropdown
+    const button = screen.getByRole('button', { name: /study:/i });
+    fireEvent.click(button);
 
-    expect(mockOnTagToggle).toHaveBeenCalled();
+    // Wait for dropdown menu to appear, then find and click Words menu item
+    await waitFor(() => {
+      const menu = document.querySelector('.filter-dropdown-menu');
+      expect(menu).toBeInTheDocument();
+      
+      // Find button in menu with "Words" text
+      const menuButtons = menu.querySelectorAll('button');
+      const wordsButton = Array.from(menuButtons).find(btn => 
+        btn.textContent.trim() === 'Words'
+      );
+      expect(wordsButton).toBeDefined();
+      fireEvent.click(wordsButton);
+    });
+
+    expect(mockOnTagToggle).toHaveBeenCalledWith(['Word']);
   });
 
   it('displays selected tags', () => {
     render(<CardFilter selectedTags={['Word']} onTagToggle={mockOnTagToggle} />);
 
-    const wordCheckbox = screen.getByLabelText(/words/i);
-    expect(wordCheckbox).toBeChecked();
+    expect(screen.getByText(/words/i)).toBeInTheDocument();
   });
 
   it('handles "All cards" selection', () => {
     render(<CardFilter selectedTags={['all']} onTagToggle={mockOnTagToggle} />);
 
-    const allCheckbox = screen.getByLabelText(/all cards/i);
-    expect(allCheckbox).toBeChecked();
+    expect(screen.getByText(/all cards/i)).toBeInTheDocument();
   });
 
-  it('toggles "All cards" correctly', () => {
+  it('toggles "All cards" correctly', async () => {
     render(<CardFilter selectedTags={[]} onTagToggle={mockOnTagToggle} />);
 
-    const allCheckbox = screen.getByLabelText(/all cards/i);
-    fireEvent.click(allCheckbox);
+    // Open dropdown
+    const button = screen.getByRole('button', { name: /study:/i });
+    fireEvent.click(button);
+
+    // Wait for dropdown menu to appear, then find and click All Cards menu item
+    await waitFor(() => {
+      const menu = document.querySelector('.filter-dropdown-menu');
+      expect(menu).toBeInTheDocument();
+      
+      // Find button in menu with "All Cards" text
+      const menuButtons = menu.querySelectorAll('button');
+      const allCardsButton = Array.from(menuButtons).find(btn => 
+        btn.textContent.trim() === 'All Cards'
+      );
+      expect(allCardsButton).toBeDefined();
+      fireEvent.click(allCardsButton);
+    });
 
     expect(mockOnTagToggle).toHaveBeenCalledWith(['all']);
   });

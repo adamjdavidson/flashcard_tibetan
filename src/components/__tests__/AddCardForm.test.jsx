@@ -15,21 +15,25 @@ describe('AddCardForm', () => {
     render(<AddCardForm onAdd={mockOnAdd} onCancel={mockOnCancel} />);
 
     expect(screen.getByLabelText(/type/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/front/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/english/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/english text/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/tibetan text/i)).toBeInTheDocument();
   });
 
   it('allows user to input card data', async () => {
     const user = userEvent.setup();
     render(<AddCardForm onAdd={mockOnAdd} onCancel={mockOnCancel} />);
 
-    const frontInput = screen.getByLabelText(/front/i);
-    const englishInput = screen.getByLabelText(/english/i);
+    // Select word type first
+    const typeSelect = screen.getByLabelText(/type/i);
+    await user.selectOptions(typeSelect, 'word');
 
-    await user.type(frontInput, 'ཞབས་ཏོག');
+    const tibetanInput = screen.getByLabelText(/tibetan text/i);
+    const englishInput = screen.getByLabelText(/english text/i);
+
+    await user.type(tibetanInput, 'ཞབས་ཏོག');
     await user.type(englishInput, 'service');
 
-    expect(frontInput).toHaveValue('ཞབས་ཏོག');
+    expect(tibetanInput).toHaveValue('ཞབས་ཏོག');
     expect(englishInput).toHaveValue('service');
   });
 
@@ -37,15 +41,16 @@ describe('AddCardForm', () => {
     const user = userEvent.setup();
     render(<AddCardForm onAdd={mockOnAdd} onCancel={mockOnCancel} />);
 
-    // For word cards, need: front, backEnglish, backTibetanSpelling
-    // But validation requires backTibetanScript, which is not in the form
-    // The form creates a card with createCard(), which might set defaults
-    // Let's test what the form actually does
-    const frontInput = screen.getByLabelText(/front/i);
-    const englishInput = screen.getByLabelText(/english/i);
+    // Select word type
+    const typeSelect = screen.getByLabelText(/type/i);
+    await user.selectOptions(typeSelect, 'word');
+
+    // For word cards, use new bidirectional fields: tibetanText and englishText
+    const tibetanInput = screen.getByLabelText(/tibetan text/i);
+    const englishInput = screen.getByLabelText(/english text/i);
     const spellingInput = screen.getByLabelText(/spelling/i);
 
-    await user.type(frontInput, 'ཞབས་ཏོག');
+    await user.type(tibetanInput, 'ཞབས་ཏོག');
     await user.type(englishInput, 'service');
     await user.type(spellingInput, 'zhaptog');
 
