@@ -705,7 +705,10 @@ export default function AdminPage() {
                             {u.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
                           </button>
                           <button
-                            onClick={() => setPasswordForm({ ...passwordForm, userId: u.id })}
+                            onClick={() => {
+                              setPasswordForm({ ...passwordForm, userId: u.id });
+                              setActiveTab('password');
+                            }}
                             className="btn-small"
                             disabled={loading}
                           >
