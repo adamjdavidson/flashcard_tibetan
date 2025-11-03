@@ -14,6 +14,7 @@ export default function AdminCardTable({
   onAdd,
   onEdit,
   onDelete,
+  onPreview,
   filterType = '',
   filterCategory = '',
   filterInstructionLevel = ''
@@ -185,7 +186,21 @@ export default function AdminCardTable({
   };
 
   // Get back content summary
+  // For word/phrase cards, prefer new bidirectional fields; fallback to legacy fields
   const getBackContentSummary = (card) => {
+    // For word/phrase cards, use new bidirectional fields
+    if (card.type === 'word' || card.type === 'phrase') {
+      if (card.englishText) {
+        return card.englishText.substring(0, 50) + (card.englishText.length > 50 ? '...' : '');
+      }
+      if (card.tibetanText) {
+        return card.tibetanText.substring(0, 50) + (card.tibetanText.length > 50 ? '...' : '');
+      }
+      // Fallback to legacy fields
+      if (card.backEnglish) return card.backEnglish.substring(0, 50) + (card.backEnglish.length > 50 ? '...' : '');
+      if (card.backTibetanScript) return card.backTibetanScript.substring(0, 50) + (card.backTibetanScript.length > 50 ? '...' : '');
+    }
+    // For number cards, use legacy fields
     if (card.backEnglish) return card.backEnglish.substring(0, 50) + (card.backEnglish.length > 50 ? '...' : '');
     if (card.backArabic) return card.backArabic;
     if (card.backTibetanScript) return card.backTibetanScript.substring(0, 50) + (card.backTibetanScript.length > 50 ? '...' : '');
@@ -199,7 +214,7 @@ export default function AdminCardTable({
   };
 
   // Memoized table row component for performance optimization
-  const TableRow = memo(({ card, rowIndex, onEdit, onDelete, getBackContentSummary, getCategoriesDisplay, formatDate }) => {
+  const TableRow = memo(({ card, rowIndex, onEdit, onDelete, onPreview, getBackContentSummary, getCategoriesDisplay, formatDate }) => {
     const cellId = (colIndex) => `cell-${card.id}-${colIndex}`;
     
     return (
@@ -261,6 +276,17 @@ export default function AdminCardTable({
           aria-describedby={cellId(7)}
         >
           <div className="table-actions">
+            {onPreview && (
+              <button
+                type="button"
+                className="btn-table-preview"
+                onClick={() => onPreview(card)}
+                aria-label={`Preview card ${card.front} in study mode`}
+                title="Preview in study mode"
+              >
+                👁️
+              </button>
+            )}
             {onEdit && (
               <button
                 type="button"
@@ -298,7 +324,8 @@ export default function AdminCardTable({
       prevProps.card.instructionLevel?.id === nextProps.card.instructionLevel?.id &&
       prevProps.rowIndex === nextProps.rowIndex &&
       prevProps.onEdit === nextProps.onEdit &&
-      prevProps.onDelete === nextProps.onDelete
+      prevProps.onDelete === nextProps.onDelete &&
+      prevProps.onPreview === nextProps.onPreview
     );
   });
   
@@ -517,6 +544,7 @@ export default function AdminCardTable({
                   rowIndex={rowIndex}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onPreview={onPreview}
                   getBackContentSummary={getBackContentSummary}
                   getCategoriesDisplay={getCategoriesDisplay}
                   formatDate={formatDate}

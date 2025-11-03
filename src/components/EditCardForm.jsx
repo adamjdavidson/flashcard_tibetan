@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { validateCard } from '../data/cardSchema.js';
+import { validateCard, ensureBidirectionalFields, getTibetanText, getEnglishText } from '../data/cardSchema.js';
 import { translateText } from '../utils/translation.js';
 import { generateAIImage, searchImage, uploadImage, validateImageFile, createImagePreview, revokeImagePreview } from '../utils/images.js';
 import { uploadImage as uploadToSupabase } from '../services/imagesService.js';
 import { loadCategories, createCategory } from '../services/categoriesService.js';
 import { loadInstructionLevels, createInstructionLevel } from '../services/instructionLevelsService.js';
 import { useAuth } from '../hooks/useAuth.js';
+import { containsTibetan } from '../utils/tibetanUtils.js';
+import AudioRecorder from './AudioRecorder.jsx';
 import './AddCardForm.css';
 
 /**
@@ -19,10 +21,13 @@ export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }
     backEnglish: '',
     backTibetanScript: '',
     backTibetanSpelling: '',
+    tibetanText: '', // New bidirectional field
+    englishText: '', // New bidirectional field
     notes: ''
   });
   const [imageUrl, setImageUrl] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
   const [generating, setGenerating] = useState(false);
   const [searching, setSearching] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -43,6 +48,9 @@ export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }
   // Populate form with card data when card changes
   useEffect(() => {
     if (card) {
+      // Ensure card has bidirectional fields populated (from legacy fields if needed)
+      const cardWithBidirectionalFields = ensureBidirectionalFields(card);
+      
       // Determine card type from tags (Numerals, Numbers, Word, Phrase)
       let cardType = card.type || 'word';
       if (card.tags && card.tags.length > 0) {
@@ -58,6 +66,14 @@ export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }
         }
       }
       
+      // For word/phrase cards, use new bidirectional fields with fallback to legacy
+      const tibetanText = (cardWithBidirectionalFields.type === 'word' || cardWithBidirectionalFields.type === 'phrase')
+        ? (cardWithBidirectionalFields.tibetanText || getTibetanText(card) || '')
+        : '';
+      const englishText = (cardWithBidirectionalFields.type === 'word' || cardWithBidirectionalFields.type === 'phrase')
+        ? (cardWithBidirectionalFields.englishText || getEnglishText(card) || '')
+        : '';
+      
       setFormData({
         type: cardType,
         front: card.front || '',
@@ -65,11 +81,16 @@ export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }
         backEnglish: card.backEnglish || '',
         backTibetanScript: card.backTibetanScript || '',
         backTibetanSpelling: card.backTibetanSpelling || '',
+        tibetanText: tibetanText, // New bidirectional field
+        englishText: englishText, // New bidirectional field
         notes: card.notes || ''
       });
       // Set image URL and preview
       setImageUrl(card.imageUrl || null);
       setImagePreview(card.imageUrl || null);
+      // Set audio URL
+      console.log('[EditCardForm] Loading card, audioUrl:', card.audioUrl);
+      setAudioUrl(card.audioUrl || null);
       // Set category IDs and instruction level ID
       if (card.categories && Array.isArray(card.categories)) {
         setCategoryIds(card.categories.map(cat => cat.id || cat.categoryId).filter(Boolean));
@@ -347,6 +368,11 @@ export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }
     setImagePreview(null);
   };
 
+  const handleAudioRecorded = (url) => {
+    console.log('[EditCardForm] Audio recorded, URL:', url);
+    setAudioUrl(url);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -377,19 +403,27 @@ export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }
       backTibetanScript: (cardType === 'word' || cardType === 'phrase') ? (formData.backTibetanScript || null) : (card.backTibetanScript || null),
       backTibetanNumeral: (cardType === 'number' && card.subcategory === 'script') ? (card.backTibetanNumeral || null) : null,
       backTibetanSpelling: formData.backTibetanSpelling,
+      // New bidirectional fields (for word/phrase cards)
+      tibetanText: (cardType === 'word' || cardType === 'phrase') ? (formData.tibetanText || null) : null,
+      englishText: (cardType === 'word' || cardType === 'phrase') ? (formData.englishText || null) : null,
       notes: formData.notes || null,
       tags: tags,
       subcategory: subcategory,
       imageUrl: imageUrl || null, // Preserve or update image URL
+      audioUrl: audioUrl || null, // Preserve or update audio URL
       // Classification data
       categoryIds: categoryIds, // Array of category IDs
       instructionLevelId: instructionLevelId || null // Single instruction level ID
     };
 
+    console.log('[EditCardForm] Saving card with audioUrl:', updatedCard.audioUrl);
+    console.log('[EditCardForm] Saving card with tibetanText:', updatedCard.tibetanText);
+    console.log('[EditCardForm] Saving card with englishText:', updatedCard.englishText);
+
     if (validateCard(updatedCard)) {
-      // Warn if Tibetan script is missing for word/phrase cards (translation should have populated it)
-      if ((cardType === 'word' || cardType === 'phrase') && !formData.backTibetanScript && formData.backEnglish) {
-        const proceed = confirm('Tibetan script is not set. Did you try the Translate button? You can still save the card and add Tibetan script later.');
+      // Warn if Tibetan text is missing for word/phrase cards (translation should have populated it)
+      if ((cardType === 'word' || cardType === 'phrase') && !formData.tibetanText && formData.englishText) {
+        const proceed = confirm('Tibetan text is not set. Did you try the Translate button? You can still save the card and add Tibetan text later.');
         if (!proceed) {
           return;
         }
@@ -424,24 +458,73 @@ export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }
           </select>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="front">
-            {formData.type === 'numerals' ? 'Tibetan Numeral (Front) *' : 
-             formData.type === 'numbers' ? 'Tibetan Script (Front) *' : 
-             'Tibetan Script (Front) *'}
-          </label>
-          <input
-            type="text"
-            id="front"
-            name="front"
-            value={formData.front}
-            onChange={handleChange}
-            required
-            placeholder={formData.type === 'numerals' ? 'Enter Tibetan numerals (e.g., ༢༥)' : 
-                        formData.type === 'numbers' ? 'Enter Tibetan script (e.g., ཉི་ཤུ་རྩ་ལྔ)' : 
-                        'Enter Tibetan script'}
-          />
-        </div>
+        {/* Legacy front field - only for number cards */}
+        {(formData.type === 'numerals' || formData.type === 'numbers') && (
+          <div className="form-group">
+            <label htmlFor="front">
+              {formData.type === 'numerals' ? 'Tibetan Numeral (Front) *' : 'Tibetan Script (Front) *'}
+            </label>
+            <input
+              type="text"
+              id="front"
+              name="front"
+              value={formData.front}
+              onChange={handleChange}
+              required
+              placeholder={formData.type === 'numerals' ? 'Enter Tibetan numerals (e.g., ༢༥)' : 'Enter Tibetan script (e.g., ཉི་ཤུ་རྩ་ལྔ)'}
+            />
+          </div>
+        )}
+
+        {/* New bidirectional fields - only for word/phrase cards */}
+        {(formData.type === 'word' || formData.type === 'phrase') && (
+          <>
+            <div className="form-group">
+              <label htmlFor="englishText">English Text *</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  id="englishText"
+                  name="englishText"
+                  value={formData.englishText}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter English word or phrase"
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  onClick={handleTranslate}
+                  disabled={translating || !formData.englishText.trim()}
+                  className="btn-secondary"
+                >
+                  {translating ? 'Translating...' : 'Translate'}
+                </button>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="tibetanText">
+                Tibetan Text *
+                <span style={{ color: '#666', fontWeight: 'normal' }}> (use Translate button)</span>
+              </label>
+              <input
+                type="text"
+                id="tibetanText"
+                name="tibetanText"
+                value={formData.tibetanText}
+                onChange={handleChange}
+                placeholder="Will be populated by Translate button"
+                required
+              />
+              {!formData.tibetanText && formData.englishText && (
+                <small style={{ display: 'block', marginTop: '0.25rem', color: '#666', fontStyle: 'italic' }}>
+                  Click the "Translate" button to automatically populate this field
+                </small>
+              )}
+            </div>
+          </>
+        )}
 
         {(formData.type === 'numerals' || formData.type === 'numbers') && (
           <div className="form-group">
@@ -458,38 +541,26 @@ export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }
           </div>
         )}
 
-        <div className="form-group">
-          <label htmlFor="backEnglish">
-            {(formData.type === 'numerals' || formData.type === 'numbers') ? 'English Word (Back, optional)' : 'English Translation (Back) *'}
-          </label>
-          <div style={{ display: 'flex', gap: '8px' }}>
+        {/* Legacy backEnglish field - only for number cards */}
+        {(formData.type === 'numerals' || formData.type === 'numbers') && (
+          <div className="form-group">
+            <label htmlFor="backEnglish">English Word (Back, optional)</label>
             <input
               type="text"
               id="backEnglish"
               name="backEnglish"
               value={formData.backEnglish}
               onChange={handleChange}
-              required={formData.type !== 'numerals' && formData.type !== 'numbers'}
               placeholder="Enter English translation"
-              style={{ flex: 1 }}
             />
-            {(formData.type === 'word' || formData.type === 'phrase') && (
-              <button
-                type="button"
-                onClick={handleTranslate}
-                disabled={translating || !formData.backEnglish.trim()}
-                className="btn-secondary"
-              >
-                {translating ? 'Translating...' : 'Translate'}
-              </button>
-            )}
           </div>
-        </div>
+        )}
 
-        {(formData.type === 'word' || formData.type === 'phrase') && (
+        {/* Legacy backTibetanScript field - only for number cards */}
+        {(formData.type === 'numerals' || formData.type === 'numbers') && (
           <div className="form-group">
             <label htmlFor="backTibetanScript">
-              Tibetan Script (Back) <span style={{ color: '#666', fontWeight: 'normal' }}>(use Translate button)</span>
+              {formData.type === 'numerals' ? 'Tibetan Numeral (Back)' : 'Tibetan Script (Back)'}
             </label>
             <input
               type="text"
@@ -497,13 +568,8 @@ export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }
               name="backTibetanScript"
               value={formData.backTibetanScript}
               onChange={handleChange}
-              placeholder="Will be populated by Translate button"
+              placeholder={formData.type === 'numerals' ? 'Enter Tibetan numeral' : 'Enter Tibetan script'}
             />
-            {!formData.backTibetanScript && formData.backEnglish && (
-              <small style={{ display: 'block', marginTop: '0.25rem', color: '#666', fontStyle: 'italic' }}>
-                Click the "Translate" button to automatically populate this field
-              </small>
-            )}
           </div>
         )}
 
@@ -705,7 +771,7 @@ export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }
                 <button
                   type="button"
                   onClick={handleGenerateAIImage}
-                  disabled={generating || (!formData.front.trim() && !formData.backEnglish.trim())}
+                  disabled={generating || (!formData.front?.trim() && !formData.backEnglish?.trim() && !formData.englishText?.trim())}
                   className="btn-secondary"
                 >
                   {generating ? 'Generating...' : 'Generate AI Image'}
@@ -714,7 +780,7 @@ export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }
                 <button
                   type="button"
                   onClick={handleSearchUnsplash}
-                  disabled={searching || (!formData.front.trim() && !formData.backEnglish.trim())}
+                  disabled={searching || (!formData.front?.trim() && !formData.backEnglish?.trim() && !formData.englishText?.trim())}
                   className="btn-secondary"
                 >
                   {searching ? 'Searching...' : 'Search Unsplash'}
@@ -749,6 +815,15 @@ export default function EditCardForm({ card, onSave, onCancel, isAdmin = false }
               <img src={imagePreview} alt="Preview" />
             </div>
           )}
+        </div>
+
+        <div className="form-group">
+          <label>Pronunciation Audio (Optional)</label>
+          <AudioRecorder 
+            onAudioRecorded={handleAudioRecorded}
+            onCancel={null}
+            existingAudioUrl={audioUrl}
+          />
         </div>
 
         {error && (

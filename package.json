@@ -34,12 +34,12 @@
     "migrate:themes": "node apply-themes-migration.js"
   },
   "dependencies": {
+    "@breezystack/lamejs": "^1.2.7",
     "@supabase/supabase-js": "^2.49.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.0.6",
     "@axe-core/react": "^4.11.0",
     "@eslint/js": "^9.36.0",
     "@playwright/test": "^1.56.1",
@@ -49,6 +49,7 @@
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.4",
+    "@vitest/coverage-v8": "^4.0.6",
     "@vitest/ui": "^4.0.6",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^5.2.0",

@@ -1,13 +1,23 @@
 import { useState, useEffect } from 'react';
+import AudioPlayer from './AudioPlayer.jsx';
+import { containsTibetan } from '../utils/tibetanUtils.js';
+import { getTibetanText, getEnglishText, ensureBidirectionalFields } from '../data/cardSchema.js';
 import './Flashcard.css';
 
 /**
  * Flashcard component that displays a card and flips on click
- * Two card types:
- * 1. Numeral cards: Front = Tibetan numerals → Back = Arabic number + Tibetan Script
- * 2. Script cards: Front = Tibetan Script → Back = Arabic number + Tibetan Numerals
+ * 
+ * Card types:
+ * 1. Number cards (numerals/script): Uses legacy front/back structure
+ * 2. Word/phrase cards: Uses new bidirectional fields (tibetanText/englishText) with studyDirection
+ * 
+ * @param {Object} card - Card object
+ * @param {Function} onFlip - Callback when card is flipped
+ * @param {boolean} isFlipped - External flip state (controlled)
+ * @param {Function} onFlipChange - Callback for flip state changes
+ * @param {string} studyDirection - 'tibetan_to_english' | 'english_to_tibetan' (for word/phrase cards)
  */
-export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, onFlipChange }) {
+export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, onFlipChange, studyDirection = 'tibetan_to_english' }) {
   // Use external isFlipped if provided, otherwise use internal state
   const [internalIsFlipped, setInternalIsFlipped] = useState(false);
   const isFlipped = externalIsFlipped !== undefined ? externalIsFlipped : internalIsFlipped;
@@ -52,11 +62,28 @@ export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, 
     }
   };
 
-  // Determine card type - check subcategory first, fallback to detection
-  const isNumeralCard = card.subcategory === 'numerals' || /[\u0F20-\u0F29]/.test(card.front);
+  // Ensure card has bidirectional fields populated (from legacy fields if needed)
+  const cardWithBidirectionalFields = ensureBidirectionalFields(card);
+  
+  // Determine card type
+  const isNumberCard = card.type === 'number';
+  const isWordPhraseCard = card.type === 'word' || card.type === 'phrase';
+  
+  // For number cards: determine sub-type
+  const isNumeralCard = card.subcategory === 'numerals' || /[\u0F20-\u0F29]/.test(card.front || '');
   const isScriptCard = card.subcategory === 'script' || (!isNumeralCard && card.front && /[\u0F00-\u0FFF]/.test(card.front));
-  const isEnglishToTibetan = card.subcategory === 'english_to_tibetan';
-  const isTibetanToEnglish = card.subcategory === 'tibetan_to_english';
+  
+  // For word/phrase cards: get text based on study direction
+  const tibetanText = isWordPhraseCard ? getTibetanText(cardWithBidirectionalFields) : null;
+  const englishText = isWordPhraseCard ? getEnglishText(cardWithBidirectionalFields) : null;
+  
+  // Determine what to show on front and back based on study direction (for word/phrase cards)
+  const frontText = isWordPhraseCard 
+    ? (studyDirection === 'tibetan_to_english' ? tibetanText : englishText)
+    : card.front;
+  const backText = isWordPhraseCard
+    ? (studyDirection === 'tibetan_to_english' ? englishText : tibetanText)
+    : null;
 
   return (
     <div className="flashcard-wrapper">
@@ -76,48 +103,122 @@ export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, 
         <div className="flashcard-inner">
         <div className="flashcard-front">
           <div className="card-content">
-            {/* Display image for English→Tibetan word cards */}
-            {isEnglishToTibetan && card.imageUrl && (
+            {/* Display image for word/phrase cards when English is on front */}
+            {isWordPhraseCard && studyDirection === 'english_to_tibetan' && card.imageUrl && (
+              <div className="card-image">
+                <img src={card.imageUrl} alt={englishText || 'Card'} />
+              </div>
+            )}
+            {/* Legacy: Display image for English→Tibetan cards (backward compatibility) */}
+            {!isWordPhraseCard && card.subcategory === 'english_to_tibetan' && card.imageUrl && (
               <div className="card-image">
                 <img src={card.imageUrl} alt={card.front} />
               </div>
             )}
-            {isNumeralCard ? (
-              <div className="tibetan-numeral">{card.front}</div>
-            ) : isEnglishToTibetan ? (
-              <div className="english-word">{card.front}</div>
-            ) : isTibetanToEnglish ? (
-              <div className="tibetan-text">{card.front}</div>
-            ) : isScriptCard ? (
-              <div className="tibetan-text">{card.front}</div>
-            ) : (
-              <div className="english-word">{card.front}</div>
-            )}
+            <div className="card-text-wrapper">
+              {isNumberCard ? (
+                /* Number cards - legacy structure */
+                isNumeralCard ? (
+                  <div className="tibetan-numeral">{card.front}</div>
+                ) : isScriptCard ? (
+                  <div className="tibetan-text">{card.front}</div>
+                ) : (
+                  <div className="tibetan-text">{card.front}</div>
+                )
+              ) : isWordPhraseCard ? (
+                /* Word/phrase cards - use new bidirectional fields */
+                frontText ? (
+                  studyDirection === 'tibetan_to_english' ? (
+                    <div className="tibetan-text">{frontText}</div>
+                  ) : (
+                    <div className="english-word">{frontText}</div>
+                  )
+                ) : (
+                  <div className="card-error">Card data missing</div>
+                )
+              ) : (
+                /* Legacy word/phrase cards - fallback */
+                containsTibetan(card.front || '') ? (
+                  <div className="tibetan-text">{card.front}</div>
+                ) : (
+                  <div className="english-word">{card.front}</div>
+                )
+              )}
+              {/* Show audio button only if there's Tibetan text on the front and audio URL */}
+              {card.audioUrl && isWordPhraseCard && studyDirection === 'tibetan_to_english' && frontText && containsTibetan(frontText) && (
+                <AudioPlayer audioUrl={card.audioUrl} label="Listen" />
+              )}
+              {/* Legacy: audio for non-bidirectional cards */}
+              {card.audioUrl && !isWordPhraseCard && containsTibetan(frontText || '') && (
+                <AudioPlayer audioUrl={card.audioUrl} label="Listen" />
+              )}
+            </div>
             <div className="hint">Click or press Space to reveal answer</div>
           </div>
         </div>
         <div className="flashcard-back">
           <div className="card-content">
-            {/* For English→Tibetan word cards: show Tibetan script */}
-            {isEnglishToTibetan && card.backTibetanScript ? (
-              <div className="tibetan-text">{card.backTibetanScript}</div>
-            ) : isTibetanToEnglish && card.backEnglish ? (
-              /* For Tibetan→English word cards: show English */
-              <div className="english-word">{card.backEnglish}</div>
-            ) : (
+            {isNumberCard ? (
+              /* Number cards - legacy structure */
               <>
-                {/* For number cards */}
                 {card.backArabic && (
                   <div className="arabic-numeral">{card.backArabic}</div>
                 )}
                 {/* Show Tibetan Script if it exists (for numeral cards) */}
                 {card.backTibetanScript && (
-                  <div className="tibetan-text">{card.backTibetanScript}</div>
+                  <div className="card-text-wrapper">
+                    <div className="tibetan-text">{card.backTibetanScript}</div>
+                    {/* Show audio button if there's Tibetan text and audio URL */}
+                    {card.audioUrl && containsTibetan(card.backTibetanScript) && (
+                      <AudioPlayer audioUrl={card.audioUrl} label="Listen" />
+                    )}
+                  </div>
                 )}
                 {/* Show Tibetan Numerals if it exists (for script cards) */}
                 {card.backTibetanNumeral && (
-                  <div className="tibetan-numeral">{card.backTibetanNumeral}</div>
+                  <div className="card-text-wrapper">
+                    <div className="tibetan-numeral">{card.backTibetanNumeral}</div>
+                    {/* Show audio button if there's Tibetan text and audio URL */}
+                    {card.audioUrl && containsTibetan(card.backTibetanNumeral) && (
+                      <AudioPlayer audioUrl={card.audioUrl} label="Listen" />
+                    )}
+                  </div>
                 )}
+              </>
+            ) : isWordPhraseCard ? (
+              /* Word/phrase cards - use new bidirectional fields */
+              backText ? (
+                <div className="card-text-wrapper">
+                  {studyDirection === 'tibetan_to_english' ? (
+                    <div className="english-word">{backText}</div>
+                  ) : (
+                    <>
+                      <div className="tibetan-text">{backText}</div>
+                      {/* Show audio button if there's Tibetan text and audio URL */}
+                      {card.audioUrl && containsTibetan(backText) && (
+                        <AudioPlayer audioUrl={card.audioUrl} label="Listen" />
+                      )}
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="card-error">Card data missing</div>
+              )
+            ) : (
+              /* Legacy word/phrase cards - backward compatibility */
+              <>
+                {/* Legacy: For English→Tibetan word cards: show Tibetan script */}
+                {card.subcategory === 'english_to_tibetan' && card.backTibetanScript ? (
+                  <div className="card-text-wrapper">
+                    <div className="tibetan-text">{card.backTibetanScript}</div>
+                    {card.audioUrl && containsTibetan(card.backTibetanScript) && (
+                      <AudioPlayer audioUrl={card.audioUrl} label="Listen" />
+                    )}
+                  </div>
+                ) : card.subcategory === 'tibetan_to_english' && card.backEnglish ? (
+                  /* Legacy: For Tibetan→English word cards: back is English */
+                  <div className="english-word">{card.backEnglish}</div>
+                ) : null}
               </>
             )}
           </div>

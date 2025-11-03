@@ -7,6 +7,7 @@ import AdminCardModal from './AdminCardModal.jsx';
 import AdminClassificationManager from './AdminClassificationManager.jsx';
 import CardManager from './CardManager.jsx';
 import QuickTranslateForm from './QuickTranslateForm.jsx';
+import CardPreviewModal from './CardPreviewModal.jsx';
 import { ErrorBoundary } from '../ErrorBoundary.jsx';
 import { loadCards, saveCard, saveCards, deleteCard } from '../services/cardsService.js';
 import { loadCategories } from '../services/categoriesService.js';
@@ -48,6 +49,8 @@ export default function AdminPage() {
   const [filterInstructionLevel, setFilterInstructionLevel] = useState('');
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'card'
   const [categories, setCategories] = useState([]);
+  const [previewCard, setPreviewCard] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [instructionLevels, setInstructionLevels] = useState([]);
 
   const clearMessages = () => {
@@ -361,6 +364,18 @@ export default function AdminPage() {
     setModalMode('edit');
     setEditingCard(card);
     setModalOpen(true);
+  };
+
+  // Handle preview card
+  const handlePreviewCard = (card) => {
+    setPreviewCard(card);
+    setIsPreviewOpen(true);
+  };
+
+  // Handle close preview
+  const handleClosePreview = () => {
+    setIsPreviewOpen(false);
+    setPreviewCard(null);
   };
 
   // Handle save card (add or edit)
@@ -935,6 +950,7 @@ export default function AdminPage() {
                 onAdd={handleAddCard}
                 onEdit={handleEditCard}
                 onDelete={handleDeleteCard}
+                onPreview={handlePreviewCard}
                 filterType={filterType}
                 filterCategory={filterCategory}
                 filterInstructionLevel={filterInstructionLevel}
@@ -964,6 +980,12 @@ export default function AdminPage() {
             onSave={handleSaveCard}
             onCancel={handleModalCancel}
             isAdmin={isAdminUser}
+          />
+
+          <CardPreviewModal
+            card={previewCard}
+            isOpen={isPreviewOpen}
+            onClose={handleClosePreview}
           />
         </div>
       )}

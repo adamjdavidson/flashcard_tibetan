@@ -196,6 +196,7 @@
   align-items: center;
 }
 
+.btn-table-preview,
 .btn-table-edit,
 .btn-table-delete {
   background: none;
@@ -210,6 +211,17 @@
   justify-content: center;
   min-width: 28px;
   height: 28px;
+}
+
+.btn-table-preview {
+  color: var(--theme-accent-success);
+  font-size: 1rem;
+}
+
+.btn-table-preview:hover {
+  background: var(--theme-accent-success);
+  color: var(--theme-text-on-gradient);
+  opacity: 0.9;
 }
 
 .btn-table-edit {
@@ -230,6 +242,8 @@
   color: var(--theme-text-on-gradient);
 }
 
+.btn-table-preview:focus,
+.btn-table-preview:focus-visible,
 .btn-table-edit:focus,
 .btn-table-edit:focus-visible,
 .btn-table-delete:focus,
@@ -238,6 +252,7 @@
   outline-offset: 2px;
 }
 
+.btn-table-preview:focus:not(:focus-visible),
 .btn-table-edit:focus:not(:focus-visible),
 .btn-table-delete:focus:not(:focus-visible) {
   outline: none;
