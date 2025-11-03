@@ -59,14 +59,15 @@ export default function StudyDirectionToggle({ currentDirection, onDirectionChan
     };
 
     loadPreferences();
-  }, [user?.id]); // Only reload if user changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]); // Only reload if user changes - onDirectionChange is stable, direction updates handled separately
 
   // Update when currentDirection prop changes externally
   useEffect(() => {
     if (currentDirection && currentDirection !== direction) {
       setDirection(currentDirection);
     }
-  }, [currentDirection]);
+  }, [currentDirection, direction]);
 
   const handleToggle = async (newDirection) => {
     if (newDirection === direction || loading) {

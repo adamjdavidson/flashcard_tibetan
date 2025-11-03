@@ -178,7 +178,7 @@ describe('Admin Card Management Performance Benchmarks', () => {
     it('sorts cards in <1 second (T122)', async () => {
       const largeCardSet = generateLargeCardSet(1000);
       
-      const { container } = render(
+      render(
         <AdminCardTable
           cards={largeCardSet}
           loading={false}

@@ -15,10 +15,11 @@ export default function AudioPlayer({ audioUrl, label = 'Listen' }) {
 
   // Cleanup on unmount
   useEffect(() => {
+    const audio = audioRef.current;
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
+      if (audio) {
+        audio.pause();
+        audio.src = '';
       }
     };
   }, []);

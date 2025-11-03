@@ -14,8 +14,7 @@ import {
   requestMicrophoneAccess, 
   startRecording, 
   stopRecording, 
-  convertToMP3,
-  getAudioDuration 
+  convertToMP3
 } from '../utils/audioUtils.js';
 import { uploadAudio, deleteAudio } from '../services/audioService.js';
 import './AudioRecorder.css';
@@ -49,7 +48,7 @@ export default function AudioRecorder({ onAudioRecorded, onCancel, existingAudio
       // If existingAudioUrl is removed and we don't have a local audioUrl, go back to idle
       setState('idle');
     }
-  }, [existingAudioUrl]); // Only depend on existingAudioUrl to avoid loops
+  }, [existingAudioUrl, audioUrl, state]); // Include all dependencies
 
   // Cleanup on unmount
   useEffect(() => {

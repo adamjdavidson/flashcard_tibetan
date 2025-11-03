@@ -20,7 +20,7 @@ import {
   mergeSeedData 
 } from './utils/storage.js';
 import { loadCards as loadCardsSupabase, saveCards as saveCardsSupabase, saveCard as saveCardSupabase, deleteCard as deleteCardSupabase, subscribeToCards } from './services/cardsService.js';
-import { loadProgress as loadProgressSupabase, saveProgressBatch as saveProgressSupabase, saveProgressForDirection, getProgressForDirection, subscribeToProgress } from './services/progressService.js';
+import { loadProgress as loadProgressSupabase, saveProgressBatch as saveProgressSupabase, saveProgressForDirection, subscribeToProgress } from './services/progressService.js';
 import { isSupabaseConfigured } from './services/supabase.js';
 import { 
   calculateReview, 

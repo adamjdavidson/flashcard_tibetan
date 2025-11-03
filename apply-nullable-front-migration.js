@@ -4,7 +4,6 @@
  * Script to apply migration that makes front column nullable
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -26,25 +25,9 @@ try {
       if (!process.env[key]) process.env[key] = value;
     });
   }
-} catch (err) {
+} catch {
   // .env.local might not exist, that's ok
 }
-
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  console.error('❌ Missing Supabase credentials!');
-  console.error('   Required: VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
-  process.exit(1);
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
 
 async function applyMigration() {
   console.log('📝 Applying migration to allow NULL front for word/phrase cards...\n');

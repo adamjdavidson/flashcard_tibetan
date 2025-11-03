@@ -6,7 +6,6 @@ import { uploadImage as uploadToSupabase } from '../services/imagesService.js';
 import { loadCategories, createCategory } from '../services/categoriesService.js';
 import { loadInstructionLevels, createInstructionLevel } from '../services/instructionLevelsService.js';
 import { useAuth } from '../hooks/useAuth.js';
-import { containsTibetan } from '../utils/tibetanUtils.js';
 import AudioRecorder from './AudioRecorder.jsx';
 import './AddCardForm.css';
 

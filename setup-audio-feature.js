@@ -39,7 +39,7 @@ async function applyMigration() {
         const { error } = await supabase.rpc('exec_sql', { sql: statement });
         if (error) {
           // Try direct query instead
-          const { error: directError } = await supabase
+          const { error: _directError } = await supabase
             .from('_realtime')
             .select('*')
             .limit(0); // This is just to test connection

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createCard, validateCard, getTibetanText, getEnglishText } from '../data/cardSchema.js';
+import { createCard, validateCard } from '../data/cardSchema.js';
 import { translateText } from '../utils/translation.js';
 import { loadCategories, createCategory } from '../services/categoriesService.js';
 import { loadInstructionLevels, createInstructionLevel } from '../services/instructionLevelsService.js';

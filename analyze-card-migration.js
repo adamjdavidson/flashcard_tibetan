@@ -31,7 +31,7 @@ try {
       if (!process.env[key]) process.env[key] = value;
     });
   }
-} catch (err) {
+} catch {
   // .env.local might not exist, that's ok
 }
 
@@ -198,7 +198,6 @@ async function analyzeCards() {
       console.log('   After verifying that new fields work correctly, you can clear old fields:');
       console.log('   This will remove front, back_english, and back_tibetan_script from migrated cards\n');
       
-      const idsToClean = [...hasBoth, ...fullyMigrated].map(c => c.id);
       console.log('   SQL to clear old fields (SAFE - only clears if new fields exist):\n');
       console.log('   ```sql');
       console.log('   -- Clear old fields from migrated cards');

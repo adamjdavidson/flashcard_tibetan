@@ -29,7 +29,7 @@ try {
       if (!process.env[key]) process.env[key] = value;
     });
   }
-} catch (err) {
+} catch {
   // .env.local might not exist, that's ok
 }
 

@@ -66,7 +66,7 @@ async function applyMigration() {
           }
           
           console.log('   ✅ Statement executed');
-        } catch (error) {
+        } catch {
           console.log('   ⚠️  Could not execute via API');
           console.log('   💡 See manual instructions below\n');
         }

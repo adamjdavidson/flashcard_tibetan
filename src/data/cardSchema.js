@@ -86,7 +86,6 @@ export function validateCard(card) {
   } else {
     // For word/phrase cards, need either new fields OR legacy fields (backward compatibility)
     // Prefer new bidirectional fields if available
-    const hasTibetanText = card.tibetanText && card.tibetanText.trim();
     const hasEnglishText = card.englishText && card.englishText.trim();
     const hasLegacyFields = card.backEnglish && card.backEnglish.trim();
     
