@@ -78,13 +78,32 @@ export default function AdminCardTable({
           bValue = b.type || '';
           break;
         case 'front':
-          aValue = a.front || '';
-          bValue = b.front || '';
+        case 'tibetan':
+          // For word/phrase cards, use new bidirectional fields
+          if (a.type === 'word' || a.type === 'phrase') {
+            aValue = a.tibetanText || a.front || '';
+          } else {
+            aValue = a.front || '';
+          }
+          if (b.type === 'word' || b.type === 'phrase') {
+            bValue = b.tibetanText || b.front || '';
+          } else {
+            bValue = b.front || '';
+          }
           break;
         case 'backContent':
-          // Show summary of back content
-          aValue = a.backEnglish || a.backArabic || a.backTibetanScript || '';
-          bValue = b.backEnglish || b.backArabic || b.backTibetanScript || '';
+        case 'english':
+          // For word/phrase cards, use new bidirectional fields
+          if (a.type === 'word' || a.type === 'phrase') {
+            aValue = a.englishText || a.backEnglish || '';
+          } else {
+            aValue = a.backEnglish || a.backArabic || a.backTibetanScript || '';
+          }
+          if (b.type === 'word' || b.type === 'phrase') {
+            bValue = b.englishText || b.backEnglish || '';
+          } else {
+            bValue = b.backEnglish || b.backArabic || b.backTibetanScript || '';
+          }
           break;
         case 'categories':
           aValue = a.categories && a.categories.length > 0 ? a.categories[0].name : '';
@@ -185,6 +204,19 @@ export default function AdminCardTable({
     return date.toLocaleDateString();
   };
 
+  // Get front content - use new bidirectional fields for word/phrase cards
+  const getFrontContent = (card) => {
+    // For word/phrase cards, use new bidirectional fields
+    if (card.type === 'word' || card.type === 'phrase') {
+      // Prefer new fields, fallback to legacy
+      if (card.tibetanText) return card.tibetanText;
+      if (card.front) return card.front;
+      return '';
+    }
+    // For number cards, use legacy front field
+    return card.front || '';
+  };
+
   // Get back content summary
   // For word/phrase cards, prefer new bidirectional fields; fallback to legacy fields
   const getBackContentSummary = (card) => {
@@ -192,9 +224,6 @@ export default function AdminCardTable({
     if (card.type === 'word' || card.type === 'phrase') {
       if (card.englishText) {
         return card.englishText.substring(0, 50) + (card.englishText.length > 50 ? '...' : '');
-      }
-      if (card.tibetanText) {
-        return card.tibetanText.substring(0, 50) + (card.tibetanText.length > 50 ? '...' : '');
       }
       // Fallback to legacy fields
       if (card.backEnglish) return card.backEnglish.substring(0, 50) + (card.backEnglish.length > 50 ? '...' : '');
@@ -214,7 +243,7 @@ export default function AdminCardTable({
   };
 
   // Memoized table row component for performance optimization
-  const TableRow = memo(({ card, rowIndex, onEdit, onDelete, onPreview, getBackContentSummary, getCategoriesDisplay, formatDate }) => {
+  const TableRow = memo(({ card, rowIndex, onEdit, onDelete, onPreview, getFrontContent, getBackContentSummary, getCategoriesDisplay, formatDate }) => {
     const cellId = (colIndex) => `cell-${card.id}-${colIndex}`;
     
     return (
@@ -229,12 +258,12 @@ export default function AdminCardTable({
         </td>
         <td 
           className="front-cell" 
-          title={card.front}
+          title={getFrontContent(card)}
           aria-colindex={2}
           id={cellId(2)}
           aria-describedby={cellId(2)}
         >
-          {card.front}
+          {getFrontContent(card)}
         </td>
         <td 
           className="back-content-cell" 
@@ -485,9 +514,18 @@ export default function AdminCardTable({
                   type="button"
                   className="sortable-header"
                   onClick={() => handleSort('front')}
-                  aria-label={`Sort by front ${sortColumn === 'front' ? `(${sortDirection})` : ''}`}
+                  aria-label={`Sort by ${(() => {
+                    const hasWordPhrase = filterType === 'word' || filterType === 'phrase';
+                    const allWordPhrase = !hasWordPhrase && filteredCards.length > 0 && filteredCards.every(c => c.type === 'word' || c.type === 'phrase');
+                    return (hasWordPhrase || allWordPhrase) ? 'Tibetan' : 'Front';
+                  })()} ${sortColumn === 'front' ? `(${sortDirection})` : ''}`}
                 >
-                  Front {getSortIndicator('front')}
+                  {(() => {
+                    // Show "Tibetan" if filtering word/phrase OR all visible cards are word/phrase
+                    const hasWordPhrase = filterType === 'word' || filterType === 'phrase';
+                    const allWordPhrase = !hasWordPhrase && filteredCards.length > 0 && filteredCards.every(c => c.type === 'word' || c.type === 'phrase');
+                    return (hasWordPhrase || allWordPhrase) ? 'Tibetan' : 'Front';
+                  })()} {getSortIndicator('front')}
                 </button>
               </th>
               <th>
@@ -495,9 +533,18 @@ export default function AdminCardTable({
                   type="button"
                   className="sortable-header"
                   onClick={() => handleSort('backContent')}
-                  aria-label={`Sort by back content ${sortColumn === 'backContent' ? `(${sortDirection})` : ''}`}
+                  aria-label={`Sort by ${(() => {
+                    const hasWordPhrase = filterType === 'word' || filterType === 'phrase';
+                    const allWordPhrase = !hasWordPhrase && filteredCards.length > 0 && filteredCards.every(c => c.type === 'word' || c.type === 'phrase');
+                    return (hasWordPhrase || allWordPhrase) ? 'English' : 'Back Content';
+                  })()} ${sortColumn === 'backContent' ? `(${sortDirection})` : ''}`}
                 >
-                  Back Content {getSortIndicator('backContent')}
+                  {(() => {
+                    // Show "English" if filtering word/phrase OR all visible cards are word/phrase
+                    const hasWordPhrase = filterType === 'word' || filterType === 'phrase';
+                    const allWordPhrase = !hasWordPhrase && filteredCards.length > 0 && filteredCards.every(c => c.type === 'word' || c.type === 'phrase');
+                    return (hasWordPhrase || allWordPhrase) ? 'English' : 'Back Content';
+                  })()} {getSortIndicator('backContent')}
                 </button>
               </th>
               <th>
@@ -538,13 +585,14 @@ export default function AdminCardTable({
               const rowIndex = (currentPage - 1) * pageSize + index + 1;
               
               return (
-                <TableRow
+                  <TableRow
                   key={card.id}
                   card={card}
                   rowIndex={rowIndex}
                   onEdit={onEdit}
                   onDelete={onDelete}
                   onPreview={onPreview}
+                  getFrontContent={getFrontContent}
                   getBackContentSummary={getBackContentSummary}
                   getCategoriesDisplay={getCategoriesDisplay}
                   formatDate={formatDate}
