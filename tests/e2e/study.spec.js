@@ -6,7 +6,8 @@ test.describe('Study flow', () => {
     await page.waitForLoadState('domcontentloaded');
 
     // Ensure we are on Study view
-    const studyBtn = page.getByRole('button', { name: /study/i });
+    // Use first() to get the navigation button, not the CardFilter button ("Study: All Cards")
+    const studyBtn = page.getByRole('button', { name: /^study$/i }).first();
     if (await studyBtn.count()) {
       await studyBtn.click();
     }
