@@ -4,6 +4,7 @@ import CardButtons from './components/CardButtons.jsx';
 import ProgressStats from './components/ProgressStats.jsx';
 import CardManager from './components/CardManager.jsx';
 import CardFilter from './components/CardFilter.jsx';
+import StudyDirectionToggle from './components/StudyDirectionToggle.jsx';
 import Auth from './components/Auth.jsx';
 import AdminPage from './components/AdminPage.jsx';
 import ThemeSelector from './components/ThemeSelector.jsx';
@@ -19,7 +20,7 @@ import {
   mergeSeedData 
 } from './utils/storage.js';
 import { loadCards as loadCardsSupabase, saveCards as saveCardsSupabase, saveCard as saveCardSupabase, deleteCard as deleteCardSupabase, subscribeToCards } from './services/cardsService.js';
-import { loadProgress as loadProgressSupabase, saveProgressBatch as saveProgressSupabase, subscribeToProgress } from './services/progressService.js';
+import { loadProgress as loadProgressSupabase, saveProgressBatch as saveProgressSupabase, saveProgressForDirection, getProgressForDirection, subscribeToProgress } from './services/progressService.js';
 import { isSupabaseConfigured } from './services/supabase.js';
 import { 
   calculateReview, 
@@ -40,6 +41,8 @@ function App() {
   const [currentCard, setCurrentCard] = useState(null);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [studyDirection, setStudyDirection] = useState('both'); // Default: both directions
+  const [currentCardDirection, setCurrentCardDirection] = useState('tibetan_to_english'); // Track which direction the current card is showing
   
   // Initialize view from URL
   const [view, setView] = useState(() => {
@@ -190,16 +193,29 @@ function App() {
     });
 
     // Subscribe to progress changes for this user
+    // Note: progressMap structure is now { [cardId]: { tibetan_to_english?: progress, english_to_tibetan?: progress } }
     const unsubscribeProgress = subscribeToProgress(user.id, (payload) => {
       if (payload.type === 'INSERT' || payload.type === 'UPDATE') {
-        setProgressMap(prev => ({
-          ...prev,
-          [payload.data.cardId]: payload.data
-        }));
-      } else if (payload.type === 'DELETE') {
+        const cardId = payload.data.cardId;
+        const direction = payload.data.studyDirection || 'tibetan_to_english';
         setProgressMap(prev => {
           const newMap = { ...prev };
-          delete newMap[payload.data.cardId];
+          if (!newMap[cardId]) {
+            newMap[cardId] = {};
+          }
+          newMap[cardId][direction] = payload.data;
+          return newMap;
+        });
+      } else if (payload.type === 'DELETE') {
+        // Note: deletion removes specific direction progress
+        const cardId = payload.data.cardId;
+        setProgressMap(prev => {
+          const newMap = { ...prev };
+          if (newMap[cardId]) {
+            // For now, delete the whole card entry if one direction is deleted
+            // Could be refined to delete only specific direction
+            delete newMap[cardId];
+          }
           return newMap;
         });
       }
@@ -231,8 +247,14 @@ function App() {
       
       // Only get new card if current card is not in filtered set or we don't have a current card
       if (!currentCard || !isCurrentCardInFilteredSet) {
-        const nextCard = getNextCard(filteredCards, progressMap);
+        // For 'both', getNextCard will check both directions; then we randomly pick which to show
+        const nextCard = getNextCard(filteredCards, progressMap, studyDirection);
+        // For 'both', randomly pick a direction to display this card in
+        const nextDirection = studyDirection === 'both' 
+          ? (Math.random() > 0.5 ? 'tibetan_to_english' : 'english_to_tibetan')
+          : studyDirection;
         setCurrentCard(nextCard);
+        setCurrentCardDirection(nextDirection); // Track which direction we're showing
         setIsFlipped(false);
       }
       // If current card is still in filtered set, don't change it (keep it as is)
@@ -240,7 +262,7 @@ function App() {
       setCurrentCard(null);
       setIsFlipped(false);
     }
-  }, [filteredCards, progressMap, isFlipped, currentCard]);
+  }, [filteredCards, progressMap, isFlipped, currentCard, studyDirection]);
 
   const handleCardFlip = () => {
     setIsFlipped(true);
@@ -250,26 +272,58 @@ function App() {
     if (!currentCard || !isFlipped) return;
 
     const quality = getQualityFromButton(buttonType);
-    let cardProgress = progressMap[currentCard.id];
-
-    if (!cardProgress) {
-      cardProgress = initializeCardProgress(currentCard.id);
+    
+    // Determine effective direction - use the direction the card was actually shown in
+    const effectiveDirection = studyDirection === 'both' 
+      ? currentCardDirection 
+      : studyDirection;
+    
+    // Get progress for current direction (structure: { [cardId]: { tibetan_to_english?: progress, english_to_tibetan?: progress } })
+    const cardProgressByDirection = progressMap[currentCard.id] || {};
+    let cardProgress = cardProgressByDirection[effectiveDirection];
+    
+    // For word/phrase cards, use direction-specific progress; for number cards, use any available progress
+    if (!cardProgress && (currentCard.type === 'word' || currentCard.type === 'phrase')) {
+      // Try legacy progress (treated as tibetan_to_english)
+      if (effectiveDirection === 'tibetan_to_english') {
+        cardProgress = cardProgressByDirection.tibetan_to_english || 
+                       (progressMap[currentCard.id] && typeof progressMap[currentCard.id] === 'object' && !progressMap[currentCard.id].tibetan_to_english && !progressMap[currentCard.id].english_to_tibetan ? progressMap[currentCard.id] : null);
+      }
+      if (!cardProgress) {
+        cardProgress = initializeCardProgress(currentCard.id);
+      }
+    } else if (!cardProgress) {
+      // Number cards or legacy structure
+      cardProgress = cardProgressByDirection[studyDirection] || 
+                     (typeof cardProgressByDirection === 'object' && cardProgressByDirection !== null && !cardProgressByDirection.tibetan_to_english && !cardProgressByDirection.english_to_tibetan ? cardProgressByDirection : null) ||
+                     initializeCardProgress(currentCard.id);
     }
 
     const updatedProgress = calculateReview(cardProgress, quality);
+    
+    // Update progress map with direction-aware structure
     const newProgressMap = {
       ...progressMap,
-      [currentCard.id]: updatedProgress
+      [currentCard.id]: {
+        ...cardProgressByDirection,
+        [effectiveDirection]: updatedProgress
+      }
     };
 
     setProgressMap(newProgressMap);
     
-    // Save to backend
+    // Save to backend - for word/phrase cards, save with direction; for number cards, save without direction
     if (useSupabase && user) {
-      await saveProgressSupabase(user.id, newProgressMap, () => {
-        updateProgressStorage(currentCard.id, updatedProgress);
-        saveProgress(newProgressMap);
-      });
+      if (currentCard.type === 'word' || currentCard.type === 'phrase') {
+        // Save direction-specific progress
+        await saveProgressForDirection(user.id, currentCard.id, effectiveDirection, updatedProgress);
+      } else {
+        // Number cards: save without direction (backward compatibility)
+        await saveProgressSupabase(user.id, newProgressMap, () => {
+          updateProgressStorage(currentCard.id, updatedProgress);
+          saveProgress(newProgressMap);
+        });
+      }
     } else {
       updateProgressStorage(currentCard.id, updatedProgress);
       saveProgress(newProgressMap);
@@ -279,15 +333,21 @@ function App() {
     setIsTransitioning(true);
     setIsFlipped(false);
     
-    // Wait for fade out, then get next card
-    setTimeout(() => {
-      const nextCard = getNextCard(filteredCards, newProgressMap);
-      setCurrentCard(nextCard);
-      // Wait a bit before showing new card (fade in)
+      // Wait for fade out, then get next card
+      // For 'both' direction, getNextCard checks both directions; then we randomly pick display direction
       setTimeout(() => {
-        setIsTransitioning(false);
-      }, 50);
-    }, 300);
+        const nextCard = getNextCard(filteredCards, newProgressMap, studyDirection);
+        // For 'both', randomly pick a direction to display this card in
+        const nextDirection = studyDirection === 'both' 
+          ? (Math.random() > 0.5 ? 'tibetan_to_english' : 'english_to_tibetan')
+          : studyDirection;
+        setCurrentCard(nextCard);
+        setCurrentCardDirection(nextDirection); // Track which direction we're showing
+        // Wait a bit before showing new card (fade in)
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 50);
+      }, 300);
   };
 
   // Keyboard shortcuts for study view
@@ -523,16 +583,28 @@ function App() {
             <CardFilter 
               selectedTags={selectedTags}
               onTagToggle={setSelectedTags}
+              studyDirection={studyDirection}
+              onStudyDirectionChange={(direction) => {
+                setStudyDirection(direction);
+                // Reset current card to get a new one with new direction
+                const newDirection = direction === 'both' 
+                  ? (Math.random() > 0.5 ? 'tibetan_to_english' : 'english_to_tibetan')
+                  : direction;
+                setCurrentCardDirection(newDirection);
+                setIsFlipped(false);
+              }}
+              hasWordPhraseCards={filteredCards.some(card => card.type === 'word' || card.type === 'phrase')}
             />
             
             {currentCard ? (
               <div style={{ opacity: isTransitioning ? 0 : 1, transition: 'opacity 0.3s' }}>
                 <Flashcard 
-                  key={currentCard.id}
+                  key={`${currentCard.id}-${currentCardDirection}`}
                   card={currentCard} 
                   onFlip={handleCardFlip}
                   isFlipped={isFlipped}
                   onFlipChange={setIsFlipped}
+                  studyDirection={currentCardDirection}
                 />
                 {isFlipped && !isTransitioning && (
                   <CardButtons 

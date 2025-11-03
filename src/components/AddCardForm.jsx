@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { createCard, validateCard } from '../data/cardSchema.js';
+import { createCard, validateCard, getTibetanText, getEnglishText } from '../data/cardSchema.js';
 import { translateText } from '../utils/translation.js';
 import { loadCategories, createCategory } from '../services/categoriesService.js';
 import { loadInstructionLevels, createInstructionLevel } from '../services/instructionLevelsService.js';
 import { useAuth } from '../hooks/useAuth.js';
+import AudioRecorder from './AudioRecorder.jsx';
 import './AddCardForm.css';
 
 /**
@@ -17,6 +18,8 @@ export default function AddCardForm({ onAdd, onCancel }) {
     backEnglish: '',
     backTibetanScript: '',
     backTibetanSpelling: '',
+    tibetanText: '', // New bidirectional field
+    englishText: '', // New bidirectional field
     notes: ''
   });
   const [translating, setTranslating] = useState(false);
@@ -31,6 +34,7 @@ export default function AddCardForm({ onAdd, onCancel }) {
   const [showNewInstructionLevel, setShowNewInstructionLevel] = useState(false);
   const [newInstructionLevelName, setNewInstructionLevelName] = useState('');
   const [newInstructionLevelOrder, setNewInstructionLevelOrder] = useState('');
+  const [audioUrl, setAudioUrl] = useState(null);
   const { user } = useAuth();
 
   // Load categories and instruction levels
@@ -149,7 +153,12 @@ export default function AddCardForm({ onAdd, onCancel }) {
 
   // Translation handler
   const handleTranslate = async () => {
-    if (!formData.backEnglish.trim()) {
+    // For word/phrase cards, translate from englishText; for legacy, use backEnglish
+    const englishInput = (formData.type === 'word' || formData.type === 'phrase')
+      ? (formData.englishText || formData.backEnglish || '')
+      : formData.backEnglish || '';
+    
+    if (!englishInput.trim()) {
       setError('Please enter an English word to translate');
       return;
     }
@@ -158,13 +167,24 @@ export default function AddCardForm({ onAdd, onCancel }) {
     setError('');
 
     try {
-      const result = await translateText(formData.backEnglish.trim(), 'en', 'bo');
+      const result = await translateText(englishInput.trim(), 'en', 'bo');
       
       if (result.success && result.translated) {
-        setFormData(prev => ({
-          ...prev,
-          backTibetanScript: result.translated
-        }));
+        if (formData.type === 'word' || formData.type === 'phrase') {
+          // Update tibetanText for word/phrase cards
+          setFormData(prev => ({
+            ...prev,
+            tibetanText: result.translated,
+            // Also update legacy field for backward compatibility during transition
+            backTibetanScript: result.translated
+          }));
+        } else {
+          // For number cards, use legacy field
+          setFormData(prev => ({
+            ...prev,
+            backTibetanScript: result.translated
+          }));
+        }
       } else {
         setError(result.error || 'Translation failed');
       }
@@ -176,6 +196,10 @@ export default function AddCardForm({ onAdd, onCancel }) {
     }
   };
 
+  const handleAudioRecorded = (url) => {
+    setAudioUrl(url);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -183,16 +207,20 @@ export default function AddCardForm({ onAdd, onCancel }) {
       ...formData,
       backArabic: (formData.type === 'numerals' || formData.type === 'numbers') && formData.backArabic ? formData.backArabic : null,
       backTibetanScript: (formData.type === 'word' || formData.type === 'phrase') ? (formData.backTibetanScript || null) : null,
+      // New bidirectional fields (for word/phrase cards)
+      tibetanText: (formData.type === 'word' || formData.type === 'phrase') ? (formData.tibetanText || null) : null,
+      englishText: (formData.type === 'word' || formData.type === 'phrase') ? (formData.englishText || null) : null,
       notes: formData.notes || null,
+      audioUrl: audioUrl || null,
       // Classification data
       categoryIds: categoryIds,
       instructionLevelId: instructionLevelId || null
     });
 
     if (validateCard(newCard)) {
-      // Warn if Tibetan script is missing for word/phrase cards (translation should have populated it)
-      if ((formData.type === 'word' || formData.type === 'phrase') && !formData.backTibetanScript && formData.backEnglish) {
-        const proceed = confirm('Tibetan script is not set. Did you try the Translate button? You can still save the card and add Tibetan script later.');
+      // Warn if Tibetan text is missing for word/phrase cards (translation should have populated it)
+      if ((formData.type === 'word' || formData.type === 'phrase') && !formData.tibetanText && formData.englishText) {
+        const proceed = confirm('Tibetan text is not set. Did you try the Translate button? You can still save the card and add Tibetan text later.');
         if (!proceed) {
           return;
         }
@@ -206,10 +234,13 @@ export default function AddCardForm({ onAdd, onCancel }) {
         backEnglish: '',
         backTibetanScript: '',
         backTibetanSpelling: '',
+        tibetanText: '', // Reset new bidirectional fields
+        englishText: '', // Reset new bidirectional fields
         notes: ''
       });
       setCategoryIds([]);
       setInstructionLevelId('');
+      setAudioUrl(null);
       setError('');
     } else {
       alert('Please fill in all required fields.');
@@ -236,24 +267,73 @@ export default function AddCardForm({ onAdd, onCancel }) {
           </select>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="front">
-            {formData.type === 'numerals' ? 'Tibetan Numeral (Front) *' : 
-             formData.type === 'numbers' ? 'Tibetan Script (Front) *' : 
-             'Tibetan Script (Front) *'}
-          </label>
-          <input
-            type="text"
-            id="front"
-            name="front"
-            value={formData.front}
-            onChange={handleChange}
-            required
-            placeholder={formData.type === 'numerals' ? 'Enter Tibetan numerals (e.g., ༢༥)' : 
-                        formData.type === 'numbers' ? 'Enter Tibetan script (e.g., ཉི་ཤུ་རྩ་ལྔ)' : 
-                        'Enter Tibetan script'}
-          />
-        </div>
+        {/* Legacy front field - only for number cards */}
+        {(formData.type === 'numerals' || formData.type === 'numbers') && (
+          <div className="form-group">
+            <label htmlFor="front">
+              {formData.type === 'numerals' ? 'Tibetan Numeral (Front) *' : 'Tibetan Script (Front) *'}
+            </label>
+            <input
+              type="text"
+              id="front"
+              name="front"
+              value={formData.front}
+              onChange={handleChange}
+              required
+              placeholder={formData.type === 'numerals' ? 'Enter Tibetan numerals (e.g., ༢༥)' : 'Enter Tibetan script (e.g., ཉི་ཤུ་རྩ་ལྔ)'}
+            />
+          </div>
+        )}
+
+        {/* New bidirectional fields - only for word/phrase cards */}
+        {(formData.type === 'word' || formData.type === 'phrase') && (
+          <>
+            <div className="form-group">
+              <label htmlFor="englishText">English Text *</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  id="englishText"
+                  name="englishText"
+                  value={formData.englishText}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter English word or phrase"
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  onClick={handleTranslate}
+                  disabled={translating || !formData.englishText.trim()}
+                  className="btn-secondary"
+                >
+                  {translating ? 'Translating...' : 'Translate'}
+                </button>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="tibetanText">
+                Tibetan Text *
+                <span style={{ color: '#666', fontWeight: 'normal' }}> (use Translate button)</span>
+              </label>
+              <input
+                type="text"
+                id="tibetanText"
+                name="tibetanText"
+                value={formData.tibetanText}
+                onChange={handleChange}
+                placeholder="Will be populated by Translate button"
+                required
+              />
+              {!formData.tibetanText && formData.englishText && (
+                <small style={{ display: 'block', marginTop: '0.25rem', color: '#666', fontStyle: 'italic' }}>
+                  Click the "Translate" button to automatically populate this field
+                </small>
+              )}
+            </div>
+          </>
+        )}
 
         {(formData.type === 'numerals' || formData.type === 'numbers') && (
           <div className="form-group">
@@ -270,35 +350,7 @@ export default function AddCardForm({ onAdd, onCancel }) {
           </div>
         )}
 
-        {(formData.type === 'word' || formData.type === 'phrase') && (
-          <div className="form-group">
-            <label htmlFor="backEnglish">
-              English Translation (Back) *
-            </label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input
-                type="text"
-                id="backEnglish"
-                name="backEnglish"
-                value={formData.backEnglish}
-                onChange={handleChange}
-                required
-                placeholder="Enter English translation"
-                style={{ flex: 1 }}
-              />
-              <button
-                type="button"
-                onClick={handleTranslate}
-                disabled={translating || !formData.backEnglish.trim()}
-                className="btn-translate"
-                title="Translate to Tibetan"
-              >
-                {translating ? 'Translating...' : 'Translate'}
-              </button>
-            </div>
-          </div>
-        )}
-
+        {/* Legacy backEnglish field - only for number cards */}
         {(formData.type === 'numerals' || formData.type === 'numbers') && (
           <div className="form-group">
             <label htmlFor="backEnglish">English Word (Back, optional)</label>
@@ -313,10 +365,11 @@ export default function AddCardForm({ onAdd, onCancel }) {
           </div>
         )}
 
-        {(formData.type === 'word' || formData.type === 'phrase') && (
+        {/* Legacy backTibetanScript field - only for number cards */}
+        {(formData.type === 'numerals' || formData.type === 'numbers') && (
           <div className="form-group">
             <label htmlFor="backTibetanScript">
-              Tibetan Script (Back) <span style={{ color: '#666', fontWeight: 'normal' }}>(use Translate button)</span>
+              {formData.type === 'numerals' ? 'Tibetan Numeral (Back)' : 'Tibetan Script (Back)'}
             </label>
             <input
               type="text"
@@ -324,13 +377,8 @@ export default function AddCardForm({ onAdd, onCancel }) {
               name="backTibetanScript"
               value={formData.backTibetanScript}
               onChange={handleChange}
-              placeholder="Will be populated by Translate button"
+              placeholder={formData.type === 'numerals' ? 'Enter Tibetan numeral' : 'Enter Tibetan script'}
             />
-            {!formData.backTibetanScript && formData.backEnglish && (
-              <small style={{ display: 'block', marginTop: '0.25rem', color: '#666', fontStyle: 'italic' }}>
-                Click the "Translate" button to automatically populate this field
-              </small>
-            )}
           </div>
         )}
 
@@ -526,6 +574,19 @@ export default function AddCardForm({ onAdd, onCancel }) {
             rows="3"
             placeholder="Additional notes..."
           />
+        </div>
+
+        <div className="form-group">
+          <label>Pronunciation Audio (Optional)</label>
+          <AudioRecorder 
+            onAudioRecorded={handleAudioRecorded}
+            onCancel={null}
+          />
+          {audioUrl && (
+            <p className="form-hint" style={{ marginTop: '0.5rem', color: 'var(--theme-accent-success, #28a745)' }}>
+              ✅ Audio recorded and ready to save
+            </p>
+          )}
         </div>
 
         <div className="form-actions">

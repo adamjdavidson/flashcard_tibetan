@@ -244,16 +244,21 @@ function transformCardFromDB(dbCard) {
   return {
     id: dbCard.id,
     type: dbCard.type,
+    // Legacy fields (for backward compatibility)
     front: dbCard.front,
     backArabic: dbCard.back_arabic || null,
     backEnglish: dbCard.back_english || '',
     backTibetanScript: dbCard.back_tibetan_script || null,
     backTibetanNumeral: dbCard.back_tibetan_numeral || null,
     backTibetanSpelling: dbCard.back_tibetan_spelling || '',
+    // New bidirectional fields (for word/phrase cards)
+    tibetanText: dbCard.tibetan_text || null,
+    englishText: dbCard.english_text || null,
     tags: dbCard.tags || [],
     subcategory: dbCard.subcategory || null,
     notes: dbCard.notes || null,
     imageUrl: dbCard.image_url || null,
+    audioUrl: dbCard.audio_url || null,
     createdAt: dbCard.created_at ? new Date(dbCard.created_at).getTime() : Date.now(),
     userId: dbCard.user_id || null,
     isMaster: dbCard.is_master || false,
@@ -291,16 +296,21 @@ function transformCardToDB(card) {
     cardData: {
       id: card.id,
       type: card.type,
+      // Legacy fields (for backward compatibility during transition)
       front: card.front,
       back_arabic: card.backArabic || null,
       back_english: card.backEnglish || '',
       back_tibetan_script: card.backTibetanScript || null,
       back_tibetan_numeral: card.backTibetanNumeral || null,
       back_tibetan_spelling: card.backTibetanSpelling || '',
+      // New bidirectional fields (for word/phrase cards)
+      tibetan_text: card.tibetanText || null,
+      english_text: card.englishText || null,
       tags: card.tags || [],
       subcategory: card.subcategory || null,
       notes: card.notes || null,
       image_url: card.imageUrl || null,
+      audio_url: card.audioUrl || null,
       created_at: card.createdAt ? new Date(card.createdAt).toISOString() : new Date().toISOString(),
       updated_at: new Date().toISOString(),
       user_id: card.userId || null,
