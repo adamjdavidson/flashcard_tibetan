@@ -9,7 +9,6 @@ import CardManager from './CardManager.jsx';
 import QuickTranslateForm from './QuickTranslateForm.jsx';
 import CardPreviewModal from './CardPreviewModal.jsx';
 import BulkAddForm from './BulkAddForm.jsx';
-import BulkImageGenerator from './BulkImageGenerator.jsx';
 import { ErrorBoundary } from '../ErrorBoundary.jsx';
 import { loadCards, saveCard, saveCards, deleteCard } from '../services/cardsService.js';
 import { loadCategories } from '../services/categoriesService.js';
