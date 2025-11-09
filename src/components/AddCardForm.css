@@ -153,6 +153,84 @@
   background: var(--theme-btn-hover);
 }
 
+/* Image Section */
+.image-section {
+  margin-bottom: 1.5rem;
+}
+
+.image-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.image-preview {
+  margin-top: 1rem;
+  border: 1px solid var(--theme-border-dark);
+  border-radius: 6px;
+  padding: 0.5rem;
+  background: var(--theme-bg-card);
+}
+
+.image-preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.btn-upload {
+  cursor: pointer;
+  display: inline-block;
+}
+
+.btn-upload:has(input:disabled) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-remove {
+  background: var(--theme-accent-error, #dc3545);
+  color: white;
+}
+
+.btn-remove:hover {
+  opacity: 0.9;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--theme-border-dark);
+  border-top-color: var(--theme-accent-info);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+    border-top-color: var(--theme-accent-info);
+  }
+}
+
+/* Button states during loading */
+button[aria-busy="true"] {
+  opacity: 0.7;
+  cursor: wait;
+}
+
 @media (max-width: 600px) {
   .add-card-form {
     padding: 1.5rem;

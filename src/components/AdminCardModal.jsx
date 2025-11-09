@@ -100,6 +100,7 @@ export default function AdminCardModal({
           <AddCardForm
             onAdd={onSave}
             onCancel={onCancel}
+            isAdmin={isAdmin}
           />
         )}
         

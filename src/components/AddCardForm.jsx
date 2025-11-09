@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { createCard, validateCard } from '../data/cardSchema.js';
 import { translateText } from '../utils/translation.js';
+import { generateAIImage, searchImage, uploadImage, validateImageFile, createImagePreview, revokeImagePreview } from '../utils/images.js';
+import { uploadImage as uploadToSupabase } from '../services/imagesService.js';
 import { loadCategories, createCategory } from '../services/categoriesService.js';
 import { loadInstructionLevels, createInstructionLevel } from '../services/instructionLevelsService.js';
 import { useAuth } from '../hooks/useAuth.js';
@@ -10,7 +12,7 @@ import './AddCardForm.css';
 /**
  * AddCardForm component for adding new cards
  */
-export default function AddCardForm({ onAdd, onCancel }) {
+export default function AddCardForm({ onAdd, onCancel, isAdmin = false }) {
   const [formData, setFormData] = useState({
     type: 'word',
     front: '',
@@ -35,6 +37,11 @@ export default function AddCardForm({ onAdd, onCancel }) {
   const [newInstructionLevelName, setNewInstructionLevelName] = useState('');
   const [newInstructionLevelOrder, setNewInstructionLevelOrder] = useState('');
   const [audioUrl, setAudioUrl] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [generating, setGenerating] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const { user } = useAuth();
 
   // Load categories and instruction levels
@@ -200,6 +207,131 @@ export default function AddCardForm({ onAdd, onCancel }) {
     setAudioUrl(url);
   };
 
+  // Image handlers
+  const handleGenerateAIImage = async () => {
+    if (!formData.front?.trim() && !formData.backEnglish?.trim() && !formData.englishText?.trim()) {
+      setError('Please enter a word first (front, backEnglish, or englishText)');
+      return;
+    }
+
+    setGenerating(true);
+    setError('');
+
+    try {
+      const prompt = formData.backEnglish || formData.englishText || formData.front;
+      const result = await generateAIImage(prompt);
+      
+      if (result.success && result.imageUrl) {
+        // Check if it's a base64 data URL - if so, upload to Supabase Storage
+        if (result.imageUrl.startsWith('data:image/')) {
+          try {
+            const response = await fetch(result.imageUrl);
+            const blob = await response.blob();
+            const file = new File([blob], `${prompt}_${Date.now()}.png`, {
+              type: blob.type || 'image/png'
+            });
+            const uploadResult = await uploadToSupabase(file);
+            
+            if (uploadResult.success && uploadResult.imageUrl) {
+              setImageUrl(uploadResult.imageUrl);
+              setImagePreview(uploadResult.imageUrl);
+            } else {
+              console.warn('Failed to upload to Supabase, using base64:', uploadResult.error);
+              setImageUrl(result.imageUrl);
+              setImagePreview(result.imageUrl);
+            }
+          } catch (uploadErr) {
+            console.error('Error uploading generated image:', uploadErr);
+            setImageUrl(result.imageUrl);
+            setImagePreview(result.imageUrl);
+          }
+        } else {
+          setImageUrl(result.imageUrl);
+          setImagePreview(result.imageUrl);
+        }
+      } else {
+        setError(result.error || 'AI image generation failed');
+      }
+    } catch (err) {
+      console.error('Image generation error:', err);
+      setError('Image generation failed. Please try again.');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleSearchUnsplash = async () => {
+    if (!formData.backEnglish?.trim() && !formData.front?.trim() && !formData.englishText?.trim()) {
+      setError('Please enter a word first (front, backEnglish, or englishText)');
+      return;
+    }
+
+    setSearching(true);
+    setError('');
+
+    try {
+      const query = (formData.backEnglish || formData.englishText || formData.front).trim();
+      const result = await searchImage(query);
+      if (result.success && result.imageUrl) {
+        setImageUrl(result.imageUrl);
+        setImagePreview(result.imageUrl);
+      } else {
+        setError(result.error || 'Image search failed');
+      }
+    } catch (err) {
+      console.error('Image search error:', err);
+      setError('Image search failed. Please try again.');
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setError(validation.error || 'Invalid image file');
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+
+    const preview = createImagePreview(file);
+    setImagePreview(preview);
+
+    try {
+      const result = await uploadImage(file);
+      if (result.success && result.imageUrl) {
+        setImageUrl(result.imageUrl);
+        revokeImagePreview(preview);
+        setImagePreview(result.imageUrl);
+      } else {
+        setError(result.error || 'Image upload failed');
+        revokeImagePreview(preview);
+        setImagePreview(null);
+      }
+    } catch (err) {
+      console.error('Image upload error:', err);
+      setError('Image upload failed. Please try again.');
+      revokeImagePreview(preview);
+      setImagePreview(null);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveImage = () => {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      revokeImagePreview(imagePreview);
+    }
+    setImageUrl(null);
+    setImagePreview(null);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -212,6 +344,7 @@ export default function AddCardForm({ onAdd, onCancel }) {
       englishText: (formData.type === 'word' || formData.type === 'phrase') ? (formData.englishText || null) : null,
       notes: formData.notes || null,
       audioUrl: audioUrl || null,
+      imageUrl: imageUrl || null,
       // Classification data
       categoryIds: categoryIds,
       instructionLevelId: instructionLevelId || null
@@ -241,6 +374,11 @@ export default function AddCardForm({ onAdd, onCancel }) {
       setCategoryIds([]);
       setInstructionLevelId('');
       setAudioUrl(null);
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        revokeImagePreview(imagePreview);
+      }
+      setImageUrl(null);
+      setImagePreview(null);
       setError('');
     } else {
       alert('Please fill in all required fields.');
@@ -586,6 +724,85 @@ export default function AddCardForm({ onAdd, onCancel }) {
             <p className="form-hint" style={{ marginTop: '0.5rem', color: 'var(--theme-accent-success, #28a745)' }}>
               ✅ Audio recorded and ready to save
             </p>
+          )}
+        </div>
+
+        {/* Image Section */}
+        <div className="image-section">
+          <label>Image (Optional)</label>
+          
+          <div className="image-actions">
+            {isAdmin && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleGenerateAIImage}
+                  disabled={generating || searching || uploading || (!formData.front?.trim() && !formData.backEnglish?.trim() && !formData.englishText?.trim())}
+                  className="btn-secondary"
+                  aria-busy={generating}
+                >
+                  {generating ? (
+                    <>
+                      <span className="loading-spinner" aria-label="Generating image..."></span>
+                      Generating...
+                    </>
+                  ) : (
+                    'Generate AI Image'
+                  )}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleSearchUnsplash}
+                  disabled={generating || searching || uploading || (!formData.front?.trim() && !formData.backEnglish?.trim() && !formData.englishText?.trim())}
+                  className="btn-secondary"
+                  aria-busy={searching}
+                >
+                  {searching ? (
+                    <>
+                      <span className="loading-spinner" aria-label="Searching for image..."></span>
+                      Searching...
+                    </>
+                  ) : (
+                    'Search Unsplash'
+                  )}
+                </button>
+              </>
+            )}
+            
+            <label className="btn-secondary btn-upload">
+              {uploading ? (
+                <>
+                  <span className="loading-spinner" aria-label="Uploading image..."></span>
+                  Uploading...
+                </>
+              ) : (
+                'Upload Image'
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                disabled={uploading || generating || searching}
+                style={{ display: 'none' }}
+              />
+            </label>
+            
+            {imagePreview && (
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="btn-secondary btn-remove"
+              >
+                Remove Image
+              </button>
+            )}
+          </div>
+
+          {imagePreview && (
+            <div className="image-preview">
+              <img src={imagePreview} alt="Preview" />
+            </div>
           )}
         </div>
 
