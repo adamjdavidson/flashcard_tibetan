@@ -13,6 +13,12 @@
   overflow-y: auto;
 }
 
+.modal-loading {
+  padding: 2rem;
+  text-align: center;
+  color: var(--theme-text-secondary, #666);
+}
+
 .admin-card-modal {
   position: relative;
   background: var(--theme-bg-card);
