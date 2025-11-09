@@ -81,6 +81,30 @@
   font-size: 0.875rem;
 }
 
+.bulk-add-form .help-text {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--theme-text-secondary, #666);
+  font-size: 0.875rem;
+}
+
+.bulk-add-form input[type="checkbox"] {
+  margin-right: 0.5rem;
+  width: auto;
+  cursor: pointer;
+}
+
+.bulk-add-form input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.bulk-add-form label[for="markAsNew"] {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
 .bulk-add-form .error-message {
   color: var(--theme-error, #dc3545);
 }
