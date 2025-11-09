@@ -1,0 +1,180 @@
+.bulk-add-summary {
+  padding: 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.bulk-add-summary h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--theme-text-primary, #333);
+}
+
+.bulk-add-summary h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: var(--theme-text-primary, #333);
+  font-size: 1.1rem;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+  background: var(--theme-bg-card, #fff);
+  border: 1px solid var(--theme-border, #ddd);
+}
+
+.stat-card.success {
+  background: var(--theme-success-bg, #d4edda);
+  border-color: var(--theme-success, #28a745);
+}
+
+.stat-card.info {
+  background: var(--theme-info-bg, #d1ecf1);
+  border-color: var(--theme-info, #17a2b8);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--theme-text-primary, #333);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--theme-text-secondary, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--theme-bg-card, #fff);
+  border: 1px solid var(--theme-border, #ddd);
+  border-radius: 4px;
+}
+
+.summary-section.error {
+  background: var(--theme-error-bg, #fee);
+  border-color: var(--theme-error, #dc3545);
+}
+
+.section-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--theme-text-primary, #333);
+  text-align: left;
+}
+
+.section-toggle:hover {
+  color: var(--theme-accent, #007bff);
+}
+
+.section-toggle span:last-child {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.word-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.word-tag {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: var(--theme-bg-secondary, #6c757d);
+  color: white;
+  border-radius: 12px;
+  font-size: 0.875rem;
+}
+
+.summary-section ul {
+  margin: 0.5rem 0 0 0;
+  padding-left: 1.5rem;
+}
+
+.summary-section li {
+  margin-bottom: 0.5rem;
+  color: var(--theme-text-primary, #333);
+}
+
+.card-list {
+  margin-top: 1rem;
+}
+
+.card-item {
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: var(--theme-bg-input, #f8f9fa);
+  border-radius: 4px;
+  border-left: 3px solid var(--theme-accent, #007bff);
+}
+
+.card-item strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--theme-text-primary, #333);
+}
+
+.card-item .tibetan-text {
+  display: block;
+  color: var(--theme-text-secondary, #666);
+  font-size: 0.9rem;
+}
+
+.summary-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  justify-content: flex-end;
+}
+
+.summary-actions .btn-primary,
+.summary-actions .btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.summary-actions .btn-primary {
+  background: var(--theme-accent, #007bff);
+  color: white;
+}
+
+.summary-actions .btn-primary:hover {
+  background: var(--theme-accent-hover, #0056b3);
+}
+
+.summary-actions .btn-secondary {
+  background: var(--theme-bg-secondary, #6c757d);
+  color: white;
+}
+
+.summary-actions .btn-secondary:hover {
+  background: var(--theme-bg-secondary-hover, #5a6268);
+}
+
