@@ -8,6 +8,7 @@ import AdminClassificationManager from './AdminClassificationManager.jsx';
 import CardManager from './CardManager.jsx';
 import QuickTranslateForm from './QuickTranslateForm.jsx';
 import CardPreviewModal from './CardPreviewModal.jsx';
+import BulkImageGenerator from './BulkImageGenerator.jsx';
 import { ErrorBoundary } from '../ErrorBoundary.jsx';
 import { loadCards, saveCard, saveCards, deleteCard } from '../services/cardsService.js';
 import { loadCategories } from '../services/categoriesService.js';
@@ -943,6 +944,23 @@ export default function AdminPage() {
               </select>
             </div>
           </div>
+
+          {/* Bulk Image Generation */}
+          {isAdminUser && (
+            <BulkImageGenerator
+              cards={cards}
+              filters={{
+                type: filterType,
+                category: filterCategory,
+                instructionLevel: filterInstructionLevel
+              }}
+              onComplete={(result) => {
+                // Reload cards to show new images
+                loadCardsData();
+                setSuccess(`Bulk generation complete: ${result.completed} succeeded, ${result.failed} failed`);
+              }}
+            />
+          )}
 
           {/* View Mode Content */}
           {viewMode === 'table' ? (

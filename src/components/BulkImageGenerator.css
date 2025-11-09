@@ -1,0 +1,173 @@
+/* BulkImageGenerator component styles */
+
+.bulk-image-generator {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  border: 1px solid var(--theme-border-dark, #e0e0e0);
+  border-radius: 8px;
+  background: var(--theme-bg-card, #ffffff);
+}
+
+.bulk-image-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.bulk-image-header h3 {
+  margin: 0;
+  color: var(--theme-text-primary, #333);
+  font-size: 1.25rem;
+}
+
+.bulk-image-message {
+  color: var(--theme-text-secondary, #666);
+  font-style: italic;
+  margin: 0.5rem 0;
+}
+
+.bulk-progress {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--theme-bg-card, #ffffff);
+  border: 1px solid var(--theme-border-dark, #e0e0e0);
+  border-radius: 6px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 24px;
+  background: var(--theme-border-dark, #e0e0e0);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--theme-accent-info, #007bff);
+  transition: width 0.3s ease;
+}
+
+.progress-info {
+  margin: 0.5rem 0;
+  color: var(--theme-text-primary, #333);
+}
+
+.progress-info p {
+  margin: 0.25rem 0;
+}
+
+.current-card {
+  font-style: italic;
+  color: var(--theme-text-secondary, #666);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.bulk-result-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--theme-bg-card, #ffffff);
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal-content h3 {
+  margin: 0 0 1rem 0;
+  color: var(--theme-text-primary, #333);
+}
+
+.result-summary {
+  margin: 1rem 0;
+}
+
+.result-summary p {
+  margin: 0.5rem 0;
+  color: var(--theme-text-primary, #333);
+}
+
+.failures-list {
+  margin-top: 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.failures-list h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--theme-text-primary, #333);
+  font-size: 1rem;
+}
+
+.failures-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+.failures-list li {
+  padding: 0.5rem;
+  margin: 0.25rem 0;
+  background: rgba(220, 53, 69, 0.1);
+  border-left: 3px solid var(--theme-accent-error, #dc3545);
+  font-size: 0.875rem;
+  color: var(--theme-text-primary, #333);
+}
+
+/* Button styles */
+.bulk-image-generator .btn-primary,
+.bulk-image-generator .btn-secondary {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.bulk-image-generator .btn-primary {
+  background: var(--theme-accent-primary, #007bff);
+  color: white;
+}
+
+.bulk-image-generator .btn-primary:hover:not(:disabled) {
+  background: var(--theme-accent-primary-hover, #0056b3);
+}
+
+.bulk-image-generator .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bulk-image-generator .btn-secondary {
+  background: var(--theme-bg-secondary, #6c757d);
+  color: white;
+  margin-top: 0.5rem;
+}
+
+.bulk-image-generator .btn-secondary:hover {
+  background: var(--theme-bg-secondary-hover, #5a6268);
+}
+
+.modal-content .btn-primary {
+  margin-top: 1rem;
+  width: 100%;
+}
+
