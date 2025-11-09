@@ -4,10 +4,12 @@
  * Provides accessible modal with focus trap, ESC to close, ARIA labels
  */
 
-import { useEffect, useRef } from 'react';
-import AddCardForm from './AddCardForm.jsx';
+import { useEffect, useRef, lazy, Suspense } from 'react';
 import EditCardForm from './EditCardForm.jsx';
 import './AdminCardModal.css';
+
+// Lazy load AddCardForm to avoid loading it until modal is opened
+const AddCardForm = lazy(() => import('./AddCardForm.jsx'));
 
 export default function AdminCardModal({ 
   isOpen, 
@@ -97,11 +99,13 @@ export default function AdminCardModal({
         </button>
         
         {mode === 'add' && (
-          <AddCardForm
-            onAdd={onSave}
-            onCancel={onCancel}
-            isAdmin={isAdmin}
-          />
+          <Suspense fallback={<div className="modal-loading">Loading...</div>}>
+            <AddCardForm
+              onAdd={onSave}
+              onCancel={onCancel}
+              isAdmin={isAdmin}
+            />
+          </Suspense>
         )}
         
         {mode === 'edit' && card && (
