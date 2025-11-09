@@ -8,6 +8,7 @@ import AdminClassificationManager from './AdminClassificationManager.jsx';
 import CardManager from './CardManager.jsx';
 import QuickTranslateForm from './QuickTranslateForm.jsx';
 import CardPreviewModal from './CardPreviewModal.jsx';
+import BulkAddForm from './BulkAddForm.jsx';
 import BulkImageGenerator from './BulkImageGenerator.jsx';
 import { ErrorBoundary } from '../ErrorBoundary.jsx';
 import { loadCards, saveCard, saveCards, deleteCard } from '../services/cardsService.js';
@@ -53,6 +54,7 @@ export default function AdminPage() {
   const [previewCard, setPreviewCard] = useState(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [instructionLevels, setInstructionLevels] = useState([]);
+  const [bulkAddModalOpen, setBulkAddModalOpen] = useState(false);
 
   const clearMessages = () => {
     setError('');
@@ -358,6 +360,24 @@ export default function AdminPage() {
     setModalMode('add');
     setEditingCard(null);
     setModalOpen(true);
+  };
+
+  // Handle bulk add cards
+  const handleBulkAddCards = () => {
+    setBulkAddModalOpen(true);
+  };
+
+  // Handle bulk add completion
+  const handleBulkAddComplete = (summary) => {
+    setBulkAddModalOpen(false);
+    setSuccess(`Bulk add completed: ${summary.cardsCreated} cards created, ${summary.duplicatesSkipped} duplicates skipped`);
+    // Refresh card list
+    loadCardsData();
+  };
+
+  // Handle bulk add cancel
+  const handleBulkAddCancel = () => {
+    setBulkAddModalOpen(false);
   };
 
   // Handle edit card
@@ -885,6 +905,14 @@ export default function AdminPage() {
               >
                 + Add Card
               </button>
+              <button
+                className="btn-secondary"
+                onClick={handleBulkAddCards}
+                disabled={loading || cardsLoading}
+                title="Bulk add multiple cards at once"
+              >
+                Bulk Add Cards
+              </button>
             </div>
           </div>
 
@@ -1008,6 +1036,41 @@ export default function AdminPage() {
             isOpen={isPreviewOpen}
             onClose={handleClosePreview}
           />
+
+          {/* Bulk Add Modal */}
+          {bulkAddModalOpen && (
+            <div
+              className="admin-card-modal-backdrop"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  handleBulkAddCancel();
+                }
+              }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="bulk-add-title"
+            >
+              <div
+                className="admin-card-modal"
+                onClick={(e) => e.stopPropagation()}
+                role="document"
+              >
+                <button
+                  className="modal-close-btn"
+                  onClick={handleBulkAddCancel}
+                  aria-label="Close bulk add modal"
+                  type="button"
+                >
+                  ×
+                </button>
+                <BulkAddForm
+                  onComplete={handleBulkAddComplete}
+                  onCancel={handleBulkAddCancel}
+                  isAdmin={isAdminUser}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
