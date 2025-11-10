@@ -4,7 +4,7 @@ test.describe('Admin Card Management - phase 1', () => {
   test.beforeEach(async ({ page }) => {
     // Go to admin page where advanced card management lives
     await page.goto('/admin');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Wait for the admin tab bar to render
     const tabs = page.locator('.admin-tabs');

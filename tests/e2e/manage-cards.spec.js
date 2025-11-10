@@ -10,7 +10,7 @@ test.describe('Manage Cards', () => {
       await page.waitForURL(/\/manage/);
     } else {
       await page.goto('/manage');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
     }
 
     // Quick add form visible

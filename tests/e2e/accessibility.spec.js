@@ -32,7 +32,7 @@ test.describe('Accessibility (global)', () => {
   for (const route of ['/', '/admin']) {
     test(`no critical violations on ${route}`, async ({ page }) => {
       await page.goto(route);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       try {
         await injectAxe(page);

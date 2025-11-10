@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Admin workflows', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/admin');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.locator('.admin-tabs')).toBeVisible({ timeout: 20000 });
   });
 

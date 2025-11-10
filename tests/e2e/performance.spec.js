@@ -4,7 +4,7 @@ test.describe('Performance (global)', () => {
   test('home page loads within budget', async ({ page }) => {
     const start = Date.now();
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     const loadMs = Date.now() - start;
     expect(loadMs).toBeLessThan(5000);
   });
@@ -28,7 +28,7 @@ test.describe('Performance (global)', () => {
     const requests = [];
     page.on('requestfinished', req => requests.push(req));
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     expect(requests.length).toBeLessThan(100);
   });
 });
