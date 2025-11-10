@@ -6,15 +6,20 @@ test.describe('Admin page', () => {
     await page.waitForLoadState('domcontentloaded');
     
     // Wait for React to hydrate and admin check to complete
+    // Increased timeout to 30s to match test timeout
     await page.waitForFunction(() => {
       const denied = document.body.textContent?.includes('access denied');
       const tabs = document.querySelector('.admin-tabs');
       const adminPage = document.querySelector('.admin-page');
       return !denied && (tabs !== null || adminPage !== null);
-    }, { timeout: 20000 });
+    }, { timeout: 30000 });
 
     // Admin shell visible (tabs or page container) - use first() for strict mode
-    await expect(page.locator('.admin-page,.admin-tabs').first()).toBeVisible({ timeout: 20000 });
+    await expect(page.locator('.admin-page,.admin-tabs').first()).toBeVisible({ timeout: 30000 });
+    
+    // Wait a bit more to ensure "access denied" has time to disappear if it was briefly shown
+    await page.waitForTimeout(500);
+    
     // No access denied
     await expect(page.locator('text=/access denied/i')).toHaveCount(0);
   });

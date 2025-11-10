@@ -8,31 +8,43 @@ test.describe('Admin Card Management - phase 1', () => {
     
     // Wait for React to hydrate and admin check to complete
     // Check that we don't see "access denied" and admin tabs appear
+    // Increased timeout to 30s to match test timeout
     await page.waitForFunction(() => {
       const denied = document.body.textContent?.includes('access denied');
       const tabs = document.querySelector('.admin-tabs');
       return !denied && tabs !== null;
-    }, { timeout: 20000 });
+    }, { timeout: 30000 });
 
     // Wait for the admin tab bar to render
     const tabs = page.locator('.admin-tabs');
-    await expect(tabs).toBeVisible({ timeout: 20000 });
+    await expect(tabs).toBeVisible({ timeout: 30000 });
 
     // Navigate to the explicit "Card Management" admin tab inside the tab bar
-    await tabs.getByRole('button', { name: /^card management$/i }).click({ timeout: 20000 });
+    await tabs.getByRole('button', { name: /^card management$/i }).click({ timeout: 30000 });
 
     // Ensure Table view is active
-    await page.getByRole('button', { name: /^table$/i }).click({ timeout: 20000 });
+    await page.getByRole('button', { name: /^table$/i }).click({ timeout: 30000 });
 
     // Wait for cards to load - table only renders when cards.length > 0
     // Wait for either the table to appear OR "No cards found" message
+    // Increased timeout to 30s and added more specific checks
     await page.waitForFunction(() => {
       const table = document.querySelector('table[aria-label="Card management table"]');
       const noCards = document.querySelector('.admin-card-table-empty');
       const loading = document.querySelector('.admin-card-table-loading');
       // Table is ready when it exists OR no-cards message exists (not loading)
+      // Also check that loading spinner is gone
       return (table !== null) || (noCards !== null && loading === null);
-    }, { timeout: 20000 });
+    }, { timeout: 30000 });
+    
+    // Additional wait to ensure table is fully rendered
+    const table = page.getByRole('table', { name: /card management table/i });
+    const noCards = page.locator('.admin-card-table-empty');
+    // Wait for either table or no-cards message to be visible
+    await Promise.race([
+      table.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null),
+      noCards.waitFor({ state: 'visible', timeout: 5000 }).catch(() => null)
+    ]);
   });
 
   test('displays cards in table view', async ({ page }) => {

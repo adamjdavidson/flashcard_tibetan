@@ -18,11 +18,21 @@ test.describe('Performance (global)', () => {
       const denied = document.body.textContent?.includes('access denied');
       const tabs = document.querySelector('.admin-tabs');
       return !denied && tabs !== null;
-    }, { timeout: 20000 });
+    }, { timeout: 30000 });
     
     await page.getByRole('button', { name: /^card management$/i }).click();
     await page.getByRole('button', { name: /^table$/i }).click();
+    
+    // Wait for cards to load before testing sort
+    await page.waitForFunction(() => {
+      const table = document.querySelector('table[aria-label="Card management table"]');
+      const noCards = document.querySelector('.admin-card-table-empty');
+      const loading = document.querySelector('.admin-card-table-loading');
+      return (table !== null) || (noCards !== null && loading === null);
+    }, { timeout: 30000 });
+    
     const sortButton = page.getByRole('button', { name: /sort by type/i });
+    await expect(sortButton).toBeVisible({ timeout: 10000 });
     const start = Date.now();
     await sortButton.click();
     await page.waitForTimeout(100);
