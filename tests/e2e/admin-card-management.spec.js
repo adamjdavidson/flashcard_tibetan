@@ -5,6 +5,14 @@ test.describe('Admin Card Management - phase 1', () => {
     // Go to admin page where advanced card management lives
     await page.goto('/admin');
     await page.waitForLoadState('domcontentloaded');
+    
+    // Wait for React to hydrate and admin check to complete
+    // Check that we don't see "access denied" and admin tabs appear
+    await page.waitForFunction(() => {
+      const denied = document.body.textContent?.includes('access denied');
+      const tabs = document.querySelector('.admin-tabs');
+      return !denied && tabs !== null;
+    }, { timeout: 20000 });
 
     // Wait for the admin tab bar to render
     const tabs = page.locator('.admin-tabs');

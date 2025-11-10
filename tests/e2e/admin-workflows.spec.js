@@ -4,6 +4,14 @@ test.describe('Admin workflows', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/admin');
     await page.waitForLoadState('domcontentloaded');
+    
+    // Wait for React to hydrate and admin check to complete
+    await page.waitForFunction(() => {
+      const denied = document.body.textContent?.includes('access denied');
+      const tabs = document.querySelector('.admin-tabs');
+      return !denied && tabs !== null;
+    }, { timeout: 20000 });
+    
     await expect(page.locator('.admin-tabs')).toBeVisible({ timeout: 20000 });
   });
 

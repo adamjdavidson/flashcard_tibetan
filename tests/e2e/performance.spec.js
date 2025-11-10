@@ -11,6 +11,15 @@ test.describe('Performance (global)', () => {
 
   test('admin table sort is responsive', async ({ page, browserName }) => {
     await page.goto('/admin');
+    await page.waitForLoadState('domcontentloaded');
+    
+    // Wait for React to hydrate and admin check to complete
+    await page.waitForFunction(() => {
+      const denied = document.body.textContent?.includes('access denied');
+      const tabs = document.querySelector('.admin-tabs');
+      return !denied && tabs !== null;
+    }, { timeout: 20000 });
+    
     await page.getByRole('button', { name: /^card management$/i }).click();
     await page.getByRole('button', { name: /^table$/i }).click();
     const sortButton = page.getByRole('button', { name: /sort by type/i });
