@@ -59,9 +59,32 @@ test('authenticate', async ({ page }) => {
   });
   if (supabaseUrl && supabaseKey) {
     logDiag('Starting Supabase auth', 'signInWithPassword');
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
     const authStart = Date.now();
-    const { data, error } = await supabase.auth.signInWithPassword({ email: sanitize(email), password: sanitize(password) });
+    
+    // Wrap auth call with timeout to prevent hanging
+    const authPromise = supabase.auth.signInWithPassword({ email: sanitize(email), password: sanitize(password) });
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Supabase auth timeout after 30 seconds')), 30000);
+    });
+    
+    let data, error;
+    try {
+      const result = await Promise.race([authPromise, timeoutPromise]);
+      // authPromise resolves with { data, error } object
+      data = result.data;
+      error = result.error;
+    } catch (timeoutError) {
+      // Timeout or other error occurred
+      logDiag('Supabase auth timeout/error', { elapsed: Date.now() - authStart, error: timeoutError.message });
+      throw new Error(`Supabase auth failed: ${timeoutError.message}`);
+    }
+    
     logDiag('Supabase auth completed', { 
       elapsed: Date.now() - authStart, 
       hasError: !!error, 
