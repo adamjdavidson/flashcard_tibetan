@@ -12,6 +12,7 @@ function logDiag(label, obj) {
 const authFile = 'playwright/.auth/admin.json';
 
 test('authenticate', async ({ page }) => {
+  test.setTimeout(60000); // 60 seconds for CI (network latency, Supabase API calls, auth polling)
   // Load .env.local into process.env if present (Playwright doesn't auto-load Vite env files)
   try {
     const envPath = path.resolve(process.cwd(), '.env.local');
