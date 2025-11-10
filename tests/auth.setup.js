@@ -62,9 +62,20 @@ test('authenticate', async ({ page }) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const authStart = Date.now();
     const { data, error } = await supabase.auth.signInWithPassword({ email: sanitize(email), password: sanitize(password) });
-    logDiag('Supabase auth completed', { elapsed: Date.now() - authStart, hasError: !!error, hasSession: !!data?.session });
+    logDiag('Supabase auth completed', { 
+      elapsed: Date.now() - authStart, 
+      hasError: !!error, 
+      hasSession: !!data?.session,
+      errorDetails: error ? {
+        message: error.message,
+        status: error.status,
+        name: error.name,
+        toString: String(error)
+      } : null
+    });
     if (error) {
-      throw new Error(`Supabase auth failed: ${error.message}`);
+      const errorMsg = error.message || error.toString() || JSON.stringify(error);
+      throw new Error(`Supabase auth failed: ${errorMsg}`);
     }
     if (!data?.session) {
       throw new Error('Supabase auth returned no session');
