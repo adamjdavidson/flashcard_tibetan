@@ -35,8 +35,15 @@ export function useAuth() {
           } else {
             setIsAdminUser(false);
           }
-          setLoading(false);
-          initializationComplete.current = true;
+          // Only set loading to false if initialization is complete
+          // This prevents race condition where SIGNED_IN fires before initializeAuth completes
+          if (initializationComplete.current) {
+            setLoading(false);
+          } else {
+            // If initialization not complete, let initializeAuth handle setting loading = false
+            // But mark initialization as complete since we've handled the sign-in
+            initializationComplete.current = true;
+          }
         } else if (event === 'TOKEN_REFRESHED') {
           // Token refreshed - update user but don't re-check admin status
           // Admin status doesn't change on token refresh, so avoid unnecessary query
