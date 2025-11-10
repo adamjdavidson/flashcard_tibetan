@@ -12,7 +12,7 @@ function logDiag(label, obj) {
 const authFile = 'playwright/.auth/admin.json';
 
 test('authenticate', async ({ page }) => {
-  test.setTimeout(60000); // 60 seconds for CI environment (network latency, Supabase API calls)
+  test.setTimeout(45000); // 45 seconds - increased from default 30s for CI network latency
   // Load .env.local into process.env if present (Playwright doesn't auto-load Vite env files)
   try {
     const envPath = path.resolve(process.cwd(), '.env.local');
@@ -141,7 +141,9 @@ test('authenticate', async ({ page }) => {
     // Give SDK time to persist, then reload fully
     await page.waitForTimeout(1000);
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    // Use domcontentloaded instead of networkidle - networkidle can hang in CI
+    // due to background requests (token refresh, analytics, etc.)
+    await page.waitForLoadState('domcontentloaded');
 
     // CRITICAL: Wait for auth state to fully initialize after reload
     // Poll until the session is restored by the Supabase SDK
