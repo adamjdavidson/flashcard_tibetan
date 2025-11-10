@@ -58,8 +58,11 @@ test('authenticate', async ({ page }) => {
     } catch (e) { void e; }
   });
   if (supabaseUrl && supabaseKey) {
+    logDiag('Starting Supabase auth', 'signInWithPassword');
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const authStart = Date.now();
     const { data, error } = await supabase.auth.signInWithPassword({ email: sanitize(email), password: sanitize(password) });
+    logDiag('Supabase auth completed', { elapsed: Date.now() - authStart, hasError: !!error, hasSession: !!data?.session });
     if (error) {
       throw new Error(`Supabase auth failed: ${error.message}`);
     }
@@ -115,8 +118,13 @@ test('authenticate', async ({ page }) => {
     }, { storageKey, session: safeSession });
 
     // Load the app
+    logDiag('Navigating to app', '/');
+    const gotoStart = Date.now();
     await page.goto('/');
+    logDiag('Page navigation completed', { elapsed: Date.now() - gotoStart });
+    logDiag('Waiting for domcontentloaded', 'initial load');
     await page.waitForLoadState('domcontentloaded');
+    logDiag('domcontentloaded reached', 'initial load complete');
 
     // Verify storage immediately
     const keysPost = await page.evaluate(() => Object.keys(localStorage));
@@ -124,7 +132,9 @@ test('authenticate', async ({ page }) => {
     logDiag('auth storage present (post-boot)', keysPost.includes(storageKey));
 
     // Ensure SDK knows about the session as well
-    await page.evaluate(async ({ url, key, session }) => {
+    logDiag('Calling setSession in browser', 'ensuring SDK knows about session');
+    const setSessionStart = Date.now();
+    const setSessionResult = await page.evaluate(async ({ url, key, session }) => {
       try {
         const mod = await import('https://esm.sh/@supabase/supabase-js@2');
         const supa = mod.createClient(url, key);
@@ -132,11 +142,12 @@ test('authenticate', async ({ page }) => {
           access_token: session.access_token,
           refresh_token: session.refresh_token
         });
-        console.log('[AUTH-SETUP] setSession result', res && res.data ? 'ok' : 'no-data');
+        return { success: true, hasData: !!(res && res.data), error: null };
       } catch (e) {
-        console.error('[AUTH-SETUP] setSession error', e && (e.message || String(e)));
+        return { success: false, hasData: false, error: e && (e.message || String(e)) };
       }
     }, { url: supabaseUrl, key: supabaseKey, session: safeSession });
+    logDiag('setSession completed', { elapsed: Date.now() - setSessionStart, ...setSessionResult });
 
     // Give SDK time to persist, then reload fully
     logDiag('Before reload', 'waiting 1s then reloading');
@@ -151,22 +162,30 @@ test('authenticate', async ({ page }) => {
 
     // CRITICAL: Wait for auth state to fully initialize after reload
     // Poll until the session is restored by the Supabase SDK
+    logDiag('Starting auth restoration polling', 'maxWait: 10000ms');
     const authRestored = await page.evaluate(async ({ url, key, maxWait = 10000 }) => {
       const start = Date.now();
+      let attempt = 0;
       while (Date.now() - start < maxWait) {
+        attempt++;
         try {
           const mod = await import('https://esm.sh/@supabase/supabase-js@2');
           const client = mod.createClient(url, key);
           const { data: { user } } = await client.auth.getUser();
           if (user?.id) {
-            return { success: true, userId: user.id, elapsed: Date.now() - start };
+            console.log(`[AUTH-SETUP] Auth restored on attempt ${attempt}, elapsed: ${Date.now() - start}ms`);
+            return { success: true, userId: user.id, elapsed: Date.now() - start, attempts: attempt };
           }
-        } catch {
+        } catch (e) {
           // SDK might not be ready yet
+          if (attempt % 5 === 0) {
+            console.log(`[AUTH-SETUP] Auth restoration attempt ${attempt}, error:`, e && (e.message || String(e)));
+          }
         }
         await new Promise(r => setTimeout(r, 200));
       }
-      return { success: false, elapsed: Date.now() - start };
+      console.log(`[AUTH-SETUP] Auth restoration failed after ${attempt} attempts, elapsed: ${Date.now() - start}ms`);
+      return { success: false, elapsed: Date.now() - start, attempts: attempt };
     }, { url: supabaseUrl, key: supabaseKey });
     logDiag('auth restoration after reload', authRestored);
 
@@ -245,20 +264,28 @@ test('authenticate', async ({ page }) => {
 
   // Wait for the app's useAuth hook to initialize and update the UI
   // This is critical - the app needs time to call getSession() and update state
-  logDiag('Waiting for app auth UI to render...', 'polling for user indicator');
+  logDiag('Waiting for app auth UI to render...', 'polling for user indicator, maxWait: 15000ms');
   const uiReady = await page.evaluate(async () => {
     const start = Date.now();
+    let attempt = 0;
     while (Date.now() - start < 15000) {
+      attempt++;
       // Check if any user indicator is visible
       const userEmail = document.querySelector('.user-email');
       const userMenu = document.querySelector('[data-testid="user-menu"]');
-      if ((userEmail && userEmail.offsetParent !== null) ||
-          (userMenu && userMenu.offsetParent !== null)) {
-        return { success: true, elapsed: Date.now() - start, indicator: userEmail ? 'user-email' : 'user-menu' };
+      const emailVisible = userEmail && userEmail.offsetParent !== null;
+      const menuVisible = userMenu && userMenu.offsetParent !== null;
+      if (emailVisible || menuVisible) {
+        console.log(`[AUTH-SETUP] UI indicator found on attempt ${attempt}, elapsed: ${Date.now() - start}ms`);
+        return { success: true, elapsed: Date.now() - start, indicator: emailVisible ? 'user-email' : 'user-menu', attempts: attempt };
+      }
+      if (attempt % 10 === 0) {
+        console.log(`[AUTH-SETUP] UI polling attempt ${attempt}, elapsed: ${Date.now() - start}ms, email exists: ${!!userEmail}, menu exists: ${!!userMenu}`);
       }
       await new Promise(r => setTimeout(r, 200));
     }
-    return { success: false, elapsed: Date.now() - start };
+    console.log(`[AUTH-SETUP] UI indicator not found after ${attempt} attempts, elapsed: ${Date.now() - start}ms`);
+    return { success: false, elapsed: Date.now() - start, attempts: attempt };
   });
   logDiag('App UI auth state', uiReady);
 
@@ -272,13 +299,18 @@ test('authenticate', async ({ page }) => {
   }
 
   // Final sanity check: user indicator is visible
+  logDiag('Final visibility check', 'expecting user indicator to be visible');
   try {
     await expect(page.locator('.user-email, [data-testid="user-menu"]').first()).toBeVisible({ timeout: 2000 });
+    logDiag('Final visibility check passed', 'user indicator is visible');
   } catch (error) {
+    logDiag('Final visibility check failed', error.message);
     throw new Error(`User indicator not visible even after polling: ${error.message}`);
   }
 
   logDiag('Auth setup complete', 'saving storage state');
   fs.mkdirSync('playwright/.auth', { recursive: true });
+  const saveStart = Date.now();
   await page.context().storageState({ path: authFile });
+  logDiag('Storage state saved', { elapsed: Date.now() - saveStart, path: authFile });
 });
