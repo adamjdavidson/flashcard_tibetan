@@ -19,7 +19,8 @@ export function useAuth() {
     // Subscribe to auth state changes (only if Supabase is configured)
     try {
       const { data: { subscription } } = onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (event === 'SIGNED_IN') {
+          // User signed in - check admin status
           const currentUser = session?.user || null;
           setUser(currentUser);
           if (currentUser) {
@@ -33,11 +34,19 @@ export function useAuth() {
           } else {
             setIsAdminUser(false);
           }
+          setLoading(false);
+        } else if (event === 'TOKEN_REFRESHED') {
+          // Token refreshed - update user but don't re-check admin status
+          // Admin status doesn't change on token refresh, so avoid unnecessary query
+          const currentUser = session?.user || null;
+          setUser(currentUser);
+          // Keep existing admin status - don't query user_roles again
+          setLoading(false);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setIsAdminUser(false);
+          setLoading(false);
         }
-        setLoading(false);
       });
 
       return () => {
