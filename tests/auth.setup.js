@@ -67,37 +67,59 @@ test('authenticate', async ({ page }) => {
     });
     const authStart = Date.now();
     
-    // Wrap auth call with timeout to prevent hanging
-    const authPromise = supabase.auth.signInWithPassword({ email: sanitize(email), password: sanitize(password) });
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Supabase auth timeout after 30 seconds')), 30000);
-    });
-    
+    // Direct call - test.setTimeout handles overall timeout
     let data, error;
     try {
-      const result = await Promise.race([authPromise, timeoutPromise]);
-      // authPromise resolves with { data, error } object
+      const result = await supabase.auth.signInWithPassword({ email: sanitize(email), password: sanitize(password) });
       data = result.data;
       error = result.error;
-    } catch (timeoutError) {
-      // Timeout or other error occurred
-      logDiag('Supabase auth timeout/error', { elapsed: Date.now() - authStart, error: timeoutError.message });
-      throw new Error(`Supabase auth failed: ${timeoutError.message}`);
+    } catch (authError) {
+      // If signInWithPassword throws (unlikely but possible), wrap it
+      logDiag('Supabase auth threw exception', { elapsed: Date.now() - authStart, error: authError });
+      throw new Error(`Supabase auth exception: ${authError.message || String(authError)}`);
     }
     
+    const elapsed = Date.now() - authStart;
     logDiag('Supabase auth completed', { 
-      elapsed: Date.now() - authStart, 
+      elapsed, 
       hasError: !!error, 
       hasSession: !!data?.session,
+      errorType: error ? typeof error : null,
+      errorConstructor: error ? error.constructor?.name : null,
+      errorKeys: error ? Object.keys(error) : null,
       errorDetails: error ? {
         message: error.message,
         status: error.status,
+        statusCode: error.statusCode,
         name: error.name,
-        toString: String(error)
+        code: error.code,
+        toString: String(error),
+        stringified: JSON.stringify(error),
+        // Try to get all enumerable properties
+        allProps: Object.getOwnPropertyNames(error).reduce((acc, key) => {
+          try {
+            acc[key] = error[key];
+          } catch (e) {
+            acc[key] = '[unable to access]';
+          }
+          return acc;
+        }, {})
       } : null
     });
+    
     if (error) {
-      const errorMsg = error.message || error.toString() || JSON.stringify(error);
+      // Build comprehensive error message
+      const errorParts = [];
+      if (error.message) errorParts.push(`message: ${error.message}`);
+      if (error.status) errorParts.push(`status: ${error.status}`);
+      if (error.statusCode) errorParts.push(`statusCode: ${error.statusCode}`);
+      if (error.code) errorParts.push(`code: ${error.code}`);
+      if (error.name) errorParts.push(`name: ${error.name}`);
+      
+      const errorMsg = errorParts.length > 0 
+        ? errorParts.join(', ')
+        : `Unknown error (type: ${typeof error}, keys: ${Object.keys(error).join(', ') || 'none'})`;
+      
       throw new Error(`Supabase auth failed: ${errorMsg}`);
     }
     if (!data?.session) {
