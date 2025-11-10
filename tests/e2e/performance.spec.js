@@ -28,7 +28,25 @@ test.describe('Performance (global)', () => {
     }, { timeout: ciTimeout });
     
     await page.getByRole('button', { name: /^card management$/i }).click();
+    
+    // Wait for Card Management tab content to render (ensures React processed tab switch)
+    await expect(page.getByRole('heading', { name: /card management/i })).toBeVisible({ timeout: 20000 });
+    
     await page.getByRole('button', { name: /^table$/i }).click();
+    
+    // Wait for cards to load - table only renders when cards.length > 0
+    // Wait for loading to disappear AND final state appears (table OR empty message)
+    // CRITICAL: Must wait for table to finish loading before measuring sort performance
+    // Otherwise we're measuring sort performance while data is still loading
+    await page.waitForFunction(() => {
+      const loading = document.querySelector('.admin-card-table-loading');
+      const table = document.querySelector('table[aria-label="Card management table"]');
+      const noCards = document.querySelector('.admin-card-table-empty');
+      // Success: loading gone (or never existed) AND final state exists (table OR empty)
+      return loading === null && (table !== null || noCards !== null);
+    }, { timeout: ciTimeout });
+    
+    // NOW measure sort performance - table is fully loaded
     const sortButton = page.getByRole('button', { name: /sort by type/i });
     const start = Date.now();
     await sortButton.click();
