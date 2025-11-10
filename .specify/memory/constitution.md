@@ -1,26 +1,25 @@
 <!--
   Sync Impact Report:
   
-  Version Change: 1.1.1 → 1.2.0 (Dependency Management principle added)
+  Version Change: 1.2.0 → 1.3.0 (Root Cause Analysis principle added)
   
   Principles Added:
-  - IX. Dependency Management & Version Consistency: New principle for version verification and library consistency
+  - X. Root Cause Analysis: New principle prohibiting workarounds and requiring investigation of underlying causes
 
   Principles Modified:
   - None
   
   Sections Modified:
-  - Development Standards: Added Dependency Management verification to Compliance Review
+  - Development Standards: Added Root Cause Analysis verification to Compliance Review
   
   Templates Status:
-  ✅ plan-template.md - Constitution check section updated with modular design validation
-  ✅ spec-template.md - User story format aligns with user-centric design
-  ✅ tasks-template.md - Testing tasks align with test-first principle
+  ✅ plan-template.md - Constitution check section updated with root cause analysis validation
+  ✅ spec-template.md - No changes required (user story format unchanged)
+  ✅ tasks-template.md - No changes required (testing tasks unchanged)
   ⚠️ No command templates in .specify/templates/commands/ - will be validated if added
   
   Follow-up TODOs:
-  - Update plan-template.md to include Dependency Management in Constitution Check section
-  - Update README.md to reference constitution if desired
+  - None
 -->
 
 # Tibetan Flashcard App Constitution
@@ -167,6 +166,70 @@ Accessibility tests MUST be included in the test suite and run in CI/CD.
 
 **Rationale**: Version consistency prevents runtime errors, security vulnerabilities, and compatibility issues. Checking installed versions during planning (as demonstrated in the Advanced Card Management plan) ensures specifications accurately reflect the current codebase state. Consistent library usage reduces bundle size, prevents conflicts, and maintains codebase clarity.
 
+### X. Root Cause Analysis (NON-NEGOTIABLE)
+
+**MUST**: Investigate and fix root causes, never mask symptoms with workarounds.
+
+**CRITICAL RULE**: **NEVER** add timeouts, delays, or workarounds to "fix" test failures or bugs.
+
+**Important Distinction**:
+- ✅ **Legitimate**: Setting reasonable timeout values for operations that legitimately take time (network requests, page loads, file operations)
+- ✅ **Legitimate**: Using Playwright's built-in wait strategies appropriately (`waitForLoadState`, `waitForFunction`, `locator.waitFor`)
+- ❌ **Prohibited**: Using timeouts to mask bugs or symptoms
+
+**Prohibited Actions** (workarounds to mask bugs):
+- Adding `setTimeout`, `waitForTimeout`, or timeout wrappers to handle timing issues caused by bugs
+- Increasing test timeouts to prevent failures when failures indicate bugs
+- Adding delays "to let things settle" when things should already be settled
+- Using `Promise.race` with timeout promises as a solution to mask bugs
+- Wrapping code in timeout handlers to prevent hanging when hanging indicates a bug
+- Adding try/catch blocks to "handle" errors without understanding why they occur
+
+**Key Question**: "Am I setting a timeout because this operation legitimately takes time, or because there's a bug causing it to take too long?"
+
+**Mandatory Process for Test Failures**:
+
+1. **Test Evaluation** (before fixing anything):
+   - What does this test actually verify?
+   - Is this test valuable? Why?
+   - Is it testing the right thing?
+   - Is there a better way to test this?
+
+2. **Determine Failure Type**:
+   - **Real bug**: The app is broken, fix the app
+   - **Test artifact**: The test is poorly designed, fix the test (or remove it if not valuable)
+
+3. **Root Cause Investigation**:
+   - **Assume YOUR recent changes caused the failure** - review git history
+   - Trace execution path: Where does it get stuck? What condition prevents completion?
+   - Investigate WHY it fails, not just that it fails
+   - What specific condition causes the failure?
+   - What code path leads to the failure?
+
+4. **Fix Root Cause**:
+   - Fix the underlying issue, not the symptom
+   - Make the code work correctly, not just "not fail"
+   - If you can't find the root cause, investigate more - don't add workarounds
+
+**Pre-Implementation Checklist**:
+Before implementing ANY solution to a test failure or error:
+- [ ] **MANDATORY**: Complete ALL steps in `.cursor/rules/error-investigation.mdc` checklist
+- [ ] Read `.cursor/notes/root-cause-analysis.md`
+- [ ] Answer: "Am I fixing the root cause or masking a symptom?"
+- [ ] If masking a symptom, STOP and investigate more
+- [ ] Acknowledge AI biases: "Am I grabbing the first solution? Am I over-complicating? Am I quick-fixing?"
+
+**Pre-Commit Verification**:
+Before committing any fix for a test failure, verify:
+- [ ] I investigated WHY the failure occurs, not just how to prevent it
+- [ ] I can explain the root cause, not just the symptom
+- [ ] I did NOT add any setTimeout, waitForTimeout, or timeout wrappers to mask bugs
+- [ ] I did NOT increase test timeouts to accommodate bugs
+- [ ] I did NOT add delays to "let things settle" when things should already be settled
+- [ ] If I set a timeout, it's because the operation legitimately takes time, not to mask a bug
+
+**Rationale**: Workarounds mask problems, create technical debt, and make debugging harder. Root cause analysis ensures problems are actually solved, not hidden. The project's test suite failures must be addressed by fixing the underlying issues, not by making tests more tolerant of bugs.
+
 ## Development Standards
 
 ### Technology Stack
@@ -226,6 +289,7 @@ Operations MUST complete within defined limits:
 - Accessibility requirements met (Accessibility Standards)
 - Module boundaries respected (Modular Design principle) - new features don't entangle with existing code
 - Dependency versions verified and consistent (Dependency Management principle) - installed versions match documentation, no conflicts
+- Root causes investigated, not symptoms masked (Root Cause Analysis principle) - no timeouts, delays, or workarounds added to fix test failures
 
 **Complexity Justification**: Any feature violating principles (e.g., skipping tests, breaking accessibility) MUST document:
 - Why the violation is necessary
@@ -234,4 +298,4 @@ Operations MUST complete within defined limits:
 
 The constitution supersedes all other development practices. When practices conflict, the constitution takes precedence.
 
-**Version**: 1.2.0 | **Ratified**: 2024-12-02 | **Last Amended**: 2025-11-01
+**Version**: 1.3.0 | **Ratified**: 2024-12-02 | **Last Amended**: 2025-11-10

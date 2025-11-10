@@ -14,10 +14,13 @@ test.describe('Performance (global)', () => {
     await page.waitForLoadState('domcontentloaded');
     
     // Wait for React to hydrate and admin check to complete
+    // Wait for auth loading to complete, then check for admin tabs (not access denied)
     await page.waitForFunction(() => {
+      const authLoading = document.querySelector('.admin-page .loading');
       const denied = document.body.textContent?.includes('access denied');
       const tabs = document.querySelector('.admin-tabs');
-      return !denied && tabs !== null;
+      // Auth loading must be complete (loading element gone), then check for tabs
+      return authLoading === null && !denied && tabs !== null;
     }, { timeout: 20000 });
     
     await page.getByRole('button', { name: /^card management$/i }).click();

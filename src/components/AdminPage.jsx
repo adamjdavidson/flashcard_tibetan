@@ -1075,6 +1075,7 @@ export default function AdminPage() {
                 <BulkAddForm
                   onComplete={handleBulkAddComplete}
                   onCancel={handleBulkAddCancel}
+                  isAdmin={isAdminUser}
                 />
               </div>
             </div>

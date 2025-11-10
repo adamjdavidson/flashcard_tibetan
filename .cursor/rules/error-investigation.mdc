@@ -1,0 +1,232 @@
+# MANDATORY: Error Investigation Process
+
+**CRITICAL RULE**: When ANY error logs, test failures, bug reports, or failure symptoms are provided, you MUST complete ALL steps below BEFORE proposing or implementing ANY fixes.
+
+**This process is ALWAYS ACTIVE** - you cannot skip it, bypass it, or "quick fix" around it.
+
+## AI Bias Acknowledgment
+
+**You have these tendencies - you MUST actively fight them:**
+
+1. **Grab easy solutions**: You will see the first issue and want to fix it immediately. **STOP. Investigate deeper.**
+2. **Overly complex solutions**: You will create elaborate fixes when simple ones exist. **STOP. Look for the simplest solution that addresses root cause.**
+3. **Quick fixes over root causes**: You will want to add timeouts, delays, workarounds. **STOP. These are prohibited. Find the real problem.**
+
+**Before every fix, ask yourself:**
+- "Am I grabbing the first solution I see?"
+- "Am I creating unnecessary complexity?"
+- "Am I treating symptoms instead of root causes?"
+
+## Mandatory Checklist
+
+**DO NOT MAKE CHANGES UNTIL ALL STEPS ARE COMPLETE AND DOCUMENTED.**
+
+### Step 1: Read Error Logs Carefully
+**Complete ALL sub-steps before proceeding:**
+
+- [ ] **What exactly is failing?**
+  - Specific error message (copy exact text)
+  - Line number or stack trace location
+  - Test name or component name
+  - Exact failure condition
+
+- [ ] **What is the failure type?**
+  - Timeout? Assertion failure? Exception? Missing element?
+  - Is it consistent or intermittent?
+  - Does it happen in all browsers or specific ones?
+
+- [ ] **Are there patterns?**
+  - Multiple similar failures?
+  - Specific conditions that trigger it?
+  - Related to recent changes?
+
+- [ ] **What is the execution context?**
+  - Browser (chromium, firefox, webkit)?
+  - Environment (local, CI)?
+  - Timing (during load, after interaction, etc.)?
+
+**Document findings:** Write down what you found in each sub-step.
+
+### Step 2: Trace Execution Path
+**Map the exact code path that leads to failure:**
+
+- [ ] **Where does the code get stuck?**
+  - Specific function name
+  - Specific line number
+  - Specific condition that fails
+
+- [ ] **What is the call stack?**
+  - What calls what, in what order?
+  - Where does execution enter the failing path?
+  - What triggers this code path?
+
+- [ ] **What conditions must be met for success?**
+  - What should be `true`?
+  - What should be `false`?
+  - What state should exist?
+  - What values should variables have?
+
+- [ ] **What prevents those conditions?**
+  - Why aren't they met?
+  - What sets them incorrectly?
+  - What race condition or timing issue exists?
+
+**Document findings:** Write down the execution path, conditions, and what prevents success.
+
+### Step 3: Ask "Why" (Not "What")
+**For each finding, ask WHY it happens, not just WHAT happens:**
+
+- [ ] **Why would this condition fail?**
+  - Not "what fails" but "why does it fail"
+  - What underlying issue causes this?
+  - What assumption is being violated?
+
+- [ ] **Why would this code path be taken?**
+  - What triggers it?
+  - What state leads to this path?
+  - Is this the expected path or an error path?
+
+- [ ] **Why would this timing occur?**
+  - Race condition? Async issue?
+  - Why does timing matter here?
+  - What should happen first but doesn't?
+
+- [ ] **Why would this state exist?**
+  - How did it get here?
+  - What should have prevented this?
+  - What initialization or setup is missing?
+
+**Document findings:** Write down the "why" for each issue, not just the "what".
+
+### Step 4: Investigate Recent Changes
+**Assume YOUR changes caused this - investigate:**
+
+- [ ] **What changed recently?**
+  - Review git history
+  - What files were modified?
+  - What commits were made?
+  - What features were added/changed?
+
+- [ ] **What was the last successful commit?**
+  - When did this last work?
+  - What commit hash?
+  - What was the state then?
+
+- [ ] **What changed between success and failure?**
+  - Diff between working and broken
+  - What code was added/removed/modified?
+  - What dependencies changed?
+
+- [ ] **Could MY recent changes have caused this?**
+  - Did I modify related code?
+  - Did I introduce a race condition?
+  - Did I break an assumption?
+  - Did I add a workaround that broke something?
+
+**Document findings:** Write down recent changes and how they might relate.
+
+### Step 5: Recognize Bias and Force Deep Investigation
+**Explicitly check yourself:**
+
+- [ ] **Am I jumping to the first issue I see?**
+  - Have I looked at multiple possibilities?
+  - Have I considered alternative explanations?
+  - Am I stopping too early?
+
+- [ ] **Have I looked systematically and thoroughly?**
+  - Did I check all code paths?
+  - Did I verify all assumptions?
+  - Did I consider edge cases?
+  - Did I look at related code?
+
+- [ ] **Am I treating symptoms or root causes?**
+  - Would this fix work if the underlying issue didn't exist?
+  - Am I masking a problem or solving it?
+  - Am I adding a workaround or fixing the real issue?
+
+- [ ] **Am I creating unnecessary complexity?**
+  - Is there a simpler solution?
+  - Am I over-engineering?
+  - Could I fix this more directly?
+
+**Document findings:** Write down your bias checks and how you're avoiding them.
+
+### Step 6: Propose Fix (ONLY AFTER ALL ABOVE)
+**Only now can you propose a solution:**
+
+- [ ] **What is the root cause?**
+  - Not symptom, but actual root cause
+  - What underlying issue needs fixing?
+  - What assumption or condition is wrong?
+
+- [ ] **How does this fix address the root cause?**
+  - How does it fix the underlying issue?
+  - Why will this prevent the problem?
+  - What does it change fundamentally?
+
+- [ ] **What evidence supports this hypothesis?**
+  - What in the error logs supports this?
+  - What in the code supports this?
+  - What investigation led to this conclusion?
+
+- [ ] **What are alternative explanations?**
+  - What else could cause this?
+  - Why is this explanation better?
+  - What would disprove this hypothesis?
+
+**Document findings:** Write down root cause, fix rationale, evidence, and alternatives.
+
+## Prohibited Actions
+
+**These are NEVER allowed, regardless of how "quick" or "easy" they seem:**
+
+- ❌ Adding timeouts, delays, or `waitForTimeout` to "fix" timing issues **WITHOUT investigating root cause first**
+- ❌ Increasing timeouts because tests are timing out **due to bugs** (without fixing the underlying bug)
+- ❌ Adding `Promise.race` with timeout promises **to mask bugs** instead of investigating why something hangs
+- ❌ Adding workarounds to mask symptoms **instead of investigating root causes**
+- ❌ Skipping investigation steps
+- ❌ Making changes before completing all steps
+- ❌ Claiming a fix without evidence
+
+**Important Distinction - Legitimate vs Prohibited Timeouts:**
+
+✅ **LEGITIMATE timeout usage** (these are fine):
+- After root cause investigation reveals an operation legitimately takes time (e.g., network request, file operation, complex page load)
+- Setting reasonable timeout values for operations that SHOULD complete but may take time
+- Using Playwright's built-in wait strategies (`waitForLoadState`, `waitForFunction`) for operations that SHOULD happen
+- These accommodate legitimate timing, not mask bugs
+
+❌ **PROHIBITED timeout usage** (these are workarounds):
+- Adding timeouts to mask bugs or avoid investigating why something is slow/hanging
+- Increasing timeouts because tests fail due to bugs, without fixing the underlying bug
+- Adding delays to "let things settle" when the real issue is a race condition or bug
+- Using timeouts to wait for conditions that should already be true but aren't due to bugs
+
+**Key Question**: "Am I setting a timeout because this operation legitimately takes time, or because there's a bug causing it to take too long and I'm masking it?"
+
+If the answer is "masking a bug", **STOP** and investigate the root cause.
+
+## Manual Trigger
+
+**To manually trigger this process, use:**
+- Command: `/errorcode` or `/investigate`
+- Or: Include "ERROR_INVESTIGATION_REQUIRED" in your message
+- Or: Paste error logs with "investigate this error"
+
+When manually triggered, you MUST:
+1. Acknowledge the trigger
+2. Start from Step 1
+3. Complete ALL steps before proposing fixes
+4. Document your findings at each step
+
+## Verification
+
+Before implementing ANY fix, verify:
+- [ ] All 6 steps completed
+- [ ] All sub-steps documented
+- [ ] Root cause identified (not symptom)
+- [ ] Fix addresses root cause
+- [ ] No prohibited actions taken
+- [ ] Bias checks completed
+
+**If any step is incomplete, STOP and complete it before proceeding.**
