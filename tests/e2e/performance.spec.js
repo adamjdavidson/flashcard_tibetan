@@ -14,14 +14,18 @@ test.describe('Performance (global)', () => {
     await page.waitForLoadState('domcontentloaded');
     
     // Wait for React to hydrate and admin check to complete
-    // Wait for auth loading to complete, then check for admin tabs (not access denied)
+    // Wait for auth loading to disappear AND admin tabs to appear (not access denied)
+    // CI environments are slower, so use longer timeout
+    const ciTimeout = process.env.CI ? 30000 : 20000;
+    
+    // Use waitForFunction to check multiple conditions atomically
     await page.waitForFunction(() => {
-      const authLoading = document.querySelector('.admin-page .loading');
+      const loading = document.querySelector('.admin-page .loading');
       const denied = document.body.textContent?.includes('access denied');
       const tabs = document.querySelector('.admin-tabs');
-      // Auth loading must be complete (loading element gone), then check for tabs
-      return authLoading === null && !denied && tabs !== null;
-    }, { timeout: 20000 });
+      // Success: loading gone (or never existed) AND tabs exist AND not denied
+      return loading === null && tabs !== null && !denied;
+    }, { timeout: ciTimeout });
     
     await page.getByRole('button', { name: /^card management$/i }).click();
     await page.getByRole('button', { name: /^table$/i }).click();

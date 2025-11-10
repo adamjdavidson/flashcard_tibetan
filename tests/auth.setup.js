@@ -3,7 +3,6 @@ import { test, expect } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import process from 'node:process';
-import { createClient } from '@supabase/supabase-js';
 
 function logDiag(label, obj) {
   try { console.log(`[AUTH-SETUP] ${label}:`, obj); } catch (e) { void e; }
@@ -11,7 +10,7 @@ function logDiag(label, obj) {
 
 const authFile = 'playwright/.auth/admin.json';
 
-test('authenticate', async ({ page }) => {
+test('authenticate', async ({ page, request }) => {
   test.setTimeout(60000); // 60 seconds for CI (network latency, Supabase API calls, auth polling)
   // Load .env.local into process.env if present (Playwright doesn't auto-load Vite env files)
   try {
@@ -58,244 +57,290 @@ test('authenticate', async ({ page }) => {
     } catch (e) { void e; }
   });
   if (supabaseUrl && supabaseKey) {
-    logDiag('Starting Supabase auth', 'signInWithPassword');
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
+    logDiag('Starting Supabase auth via browser context', 'signInWithPassword');
+    
+    // ROOT CAUSE HYPOTHESIS: Network requests from Node.js/Playwright test context hang after TLS handshake
+    // This suggests Cloudflare/Supabase may be blocking non-browser requests or requiring browser headers
+    // SOLUTION: Authenticate through the browser's network stack using page.evaluate()
+    // This uses the browser's fetch implementation, which has proper headers and behaves like a real browser
+    
     const authStart = Date.now();
-    
-    // Direct call - test.setTimeout handles overall timeout
-    let data, error;
+    let authResult;
     try {
-      const result = await supabase.auth.signInWithPassword({ email: sanitize(email), password: sanitize(password) });
-      data = result.data;
-      error = result.error;
-    } catch (authError) {
-      // If signInWithPassword throws (unlikely but possible), wrap it
-      logDiag('Supabase auth threw exception', { elapsed: Date.now() - authStart, error: authError });
-      throw new Error(`Supabase auth exception: ${authError.message || String(authError)}`);
-    }
-    
-    const elapsed = Date.now() - authStart;
-    logDiag('Supabase auth completed', { 
-      elapsed, 
-      hasError: !!error, 
-      hasSession: !!data?.session,
-      errorType: error ? typeof error : null,
-      errorConstructor: error ? error.constructor?.name : null,
-      errorKeys: error ? Object.keys(error) : null,
-      errorDetails: error ? {
-        message: error.message,
-        status: error.status,
-        statusCode: error.statusCode,
-        name: error.name,
-        code: error.code,
-        toString: String(error),
-        stringified: JSON.stringify(error),
-        // Try to get all enumerable properties
-        allProps: Object.getOwnPropertyNames(error).reduce((acc, key) => {
-          try {
-            acc[key] = error[key];
-          } catch {
-            acc[key] = '[unable to access]';
+      logDiag('Calling Supabase auth via browser context', { email: sanitize(email).slice(0, 5) + '...' });
+      const authCallStart = Date.now();
+      
+      // Navigate to a page first to establish browser context and load Supabase SDK
+      await page.goto('/');
+      await page.waitForLoadState('domcontentloaded');
+      
+      // Use Supabase JS client in browser context - same approach as the app uses
+      // This ensures we use the exact same authentication flow with proper headers/behavior
+      authResult = await page.evaluate(async ({ url, key, email, password }) => {
+        try {
+          // Import Supabase client in browser context (same as app does)
+          const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+          const supabase = createClient(url, key);
+          
+          // Use signInWithPassword - same method the app uses
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+          
+          if (error) {
+            return { 
+              success: false, 
+              error: error.message || String(error),
+              status: error.status
+            };
           }
-          return acc;
-        }, {})
-      } : null
-    });
-    
-    if (error) {
-      // Build comprehensive error message
-      const errorParts = [];
-      if (error.message) errorParts.push(`message: ${error.message}`);
-      if (error.status) errorParts.push(`status: ${error.status}`);
-      if (error.statusCode) errorParts.push(`statusCode: ${error.statusCode}`);
-      if (error.code) errorParts.push(`code: ${error.code}`);
-      if (error.name) errorParts.push(`name: ${error.name}`);
-      
-      const errorMsg = errorParts.length > 0 
-        ? errorParts.join(', ')
-        : `Unknown error (type: ${typeof error}, keys: ${Object.keys(error).join(', ') || 'none'})`;
-      
-      throw new Error(`Supabase auth failed: ${errorMsg}`);
-    }
-    if (!data?.session) {
-      throw new Error('Supabase auth returned no session');
-    }
-
-    // Compute keys/values for pre-boot injection
-    // Supabase SDK v2 storage format: session object directly (not wrapped)
-    const projectRef = new URL(supabaseUrl).host.split('.')[0];
-    const storageKey = `sb-${projectRef}-auth-token`;
-    const safeSession = JSON.parse(JSON.stringify(data.session));
-    const userId = safeSession.user?.id || data.session.user?.id;
-    logDiag('Inject keys', { storageKey, sessionKeys: Object.keys(safeSession), userId });
-
-    // PROMOTE TO ADMIN BEFORE APP BOOTS - app's first render will see admin role
-    const serviceRole = sanitize(process.env.SUPABASE_SERVICE_ROLE_KEY);
-    if (serviceRole) {
-      try {
-        const adminClient = createClient(supabaseUrl, serviceRole);
-        const { error: upsertErr } = await adminClient
-          .from('user_roles')
-          .upsert({ user_id: userId, role: 'admin' }, { onConflict: 'user_id' });
-        if (upsertErr) logDiag('Promote-admin upsert error', upsertErr.message);
-
-        // Confirm row exists via service client
-        const start = Date.now();
-        let gotAdmin = false;
-        while (Date.now() - start < 8000) {
-          const { data: roleRow } = await adminClient
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', userId)
-            .maybeSingle();
-          if (roleRow?.role === 'admin') { gotAdmin = true; break; }
-          await new Promise(r => setTimeout(r, 250));
+          
+          if (!data?.session) {
+            return { 
+              success: false, 
+              error: 'No session returned',
+              dataKeys: data ? Object.keys(data) : []
+            };
+          }
+          
+          return { success: true, session: data.session };
+        } catch (error) {
+          return { 
+            success: false, 
+            error: error.message || String(error),
+            errorType: error.constructor?.name
+          };
         }
-        logDiag('Promote-admin (before boot)', { userId, gotAdmin });
-      } catch (e) {
-        logDiag('Promote-admin exception', e && (e.message || String(e)));
+      }, { 
+        url: supabaseUrl, 
+        key: supabaseKey, 
+        email: sanitize(email), 
+        password: sanitize(password) 
+      });
+      
+      logDiag('Auth request completed', { 
+        success: authResult.success,
+        elapsed: Date.now() - authCallStart 
+      });
+      
+      if (!authResult.success) {
+        logDiag('Auth request failed', authResult);
+        throw new Error(`Supabase auth failed: ${authResult.error || 'Unknown error'}`);
       }
-    } else {
-      logDiag('Promote-admin skipped', 'SUPABASE_SERVICE_ROLE_KEY not set');
-    }
+      
+      const session = authResult.session;
+      logDiag('Supabase auth completed', { 
+        elapsed: Date.now() - authStart,
+        hasSession: !!session,
+        userId: session.user?.id
+      });
+      
+      // Use the session data
+      const safeSession = JSON.parse(JSON.stringify(session));
+      const userId = safeSession.user?.id;
 
-    // Stamp BEFORE app boot - use the exact session format the SDK expects
-    await page.addInitScript(({ storageKey, session }) => {
-      try {
-        // Store session in the format Supabase SDK v2 expects
-        localStorage.setItem(storageKey, JSON.stringify(session));
-        console.log('[AUTH-SETUP] addInitScript stamped:', storageKey);
-      } catch (e) { console.error('[AUTH-SETUP] init inject failed:', e && (e.message || String(e))); }
-    }, { storageKey, session: safeSession });
+      // Compute keys/values for pre-boot injection
+      // Supabase SDK v2 storage format: session object directly (not wrapped)
+      const projectRef = new URL(supabaseUrl).host.split('.')[0];
+      const storageKey = `sb-${projectRef}-auth-token`;
+      logDiag('Inject keys', { storageKey, sessionKeys: Object.keys(safeSession), userId });
 
-    // Load the app
-    logDiag('Navigating to app', '/');
-    const gotoStart = Date.now();
-    await page.goto('/');
-    logDiag('Page navigation completed', { elapsed: Date.now() - gotoStart });
-    logDiag('Waiting for domcontentloaded', 'initial load');
-    await page.waitForLoadState('domcontentloaded');
-    logDiag('domcontentloaded reached', 'initial load complete');
+      // PROMOTE TO ADMIN BEFORE APP BOOTS - app's first render will see admin role
+      const serviceRole = sanitize(process.env.SUPABASE_SERVICE_ROLE_KEY);
+      if (serviceRole) {
+        try {
+          // Use Playwright's request API for admin promotion (bypasses worker process blocking)
+          const promoteStart = Date.now();
+          const upsertResponse = await request.post(`${supabaseUrl}/rest/v1/user_roles`, {
+            headers: {
+              'apikey': serviceRole,
+              'Authorization': `Bearer ${serviceRole}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'resolution=merge-duplicates'
+            },
+            data: {
+              user_id: userId,
+              role: 'admin'
+            }
+          });
+          
+          if (!upsertResponse.ok()) {
+            const errorText = await upsertResponse.text();
+            logDiag('Promote-admin upsert error', { 
+              status: upsertResponse.status(), 
+              error: errorText.slice(0, 200) 
+            });
+          } else {
+            logDiag('Promote-admin upsert completed', { elapsed: Date.now() - promoteStart });
+          }
 
-    // Verify storage immediately
-    const keysPost = await page.evaluate(() => Object.keys(localStorage));
-    logDiag('localStorage keys (post-boot)', keysPost);
-    logDiag('auth storage present (post-boot)', keysPost.includes(storageKey));
-
-    // Ensure SDK knows about the session as well
-    logDiag('Calling setSession in browser', 'ensuring SDK knows about session');
-    const setSessionStart = Date.now();
-    const setSessionResult = await page.evaluate(async ({ url, key, session }) => {
-      try {
-        const mod = await import('https://esm.sh/@supabase/supabase-js@2');
-        const supa = mod.createClient(url, key);
-        const res = await supa.auth.setSession({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token
-        });
-        return { success: true, hasData: !!(res && res.data), error: null };
-      } catch (e) {
-        return { success: false, hasData: false, error: e && (e.message || String(e)) };
+          // Confirm row exists via service role request
+          const confirmStart = Date.now();
+          let gotAdmin = false;
+          while (Date.now() - confirmStart < 8000) {
+            const selectResponse = await request.get(`${supabaseUrl}/rest/v1/user_roles?user_id=eq.${userId}&select=role`, {
+              headers: {
+                'apikey': serviceRole,
+                'Authorization': `Bearer ${serviceRole}`
+              },
+              timeout: 10000
+            });
+            
+            if (selectResponse.ok()) {
+              const roleData = await selectResponse.json();
+              if (roleData && roleData.length > 0 && roleData[0].role === 'admin') {
+                gotAdmin = true;
+                break;
+              }
+            }
+            await new Promise(r => setTimeout(r, 250));
+          }
+          logDiag('Promote-admin (before boot)', { userId, gotAdmin, elapsed: Date.now() - confirmStart });
+        } catch (e) {
+          logDiag('Promote-admin exception', { error: e && (e.message || String(e)) });
+        }
+      } else {
+        logDiag('Promote-admin skipped', 'SUPABASE_SERVICE_ROLE_KEY not set');
       }
-    }, { url: supabaseUrl, key: supabaseKey, session: safeSession });
-    logDiag('setSession completed', { elapsed: Date.now() - setSessionStart, ...setSessionResult });
 
-    // Give SDK time to persist, then reload fully
-    logDiag('Before reload', 'waiting 1s then reloading');
-    await page.waitForTimeout(1000);
-    logDiag('Reloading page', 'starting reload');
-    await page.reload();
-    logDiag('After reload', 'waiting for domcontentloaded');
-    // Use domcontentloaded instead of networkidle - networkidle can hang in CI
-    // due to background requests (token refresh, analytics, etc.)
-    await page.waitForLoadState('domcontentloaded');
-    logDiag('After domcontentloaded', 'starting auth restoration polling');
+      // Stamp BEFORE app boot - use the exact session format the SDK expects
+      await page.addInitScript(({ storageKey, session }) => {
+        try {
+          // Store session in the format Supabase SDK v2 expects
+          localStorage.setItem(storageKey, JSON.stringify(session));
+          console.log('[AUTH-SETUP] addInitScript stamped:', storageKey);
+        } catch (e) { console.error('[AUTH-SETUP] init inject failed:', e && (e.message || String(e))); }
+      }, { storageKey, session: safeSession });
 
-    // CRITICAL: Wait for auth state to fully initialize after reload
-    // Poll until the session is restored by the Supabase SDK
-    logDiag('Starting auth restoration polling', 'maxWait: 10000ms');
-    const authRestored = await page.evaluate(async ({ url, key, maxWait = 10000 }) => {
-      const start = Date.now();
-      let attempt = 0;
-      while (Date.now() - start < maxWait) {
-        attempt++;
+      // Page already navigated during auth, just ensure it's ready
+      logDiag('Page already navigated during auth', 'ensuring ready state');
+      await page.waitForLoadState('domcontentloaded');
+
+      // Verify storage immediately
+      const keysPost = await page.evaluate(() => Object.keys(localStorage));
+      logDiag('localStorage keys (post-boot)', keysPost);
+      logDiag('auth storage present (post-boot)', keysPost.includes(storageKey));
+
+      // Ensure SDK knows about the session as well
+      logDiag('Calling setSession in browser', 'ensuring SDK knows about session');
+      const setSessionStart = Date.now();
+      const setSessionResult = await page.evaluate(async ({ url, key, session }) => {
         try {
           const mod = await import('https://esm.sh/@supabase/supabase-js@2');
-          const client = mod.createClient(url, key);
-          const { data: { user } } = await client.auth.getUser();
-          if (user?.id) {
-            console.log(`[AUTH-SETUP] Auth restored on attempt ${attempt}, elapsed: ${Date.now() - start}ms`);
-            return { success: true, userId: user.id, elapsed: Date.now() - start, attempts: attempt };
-          }
+          const supa = mod.createClient(url, key);
+          const res = await supa.auth.setSession({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token
+          });
+          return { success: true, hasData: !!(res && res.data), error: null };
         } catch (e) {
-          // SDK might not be ready yet
-          if (attempt % 5 === 0) {
-            console.log(`[AUTH-SETUP] Auth restoration attempt ${attempt}, error:`, e && (e.message || String(e)));
+          return { success: false, hasData: false, error: e && (e.message || String(e)) };
+        }
+      }, { url: supabaseUrl, key: supabaseKey, session: safeSession });
+      logDiag('setSession completed', { elapsed: Date.now() - setSessionStart, ...setSessionResult });
+
+      // Give SDK time to persist, then reload fully
+      logDiag('Before reload', 'waiting 1s then reloading');
+      await page.waitForTimeout(1000);
+      logDiag('Reloading page', 'starting reload');
+      await page.reload();
+      logDiag('After reload', 'waiting for domcontentloaded');
+      // Use domcontentloaded instead of networkidle - networkidle can hang in CI
+      // due to background requests (token refresh, analytics, etc.)
+      await page.waitForLoadState('domcontentloaded');
+      logDiag('After domcontentloaded', 'starting auth restoration polling');
+
+      // CRITICAL: Wait for auth state to fully initialize after reload
+      // Poll until the session is restored by the Supabase SDK
+      logDiag('Starting auth restoration polling', 'maxWait: 10000ms');
+      const authRestored = await page.evaluate(async ({ url, key, maxWait = 10000 }) => {
+        const start = Date.now();
+        let attempt = 0;
+        while (Date.now() - start < maxWait) {
+          attempt++;
+          try {
+            const mod = await import('https://esm.sh/@supabase/supabase-js@2');
+            const client = mod.createClient(url, key);
+            const { data: { user } } = await client.auth.getUser();
+            if (user?.id) {
+              console.log(`[AUTH-SETUP] Auth restored on attempt ${attempt}, elapsed: ${Date.now() - start}ms`);
+              return { success: true, userId: user.id, elapsed: Date.now() - start, attempts: attempt };
+            }
+          } catch (e) {
+            // SDK might not be ready yet
+            if (attempt % 5 === 0) {
+              console.log(`[AUTH-SETUP] Auth restoration attempt ${attempt}, error:`, e && (e.message || String(e)));
+            }
           }
+          await new Promise(r => setTimeout(r, 200));
         }
-        await new Promise(r => setTimeout(r, 200));
+        console.log(`[AUTH-SETUP] Auth restoration failed after ${attempt} attempts, elapsed: ${Date.now() - start}ms`);
+        return { success: false, elapsed: Date.now() - start, attempts: attempt };
+      }, { url: supabaseUrl, key: supabaseKey });
+      logDiag('auth restoration after reload', authRestored);
+
+      if (!authRestored.success) {
+        logDiag('AUTH RESTORATION FAILED', `elapsed: ${authRestored.elapsed}ms`);
+        throw new Error('Session not restored after reload - auth state not persisting');
       }
-      console.log(`[AUTH-SETUP] Auth restoration failed after ${attempt} attempts, elapsed: ${Date.now() - start}ms`);
-      return { success: false, elapsed: Date.now() - start, attempts: attempt };
-    }, { url: supabaseUrl, key: supabaseKey });
-    logDiag('auth restoration after reload', authRestored);
+      logDiag('Auth restoration succeeded', 'continuing to final checks');
 
-    if (!authRestored.success) {
-      logDiag('AUTH RESTORATION FAILED', `elapsed: ${authRestored.elapsed}ms`);
-      throw new Error('Session not restored after reload - auth state not persisting');
-    }
-    logDiag('Auth restoration succeeded', 'continuing to final checks');
-
-    // Deep inspect storage values
-    const storageAfter = await page.evaluate(() => Object.keys(localStorage));
-    logDiag('localStorage keys after setSession', storageAfter);
-    const preview = await page.evaluate(() => {
-      const items = {};
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        items[k] = (localStorage.getItem(k) || '').slice(0, 64) + '...';
-      }
-      return items;
-    });
-    logDiag('storage item preview', preview);
-
-    // Verify role via anon client (poll for session hydration first)
-    // Since we promoted BEFORE boot, the app should already see admin role
-    const finalCheck = await page.evaluate(async ({ url, key }) => {
-      try {
-        const mod = await import('https://esm.sh/@supabase/supabase-js@2');
-        const s = mod.createClient(url, key);
-
-        // Poll for session hydration (avoid uid: null race condition)
-        let uid = null;
-        for (let i = 0; i < 12; i++) {
-          const sess = await s.auth.getSession();
-          uid = sess?.data?.session?.user?.id || null;
-          if (uid) break;
-          await new Promise(r => setTimeout(r, 250));
+      // Deep inspect storage values
+      const storageAfter = await page.evaluate(() => Object.keys(localStorage));
+      logDiag('localStorage keys after setSession', storageAfter);
+      const preview = await page.evaluate(() => {
+        const items = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          items[k] = (localStorage.getItem(k) || '').slice(0, 64) + '...';
         }
+        return items;
+      });
+      logDiag('storage item preview', preview);
 
-        if (!uid) return { uid: null, role: null, authenticated: false };
+      // Verify role via anon client (poll for session hydration first)
+      // Since we promoted BEFORE boot, the app should already see admin role
+      const finalCheck = await page.evaluate(async ({ url, key }) => {
+        try {
+          const mod = await import('https://esm.sh/@supabase/supabase-js@2');
+          const s = mod.createClient(url, key);
 
-        const row = await s.from('user_roles').select('role').eq('user_id', uid).maybeSingle();
-        return { uid, role: row.data?.role || null, authenticated: true };
-      } catch (err) {
-        return { error: err && (err.message || String(err)), authenticated: false };
+          // Poll for session hydration (avoid uid: null race condition)
+          let uid = null;
+          for (let i = 0; i < 12; i++) {
+            const sess = await s.auth.getSession();
+            uid = sess?.data?.session?.user?.id || null;
+            if (uid) break;
+            await new Promise(r => setTimeout(r, 250));
+          }
+
+          if (!uid) return { uid: null, role: null, authenticated: false };
+
+          const row = await s.from('user_roles').select('role').eq('user_id', uid).maybeSingle();
+          return { uid, role: row.data?.role || null, authenticated: true };
+        } catch (err) {
+          return { error: err && (err.message || String(err)), authenticated: false };
+        }
+      }, { url: supabaseUrl, key: supabaseKey });
+      logDiag('Final auth check via anon client', finalCheck);
+
+      if (!finalCheck.authenticated) {
+        throw new Error('User not authenticated after setup - session not persisting properly');
       }
-    }, { url: supabaseUrl, key: supabaseKey });
-    logDiag('Final auth check via anon client', finalCheck);
 
-    if (!finalCheck.authenticated) {
-      throw new Error('User not authenticated after setup - session not persisting properly');
-    }
-
-    if (finalCheck.role !== 'admin') {
-      console.warn('[AUTH-SETUP] WARNING: Admin role not visible to anon client - tests may fail');
+      if (finalCheck.role !== 'admin') {
+        console.warn('[AUTH-SETUP] WARNING: Admin role not visible to anon client - tests may fail');
+      }
+    } catch (authError) {
+      // If auth request fails
+      const elapsed = Date.now() - authStart;
+      logDiag('Supabase auth failed', { 
+        elapsed, 
+        error: authError.message || String(authError),
+        errorType: authError.constructor?.name
+      });
+      throw new Error(`Supabase auth failed: ${authError.message || String(authError)}`);
     }
   } else {
     // Fallback UI login only if Supabase env is not provided (should not happen in CI)

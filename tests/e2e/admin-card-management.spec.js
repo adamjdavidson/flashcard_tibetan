@@ -7,14 +7,18 @@ test.describe('Admin Card Management - phase 1', () => {
     await page.waitForLoadState('domcontentloaded');
     
     // Wait for React to hydrate and admin check to complete
-    // Wait for auth loading to complete, then check for admin tabs (not access denied)
+    // Wait for auth loading to disappear AND admin tabs to appear (not access denied)
+    // CI environments are slower, so use longer timeout
+    const ciTimeout = process.env.CI ? 30000 : 20000;
+    
+    // Use waitForFunction to check multiple conditions atomically
     await page.waitForFunction(() => {
-      const authLoading = document.querySelector('.admin-page .loading');
+      const loading = document.querySelector('.admin-page .loading');
       const denied = document.body.textContent?.includes('access denied');
       const tabs = document.querySelector('.admin-tabs');
-      // Auth loading must be complete (loading element gone), then check for tabs
-      return authLoading === null && !denied && tabs !== null;
-    }, { timeout: 20000 });
+      // Success: loading gone (or never existed) AND tabs exist AND not denied
+      return loading === null && tabs !== null && !denied;
+    }, { timeout: ciTimeout });
 
     // Wait for the admin tab bar to render
     const tabs = page.locator('.admin-tabs');
@@ -30,16 +34,15 @@ test.describe('Admin Card Management - phase 1', () => {
     await page.getByRole('button', { name: /^table$/i }).click({ timeout: 20000 });
 
     // Wait for cards to load - table only renders when cards.length > 0
-    // Wait for final state: either table appears OR "No cards found" message appears
-    // Note: We wait for final state rather than loading to disappear, as React may update
-    // the DOM asynchronously and loading state might clear slightly after final state appears
+    // Wait for loading to disappear AND final state appears (table OR empty message)
+    // CI environments are slower, so use longer timeout
     await page.waitForFunction(() => {
+      const loading = document.querySelector('.admin-card-table-loading');
       const table = document.querySelector('table[aria-label="Card management table"]');
       const noCards = document.querySelector('.admin-card-table-empty');
-      // Success when final state appears (table OR noCards message)
-      // This indicates cards have finished loading, regardless of loading spinner state
-      return table !== null || noCards !== null;
-    }, { timeout: 20000 });
+      // Success: loading gone (or never existed) AND final state exists (table OR empty)
+      return loading === null && (table !== null || noCards !== null);
+    }, { timeout: ciTimeout });
   });
 
   test('displays cards in table view', async ({ page }) => {
