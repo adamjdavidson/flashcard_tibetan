@@ -7,6 +7,7 @@ Auto-generated from all feature plans. Last updated: 2025-11-01
 - JavaScript (ES6+), React 19.2.0, Node.js (Vercel serverless runtime) + React 19.2.0, React DOM 19.2.0, @supabase/supabase-js 2.49.2, Vite 7.1.7 (001-bulk-add-cards)
 - Supabase (PostgreSQL with Row Level Security) (001-bulk-add-cards)
 - JavaScript (ES6+), React 19.2.0, Node.js (Vercel serverless runtime) + React 19.2.0, React DOM 19.2.0, @supabase/supabase-js 2.78.0, Vite 7.1.12 (005-new-checkbox-bulk-add)
+- N/A (display logic only, images already stored) (001-conditional-image-display)
 
 - JavaScript (ES6+), React 19.1.1, Node.js 20.x (001-advanced-card-management)
 
@@ -27,9 +28,9 @@ npm test && npm run lint
 JavaScript (ES6+), React 19.1.1, Node.js 20.x: Follow standard conventions
 
 ## Recent Changes
+- 001-conditional-image-display: Added JavaScript (ES6+), React 19.2.0, Node.js (Vercel serverless runtime) + React 19.2.0, React DOM 19.2.0, @supabase/supabase-js 2.78.0, Vite 7.1.12
 - 005-new-checkbox-bulk-add: Added JavaScript (ES6+), React 19.2.0, Node.js (Vercel serverless runtime) + React 19.2.0, React DOM 19.2.0, @supabase/supabase-js 2.78.0, Vite 7.1.12
 - 001-bulk-add-cards: Added JavaScript (ES6+), React 19.2.0, Node.js (Vercel serverless runtime) + React 19.2.0, React DOM 19.2.0, @supabase/supabase-js 2.49.2, Vite 7.1.7
-- 002-audio-pronunciation: Added JavaScript (ES6+), React 19.1.1, Node.js 20.x
 
 
 <!-- MANUAL ADDITIONS START -->

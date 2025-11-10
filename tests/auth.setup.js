@@ -99,7 +99,7 @@ test('authenticate', async ({ page }) => {
         allProps: Object.getOwnPropertyNames(error).reduce((acc, key) => {
           try {
             acc[key] = error[key];
-          } catch (e) {
+          } catch {
             acc[key] = '[unable to access]';
           }
           return acc;

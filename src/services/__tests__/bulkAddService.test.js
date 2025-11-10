@@ -2,8 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { checkDuplicates, processBulkAdd } from '../bulkAddService.js';
 import { loadCards, saveCards } from '../cardsService.js';
 import { loadCategories, createCategory } from '../categoriesService.js';
-import { translateText } from '../../utils/translation.js';
-import { generateAIImage } from '../../utils/images.js';
 import { createCard } from '../../data/cardSchema.js';
 
 // Mock dependencies
