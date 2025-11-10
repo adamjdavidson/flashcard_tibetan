@@ -3,7 +3,7 @@
  * Manages authentication state and operations
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getSession, signIn, signOut, isAdmin, onAuthStateChange } from '../utils/auth.js';
 
 export function useAuth() {
@@ -11,6 +11,7 @@ export function useAuth() {
   const [isAdminUser, setIsAdminUser] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const initializationComplete = useRef(false);
 
   // Initialize auth state
   useEffect(() => {
@@ -35,17 +36,22 @@ export function useAuth() {
             setIsAdminUser(false);
           }
           setLoading(false);
+          initializationComplete.current = true;
         } else if (event === 'TOKEN_REFRESHED') {
           // Token refreshed - update user but don't re-check admin status
           // Admin status doesn't change on token refresh, so avoid unnecessary query
           const currentUser = session?.user || null;
           setUser(currentUser);
-          // Keep existing admin status - don't query user_roles again
-          setLoading(false);
+          // Only set loading to false if initialization is complete
+          // This prevents race condition where TOKEN_REFRESHED fires before initializeAuth completes
+          if (initializationComplete.current) {
+            setLoading(false);
+          }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setIsAdminUser(false);
           setLoading(false);
+          initializationComplete.current = false;
         }
       });
 
@@ -64,6 +70,7 @@ export function useAuth() {
   const initializeAuth = async () => {
     try {
       setLoading(true);
+      initializationComplete.current = false;
       const { data, error } = await getSession();
       
       if (error) {
@@ -72,6 +79,7 @@ export function useAuth() {
         setUser(null);
         setIsAdminUser(false);
         setLoading(false);
+        initializationComplete.current = true;
         return;
       }
       
@@ -95,6 +103,7 @@ export function useAuth() {
       setIsAdminUser(false);
     } finally {
       setLoading(false);
+      initializationComplete.current = true;
     }
   };
 
