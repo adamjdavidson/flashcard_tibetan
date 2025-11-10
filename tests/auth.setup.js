@@ -139,11 +139,15 @@ test('authenticate', async ({ page }) => {
     }, { url: supabaseUrl, key: supabaseKey, session: safeSession });
 
     // Give SDK time to persist, then reload fully
+    logDiag('Before reload', 'waiting 1s then reloading');
     await page.waitForTimeout(1000);
+    logDiag('Reloading page', 'starting reload');
     await page.reload();
+    logDiag('After reload', 'waiting for domcontentloaded');
     // Use domcontentloaded instead of networkidle - networkidle can hang in CI
     // due to background requests (token refresh, analytics, etc.)
     await page.waitForLoadState('domcontentloaded');
+    logDiag('After domcontentloaded', 'starting auth restoration polling');
 
     // CRITICAL: Wait for auth state to fully initialize after reload
     // Poll until the session is restored by the Supabase SDK
@@ -167,8 +171,10 @@ test('authenticate', async ({ page }) => {
     logDiag('auth restoration after reload', authRestored);
 
     if (!authRestored.success) {
+      logDiag('AUTH RESTORATION FAILED', `elapsed: ${authRestored.elapsed}ms`);
       throw new Error('Session not restored after reload - auth state not persisting');
     }
+    logDiag('Auth restoration succeeded', 'continuing to final checks');
 
     // Deep inspect storage values
     const storageAfter = await page.evaluate(() => Object.keys(localStorage));
