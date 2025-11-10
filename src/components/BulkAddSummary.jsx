@@ -24,8 +24,6 @@ export default function BulkAddSummary({ summary, onClose, onNewOperation }) {
     duplicateWords = []
   } = summary;
 
-  const hasFailures = translationFailures.length > 0 || imageFailures.length > 0 || errors.length > 0;
-
   return (
     <div className="bulk-add-summary">
       <h2>Bulk Add Results</h2>

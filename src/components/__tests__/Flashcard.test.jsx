@@ -169,7 +169,7 @@ describe('Flashcard', () => {
 
     // T004: Image error handling (broken image)
     it('handles broken image gracefully with onError handler', () => {
-      const { container } = render(<Flashcard card={cardWithImage} studyDirection="english_to_tibetan" />);
+      render(<Flashcard card={cardWithImage} studyDirection="english_to_tibetan" />);
       const image = screen.queryByAltText('service');
       expect(image).toBeInTheDocument();
       
@@ -351,9 +351,9 @@ describe('Flashcard', () => {
       // So images shouldn't display (frontText is Tibetan numeral, but number cards are handled differently)
       // Actually, number cards use card.front which is Tibetan, so randomization would apply
       // But per spec, we should check the actual displayed text language
-      const image = screen.queryByAltText('25');
       // Number cards may or may not show images depending on randomization
-      // This is acceptable behavior
+      // This is acceptable behavior - just verify component renders without error
+      expect(screen.getAllByText('༢༥').length).toBeGreaterThan(0);
     });
 
     // T024: Verify backward compatibility with existing card displays

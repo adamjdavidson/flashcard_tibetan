@@ -24,7 +24,7 @@ import './BulkAddForm.css';
  * - Reviewers remove "new" category from cards after approval
  * - Cards without "new" category no longer appear in the review filter
  */
-export default function BulkAddForm({ onComplete, onCancel, isAdmin = true }) {
+export default function BulkAddForm({ onComplete, onCancel }) {
   const [wordsText, setWordsText] = useState('');
   const [cardType, setCardType] = useState('word');
   const [categoryIds, setCategoryIds] = useState([]);
