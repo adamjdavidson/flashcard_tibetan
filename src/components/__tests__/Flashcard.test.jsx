@@ -273,8 +273,8 @@ describe('Flashcard', () => {
       expect(screen.queryByRole('img')).not.toBeInTheDocument();
     });
 
-    // T014: Image does NOT display when only Tibetan text exists (no English)
-    it('does not display image when card has only Tibetan text', () => {
+    // T014: Image DOES display on back even when only Tibetan text exists (per user requirement: "Images should always appear on the back, whether the writing is in English or Tibetan")
+    it('displays image on back when card has only Tibetan text', () => {
       const tibetanOnlyCard = {
         id: 'us1-tibetan-only',
         type: 'word',
@@ -283,7 +283,9 @@ describe('Flashcard', () => {
         imageUrl: 'https://example.com/wolf.jpg'
       };
       render(<Flashcard card={tibetanOnlyCard} isFlipped={true} studyDirection="tibetan_to_english" />);
-      expect(screen.queryByRole('img')).not.toBeInTheDocument();
+      const image = screen.getByRole('img');
+      expect(image).toBeInTheDocument();
+      expect(image).toHaveAttribute('src', 'https://example.com/wolf.jpg');
     });
 
     // T015: imageError state resets when card changes
