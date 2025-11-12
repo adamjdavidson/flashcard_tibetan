@@ -113,3 +113,35 @@
 .filter-menu-item.selected:hover {
   background: var(--theme-accent-hover, #0056b3);
 }
+
+/* T063-T065: US2 - Checkbox styling for instruction levels */
+.filter-checkbox-item {
+  display: flex;
+  align-items: center;
+  padding: 0.625rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  gap: 0.5rem;
+}
+
+.filter-checkbox-item:hover {
+  background-color: var(--theme-bg-secondary, #f5f5f5);
+}
+
+.filter-checkbox-item input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--theme-accent, #007bff);
+}
+
+.filter-checkbox-item input[type="checkbox"]:focus {
+  outline: 2px solid var(--theme-accent, #007bff);
+  outline-offset: 2px;
+}
+
+.filter-checkbox-item span {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--theme-text, #333);
+}

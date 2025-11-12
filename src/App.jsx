@@ -21,6 +21,7 @@ import {
 } from './utils/storage.js';
 import { loadCards as loadCardsSupabase, saveCards as saveCardsSupabase, saveCard as saveCardSupabase, deleteCard as deleteCardSupabase, subscribeToCards } from './services/cardsService.js';
 import { loadProgress as loadProgressSupabase, saveProgressBatch as saveProgressSupabase, saveProgressForDirection, subscribeToProgress } from './services/progressService.js';
+import { loadInstructionLevels } from './services/instructionLevelsService.js';
 import { isSupabaseConfigured } from './services/supabase.js';
 import { 
   calculateReview, 
@@ -55,6 +56,9 @@ function App() {
     return 'study';
   });
   const [selectedTags, setSelectedTags] = useState(['all']); // Filter tags
+  // T051-T052: US2 - Instruction level filtering state
+  const [instructionLevels, setInstructionLevels] = useState([]);
+  const [selectedInstructionLevels, setSelectedInstructionLevels] = useState([]);
   const [useSupabase, setUseSupabase] = useState(false);
   const [migrationPrompt, setMigrationPrompt] = useState(false);
 
@@ -93,6 +97,20 @@ function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []); // Empty dependency array - register once
+
+  // T053: Load instruction levels on mount
+  useEffect(() => {
+    const loadLevels = async () => {
+      try {
+        const levels = await loadInstructionLevels();
+        setInstructionLevels(levels);
+      } catch (error) {
+        console.error('Failed to load instruction levels:', error);
+        setInstructionLevels([]);
+      }
+    };
+    loadLevels();
+  }, []);
 
   // Determine if we should use Supabase
   useEffect(() => {
@@ -227,10 +245,28 @@ function App() {
     };
   }, [useSupabase, user]);
 
-  // Get filtered cards based on selected tags (memoized to prevent unnecessary recalculations)
+  // T054: Handler for instruction level toggle
+  const handleInstructionLevelToggle = (levelId) => {
+    setSelectedInstructionLevels(prev =>
+      prev.includes(levelId)
+        ? prev.filter(id => id !== levelId) // Remove if already selected
+        : [...prev, levelId]                 // Add if not selected
+    );
+  };
+
+  // T055-T056: Get filtered cards with instruction level filter (AND logic)
   const filteredCards = useMemo(() => {
-    return filterCardsByTags(cards, selectedTags);
-  }, [cards, selectedTags]);
+    let filtered = filterCardsByTags(cards, selectedTags);
+    
+    // Apply instruction level filter if any levels selected
+    if (selectedInstructionLevels.length > 0) {
+      filtered = filtered.filter(card =>
+        selectedInstructionLevels.includes(card.instruction_level_id)
+      );
+    }
+    
+    return filtered;
+  }, [cards, selectedTags, selectedInstructionLevels]);
 
   // Get next card when filtered cards or progress changes
   // Only update if current card is not in filtered set or we don't have a current card
@@ -594,6 +630,9 @@ function App() {
                 setIsFlipped(false);
               }}
               hasWordPhraseCards={filteredCards.some(card => card.type === 'word' || card.type === 'phrase')}
+              instructionLevels={instructionLevels}
+              selectedInstructionLevels={selectedInstructionLevels}
+              onInstructionLevelToggle={handleInstructionLevelToggle}
             />
             
             {currentCard ? (
