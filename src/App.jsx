@@ -8,6 +8,7 @@ import StudyDirectionToggle from './components/StudyDirectionToggle.jsx';
 import Auth from './components/Auth.jsx';
 import AdminPage from './components/AdminPage.jsx';
 import ThemeSelector from './components/ThemeSelector.jsx';
+import EditCardForm from './components/EditCardForm.jsx';
 import { useAuth } from './hooks/useAuth.js';
 import { convertNumbersToCards } from './data/tibetanNumbers.js';
 import { convertWordsToCards } from './data/tibetanWords.js';
@@ -21,6 +22,7 @@ import {
 } from './utils/storage.js';
 import { loadCards as loadCardsSupabase, saveCards as saveCardsSupabase, saveCard as saveCardSupabase, deleteCard as deleteCardSupabase, subscribeToCards } from './services/cardsService.js';
 import { loadProgress as loadProgressSupabase, saveProgressBatch as saveProgressSupabase, saveProgressForDirection, subscribeToProgress } from './services/progressService.js';
+import { loadInstructionLevels } from './services/instructionLevelsService.js';
 import { isSupabaseConfigured } from './services/supabase.js';
 import { 
   calculateReview, 
@@ -55,6 +57,12 @@ function App() {
     return 'study';
   });
   const [selectedTags, setSelectedTags] = useState(['all']); // Filter tags
+  // T051-T052: US2 - Instruction level filtering state
+  const [instructionLevels, setInstructionLevels] = useState([]);
+  const [selectedInstructionLevels, setSelectedInstructionLevels] = useState([]);
+  // T087-T088: US3 - Admin edit during study state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCard, setEditingCard] = useState(null);
   const [useSupabase, setUseSupabase] = useState(false);
   const [migrationPrompt, setMigrationPrompt] = useState(false);
 
@@ -93,6 +101,20 @@ function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []); // Empty dependency array - register once
+
+  // T053: Load instruction levels on mount
+  useEffect(() => {
+    const loadLevels = async () => {
+      try {
+        const levels = await loadInstructionLevels();
+        setInstructionLevels(levels);
+      } catch (error) {
+        console.error('Failed to load instruction levels:', error);
+        setInstructionLevels([]);
+      }
+    };
+    loadLevels();
+  }, []);
 
   // Determine if we should use Supabase
   useEffect(() => {
@@ -227,10 +249,33 @@ function App() {
     };
   }, [useSupabase, user]);
 
-  // Get filtered cards based on selected tags (memoized to prevent unnecessary recalculations)
+  // T054: Handler for instruction level toggle
+  const handleInstructionLevelToggle = (levelId) => {
+    setSelectedInstructionLevels(prev =>
+      prev.includes(levelId)
+        ? prev.filter(id => id !== levelId) // Remove if already selected
+        : [...prev, levelId]                 // Add if not selected
+    );
+  };
+
+  // T055-T056: Get filtered cards with instruction level filter (AND logic)
   const filteredCards = useMemo(() => {
-    return filterCardsByTags(cards, selectedTags);
-  }, [cards, selectedTags]);
+    let filtered = filterCardsByTags(cards, selectedTags);
+    
+    // Apply instruction level filter if any levels selected
+    if (selectedInstructionLevels.length > 0) {
+      filtered = filtered.filter(card => {
+        // Handle both camelCase and snake_case field names for backward compatibility
+        const cardLevelId = card.instructionLevelId || card.instruction_level_id;
+        // Convert both to strings for comparison (UUIDs might be different types)
+        const cardLevelIdStr = cardLevelId ? String(cardLevelId) : null;
+        const selectedIds = selectedInstructionLevels.map(id => String(id));
+        return cardLevelIdStr && selectedIds.includes(cardLevelIdStr);
+      });
+    }
+    
+    return filtered;
+  }, [cards, selectedTags, selectedInstructionLevels]);
 
   // Get next card when filtered cards or progress changes
   // Only update if current card is not in filtered set or we don't have a current card
@@ -467,6 +512,31 @@ function App() {
     }
   };
 
+  // T089-T091: US3 - Admin edit during study handlers
+  const handleEditClickDuringStudy = () => {
+    setEditingCard(currentCard);
+    setShowEditModal(true);
+  };
+
+  const handleEditSaveDuringStudy = async (editedCard) => {
+    try {
+      // Save via existing handleEditCard (includes Supabase sync)
+      await handleEditCard(editedCard);
+      // T105: Update currentCard to show edited content immediately
+      setCurrentCard(editedCard);
+      // Close modal
+      setShowEditModal(false);
+      setEditingCard(null);
+    } catch (error) {
+      console.error('Failed to update card during study:', error);
+    }
+  };
+
+  const handleEditCancelDuringStudy = () => {
+    setShowEditModal(false);
+    setEditingCard(null);
+  };
+
   const handleDeleteCard = async (cardId) => {
     if (window.confirm('Are you sure you want to delete this card?')) {
       // Optimistic update
@@ -594,6 +664,9 @@ function App() {
                 setIsFlipped(false);
               }}
               hasWordPhraseCards={filteredCards.some(card => card.type === 'word' || card.type === 'phrase')}
+              instructionLevels={instructionLevels}
+              selectedInstructionLevels={selectedInstructionLevels}
+              onInstructionLevelToggle={handleInstructionLevelToggle}
             />
             
             {currentCard ? (
@@ -605,6 +678,8 @@ function App() {
                   isFlipped={isFlipped}
                   onFlipChange={setIsFlipped}
                   studyDirection={currentCardDirection}
+                  isAdmin={isAdmin}
+                  onEditClick={handleEditClickDuringStudy}
                 />
                 {isFlipped && !isTransitioning && (
                   <CardButtons 
@@ -620,6 +695,20 @@ function App() {
             )}
             
             <ProgressStats stats={calculateStats(filteredCards, progressMap)} />
+            
+            {/* T100-T102: US3 - Edit modal during study (admin only) */}
+            {showEditModal && editingCard && (
+              <div className="modal-overlay" onClick={handleEditCancelDuringStudy}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                  <EditCardForm
+                    card={editingCard}
+                    onSave={handleEditSaveDuringStudy}
+                    onCancel={handleEditCancelDuringStudy}
+                    isAdmin={isAdmin}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         ) : view === 'admin' ? (
           <AdminPage />

@@ -16,8 +16,10 @@ import './Flashcard.css';
  * @param {boolean} isFlipped - External flip state (controlled)
  * @param {Function} onFlipChange - Callback for flip state changes
  * @param {string} studyDirection - 'tibetan_to_english' | 'english_to_tibetan' (for word/phrase cards)
+ * @param {boolean} isAdmin - T094: Whether current user is admin (shows edit button)
+ * @param {Function} onEditClick - T094: Callback when edit button clicked
  */
-export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, onFlipChange, studyDirection = 'tibetan_to_english' }) {
+export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, onFlipChange, studyDirection = 'tibetan_to_english', isAdmin = false, onEditClick }) {
   // Use external isFlipped if provided, otherwise use internal state
   const [internalIsFlipped, setInternalIsFlipped] = useState(false);
   const isFlipped = externalIsFlipped !== undefined ? externalIsFlipped : internalIsFlipped;
@@ -90,27 +92,36 @@ export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, 
     ? (studyDirection === 'tibetan_to_english' ? englishText : tibetanText)
     : null;
 
-  // T009: Create shouldDisplayImage helper function
-  // T010: Determine front text language using containsTibetan utility
-  // T018: Enhance shouldDisplayImage function to add randomization for Tibetan text
-  const shouldDisplayImage = (text, imageUrl) => {
-    if (!imageUrl || !text) return false;
-    
-    const isTibetan = containsTibetan(text);
-    if (!isTibetan) {
-      return true; // Always show for English (User Story 1)
-    }
-    
-    // T019: Random for Tibetan (50% chance) - User Story 2
-    // T020: Randomization happens on each render (not cached per card)
-    return Math.random() < 0.5;
-  };
-
-  // Determine if image should be displayed based on front text language
-  const showImage = card.imageUrl && shouldDisplayImage(frontText, card.imageUrl) && !imageError;
+  // Image display logic:
+  // 1. Front: Show image when English text is on front (any time there is an English spelling word)
+  // 2. Back: Show image on ALL backs after flip (whether English or Tibetan)
+  const hasEnglishTextOnFront = frontText && !containsTibetan(frontText);
+  const shouldShowImageOnFront = !isFlipped && 
+                                  card.imageUrl && 
+                                  hasEnglishTextOnFront && 
+                                  !imageError;
+  
+  const shouldShowImageOnBack = isFlipped && 
+                                card.imageUrl && 
+                                !imageError;
 
   return (
     <div className="flashcard-wrapper">
+      {/* T095-T097: US3 - Admin edit button (only for admin users) */}
+      {isAdmin && onEditClick && (
+        <button 
+          className="flashcard-edit-button"
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent card flip
+            onEditClick();
+          }}
+          aria-label="Edit this card"
+          type="button"
+        >
+          ✏️ Edit
+        </button>
+      )}
+      
       {isFlipped && (
         <button 
           className="turn-button"
@@ -127,9 +138,8 @@ export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, 
         <div className="flashcard-inner">
         <div className="flashcard-front">
           <div className="card-content">
-            {/* T011: Replace existing image display logic with conditional logic for English text */}
-            {/* T012: Add onError handler to img tag for graceful error handling */}
-            {showImage && (
+            {/* Show image on front when English text is present */}
+            {shouldShowImageOnFront && (
               <div className="card-image">
                 <img 
                   src={card.imageUrl} 
@@ -181,6 +191,16 @@ export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, 
         </div>
         <div className="flashcard-back">
           <div className="card-content">
+            {/* Image displays on ALL backs after flip (whether English or Tibetan) */}
+            {shouldShowImageOnBack && (
+              <div className="card-image">
+                <img 
+                  src={card.imageUrl} 
+                  alt={englishText || tibetanText || card.front || 'Card'}
+                  onError={() => setImageError(true)}
+                />
+              </div>
+            )}
             {isNumberCard ? (
               /* Number cards - legacy structure */
               <>

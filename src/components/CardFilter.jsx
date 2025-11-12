@@ -10,7 +10,11 @@ export default function CardFilter({
   onTagToggle, 
   studyDirection,
   onStudyDirectionChange,
-  hasWordPhraseCards = false
+  hasWordPhraseCards = false,
+  // T058: US2 - Instruction level props
+  instructionLevels = [],
+  selectedInstructionLevels = [],
+  onInstructionLevelToggle
 }) {
   const [isOpen, setIsOpen] = useState(false);
   
@@ -100,6 +104,26 @@ export default function CardFilter({
                 >
                   Both Directions
                 </button>
+              </div>
+            )}
+            
+            {/* T059-T062: US2 - Instruction Level filter section */}
+            {instructionLevels.length > 0 && onInstructionLevelToggle && (
+              <div className="filter-section">
+                <div className="filter-section-title">Instruction Level</div>
+                {instructionLevels
+                  .sort((a, b) => a.order - b.order)
+                  .map(level => (
+                    <label key={level.id} className="filter-checkbox-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedInstructionLevels.includes(level.id)}
+                        onChange={() => onInstructionLevelToggle(level.id)}
+                        aria-label={`Filter by ${level.name}`}
+                      />
+                      <span>{level.name}</span>
+                    </label>
+                  ))}
               </div>
             )}
           </div>
