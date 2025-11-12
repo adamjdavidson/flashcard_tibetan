@@ -1,4 +1,5 @@
 .flashcard-wrapper {
+  position: relative; /* Required for absolute positioning of edit button */
   display: flex;
   align-items: center;
   justify-content: center;
