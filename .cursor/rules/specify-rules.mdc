@@ -8,6 +8,8 @@ Auto-generated from all feature plans. Last updated: 2025-11-01
 - Supabase (PostgreSQL with Row Level Security) (001-bulk-add-cards)
 - JavaScript (ES6+), React 19.2.0, Node.js (Vercel serverless runtime) + React 19.2.0, React DOM 19.2.0, @supabase/supabase-js 2.78.0, Vite 7.1.12 (005-new-checkbox-bulk-add)
 - N/A (display logic only, images already stored) (001-conditional-image-display)
+- JavaScript (ES6+), React 19.1.1, Node.js (Vercel serverless runtime) + Playwright 1.56.1, @supabase/supabase-js 2.49.2, React 19.1.1, React DOM 19.1.1, Vite (001-playwright-test-fixes)
+- Supabase (PostgreSQL with Row Level Security) - used for authentication and data persistence (001-playwright-test-fixes)
 
 - JavaScript (ES6+), React 19.1.1, Node.js 20.x (001-advanced-card-management)
 
@@ -28,9 +30,9 @@ npm test && npm run lint
 JavaScript (ES6+), React 19.1.1, Node.js 20.x: Follow standard conventions
 
 ## Recent Changes
+- 001-playwright-test-fixes: Added JavaScript (ES6+), React 19.1.1, Node.js (Vercel serverless runtime) + Playwright 1.56.1, @supabase/supabase-js 2.49.2, React 19.1.1, React DOM 19.1.1, Vite
 - 001-conditional-image-display: Added JavaScript (ES6+), React 19.2.0, Node.js (Vercel serverless runtime) + React 19.2.0, React DOM 19.2.0, @supabase/supabase-js 2.78.0, Vite 7.1.12
 - 005-new-checkbox-bulk-add: Added JavaScript (ES6+), React 19.2.0, Node.js (Vercel serverless runtime) + React 19.2.0, React DOM 19.2.0, @supabase/supabase-js 2.78.0, Vite 7.1.12
-- 001-bulk-add-cards: Added JavaScript (ES6+), React 19.2.0, Node.js (Vercel serverless runtime) + React 19.2.0, React DOM 19.2.0, @supabase/supabase-js 2.49.2, Vite 7.1.7
 
 
 <!-- MANUAL ADDITIONS START -->

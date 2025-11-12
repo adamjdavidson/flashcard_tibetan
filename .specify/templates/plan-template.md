@@ -41,6 +41,7 @@
 - ✅ **Accessibility**: WCAG 2.1 AA compliance verified? Accessibility tests included?
 - ✅ **Modular Design**: Feature boundaries defined? Will not modify shared code unnecessarily? Dependencies explicit?
 - ✅ **Dependency Management**: Installed versions verified? Library consistency checked? Versions match documentation?
+- ✅ **Root Cause Analysis**: For any test failures, root cause investigated? No timeouts, delays, or workarounds added?
 
 If any validation fails, document justification in Complexity Tracking section below.
 
