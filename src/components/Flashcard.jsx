@@ -90,24 +90,19 @@ export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, 
     ? (studyDirection === 'tibetan_to_english' ? englishText : tibetanText)
     : null;
 
-  // T009: Create shouldDisplayImage helper function
-  // T010: Determine front text language using containsTibetan utility
-  // T018: Enhance shouldDisplayImage function to add randomization for Tibetan text
-  const shouldDisplayImage = (text, imageUrl) => {
-    if (!imageUrl || !text) return false;
-    
-    const isTibetan = containsTibetan(text);
-    if (!isTibetan) {
-      return true; // Always show for English (User Story 1)
-    }
-    
-    // T019: Random for Tibetan (50% chance) - User Story 2
-    // T020: Randomization happens on each render (not cached per card)
-    return Math.random() < 0.5;
-  };
-
-  // Determine if image should be displayed based on front text language
-  const showImage = card.imageUrl && shouldDisplayImage(frontText, card.imageUrl) && !imageError;
+  // T024: NEW User Story 1 - shouldShowImage helper function
+  // Image should display on BACK (after flip) for cards with English text
+  const hasEnglishText = Boolean(
+    card.englishText || 
+    card.backEnglish || 
+    card.backArabic || 
+    (card.type === 'number' && (card.backEnglish || card.backArabic))
+  );
+  
+  const shouldShowImage = isFlipped && 
+                           card.imageUrl && 
+                           hasEnglishText && 
+                           !imageError;
 
   return (
     <div className="flashcard-wrapper">
@@ -127,17 +122,7 @@ export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, 
         <div className="flashcard-inner">
         <div className="flashcard-front">
           <div className="card-content">
-            {/* T011: Replace existing image display logic with conditional logic for English text */}
-            {/* T012: Add onError handler to img tag for graceful error handling */}
-            {showImage && (
-              <div className="card-image">
-                <img 
-                  src={card.imageUrl} 
-                  alt={englishText || tibetanText || card.front || 'Card'}
-                  onError={() => setImageError(true)}
-                />
-              </div>
-            )}
+            {/* T025: Image removed from front - now displays on back only */}
             <div className="card-text-wrapper">
               {isNumberCard ? (
                 /* Number cards - legacy structure */
@@ -181,6 +166,16 @@ export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, 
         </div>
         <div className="flashcard-back">
           <div className="card-content">
+            {/* T026: Image now displays on back for cards with English text */}
+            {shouldShowImage && (
+              <div className="card-image">
+                <img 
+                  src={card.imageUrl} 
+                  alt={englishText || tibetanText || card.front || 'Card'}
+                  onError={() => setImageError(true)}
+                />
+              </div>
+            )}
             {isNumberCard ? (
               /* Number cards - legacy structure */
               <>

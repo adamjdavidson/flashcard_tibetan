@@ -124,8 +124,8 @@ describe('Flashcard', () => {
     expect(screen.queryByText('ཞབས་ཏོག')).not.toBeInTheDocument();
   });
 
-  // User Story 1: Always Show Image When English Text is on Front
-  describe('Image Display - English Text on Front (User Story 1)', () => {
+  // OLD SPEC: Image Display - English Text on Front (OBSOLETE - replaced by NEW US1)
+  describe.skip('Image Display - English Text on Front (User Story 1)', () => {
     const cardWithImage = {
       id: 'card3',
       type: 'word',
@@ -212,8 +212,147 @@ describe('Flashcard', () => {
     });
   });
 
-  // User Story 2: Randomly Show Image When Tibetan Text is on Front
-  describe('Image Display - Tibetan Text on Front (User Story 2)', () => {
+  // NEW User Story 1: Image Display on Card Backs (After Flipping)
+  // Images should ALWAYS appear on BACK (answer side) for cards with English text
+  describe('Image Display on Card Backs - NEW US1', () => {
+    const cardWithImage = {
+      id: 'us1-card1',
+      type: 'word',
+      tibetanText: 'སྤྱང་ཀི',
+      englishText: 'wolf',
+      imageUrl: 'https://example.com/wolf.jpg'
+    };
+
+    const cardWithoutImage = {
+      id: 'us1-card2',
+      type: 'word',
+      tibetanText: 'སྤྱང་ཀི',
+      englishText: 'wolf',
+      imageUrl: null
+    };
+
+    const cardNumberWithImage = {
+      id: 'us1-card3',
+      type: 'number',
+      front: '༥',
+      backArabic: '5',
+      backEnglish: 'five',
+      imageUrl: 'https://example.com/five.jpg'
+    };
+
+    // T011: Image displays on back when flipped with English text
+    it('displays image on back when card is flipped and has English text', () => {
+      const { rerender } = render(
+        <Flashcard card={cardWithImage} isFlipped={false} studyDirection="tibetan_to_english" />
+      );
+      
+      // Image should NOT be visible on front
+      expect(screen.queryByRole('img')).not.toBeInTheDocument();
+      
+      // Flip card
+      rerender(
+        <Flashcard card={cardWithImage} isFlipped={true} studyDirection="tibetan_to_english" />
+      );
+      
+      // Image SHOULD be visible on back
+      const image = screen.getByRole('img');
+      expect(image).toBeInTheDocument();
+      expect(image).toHaveAttribute('src', 'https://example.com/wolf.jpg');
+      expect(image).toHaveAttribute('alt', 'wolf');
+    });
+
+    // T012: Image does NOT display on front
+    it('does not display image on front side of card', () => {
+      render(<Flashcard card={cardWithImage} isFlipped={false} studyDirection="tibetan_to_english" />);
+      expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    });
+
+    // T013: Image does NOT display when imageUrl is null
+    it('does not display image when imageUrl is null even if flipped', () => {
+      render(<Flashcard card={cardWithoutImage} isFlipped={true} studyDirection="tibetan_to_english" />);
+      expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    });
+
+    // T014: Image does NOT display when only Tibetan text exists (no English)
+    it('does not display image when card has only Tibetan text', () => {
+      const tibetanOnlyCard = {
+        id: 'us1-tibetan-only',
+        type: 'word',
+        tibetanText: 'སྤྱང་ཀི',
+        englishText: '',
+        imageUrl: 'https://example.com/wolf.jpg'
+      };
+      render(<Flashcard card={tibetanOnlyCard} isFlipped={true} studyDirection="tibetan_to_english" />);
+      expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    });
+
+    // T015: imageError state resets when card changes
+    it('resets imageError state when card ID changes', () => {
+      const { rerender } = render(
+        <Flashcard card={cardWithImage} isFlipped={true} studyDirection="tibetan_to_english" />
+      );
+      
+      const firstImage = screen.getByRole('img');
+      expect(firstImage).toBeInTheDocument();
+      
+      // Simulate error on first image
+      fireEvent.error(firstImage);
+      
+      // Change to different card
+      const newCard = { ...cardWithImage, id: 'us1-new-card' };
+      rerender(
+        <Flashcard card={newCard} isFlipped={true} studyDirection="tibetan_to_english" />
+      );
+      
+      // New image should render (error state reset)
+      const newImage = screen.getByRole('img');
+      expect(newImage).toBeInTheDocument();
+    });
+
+    // T016: onError handler sets imageError=true (graceful degradation)
+    it('handles image error gracefully with onError handler', () => {
+      render(<Flashcard card={cardWithImage} isFlipped={true} studyDirection="tibetan_to_english" />);
+      
+      const image = screen.getByRole('img');
+      expect(image).toBeInTheDocument();
+      
+      // Image should have onError handler
+      expect(image).toHaveAttribute('src', 'https://example.com/wolf.jpg');
+    });
+
+    // T017: Image has descriptive alt text
+    it('displays image with descriptive alt text based on card content', () => {
+      render(<Flashcard card={cardWithImage} isFlipped={true} studyDirection="tibetan_to_english" />);
+      
+      const image = screen.getByRole('img');
+      expect(image).toHaveAttribute('alt', 'wolf');
+    });
+
+    // T018: Works for word cards in both study directions
+    it('displays image on back for tibetan_to_english direction', () => {
+      render(<Flashcard card={cardWithImage} isFlipped={true} studyDirection="tibetan_to_english" />);
+      const image = screen.getByRole('img');
+      expect(image).toBeInTheDocument();
+    });
+
+    it('displays image on back for english_to_tibetan direction', () => {
+      render(<Flashcard card={cardWithImage} isFlipped={true} studyDirection="english_to_tibetan" />);
+      const image = screen.getByRole('img');
+      expect(image).toBeInTheDocument();
+    });
+
+    // T019: Works for number cards with English back
+    it('displays image on back for number cards with English content', () => {
+      render(<Flashcard card={cardNumberWithImage} isFlipped={true} studyDirection="tibetan_to_english" />);
+      
+      const image = screen.getByRole('img');
+      expect(image).toBeInTheDocument();
+      expect(image).toHaveAttribute('src', 'https://example.com/five.jpg');
+    });
+  });
+
+  // OLD SPEC: Randomly Show Image When Tibetan Text is on Front (OBSOLETE - replaced by NEW US1)
+  describe.skip('Image Display - Tibetan Text on Front (User Story 2)', () => {
     const cardWithTibetanAndImage = {
       id: 'card7',
       type: 'word',
@@ -306,7 +445,8 @@ describe('Flashcard', () => {
   });
 
   // Phase 3: Polish & Cross-Cutting Concerns
-  describe('Image Display - Edge Cases and Polish', () => {
+  // OLD SPEC: Edge Cases (OBSOLETE - tests old behavior)
+  describe.skip('Image Display - Edge Cases and Polish', () => {
     // T021: Verify all tests pass for both user stories
     // (Already verified above - all 20 tests pass)
 

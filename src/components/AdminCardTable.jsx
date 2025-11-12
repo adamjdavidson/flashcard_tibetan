@@ -4,7 +4,7 @@
  * Supports sorting, pagination, and filtering
  */
 
-import { useState, useMemo, useEffect, useRef, memo } from 'react';
+import { useState, useMemo, useEffect, useRef, memo, useCallback } from 'react';
 import { mark, measure, clearMarks, clearMeasures, checkThreshold } from '../utils/performance.js';
 import './AdminCardTable.css';
 
@@ -209,15 +209,16 @@ export default function AdminCardTable({
     return sortDirection === 'asc' ? '↑' : '↓';
   };
 
-  // Format date
-  const formatDate = (timestamp) => {
+  // Format date - memoized to prevent TableRow re-renders
+  const formatDate = useCallback((timestamp) => {
     if (!timestamp) return 'N/A';
     const date = new Date(timestamp);
     return date.toLocaleDateString();
-  };
+  }, []);
 
   // Get front content - use new bidirectional fields for word/phrase cards
-  const getFrontContent = (card) => {
+  // Memoized to prevent TableRow re-renders
+  const getFrontContent = useCallback((card) => {
     // For word/phrase cards, use new bidirectional fields
     if (card.type === 'word' || card.type === 'phrase') {
       // Prefer new fields, fallback to legacy
@@ -227,11 +228,12 @@ export default function AdminCardTable({
     }
     // For number cards, use legacy front field
     return card.front || '';
-  };
+  }, []);
 
   // Get back content summary
   // For word/phrase cards, prefer new bidirectional fields; fallback to legacy fields
-  const getBackContentSummary = (card) => {
+  // Memoized to prevent TableRow re-renders
+  const getBackContentSummary = useCallback((card) => {
     // For word/phrase cards, use new bidirectional fields
     if (card.type === 'word' || card.type === 'phrase') {
       if (card.englishText) {
@@ -246,13 +248,13 @@ export default function AdminCardTable({
     if (card.backArabic) return card.backArabic;
     if (card.backTibetanScript) return card.backTibetanScript.substring(0, 50) + (card.backTibetanScript.length > 50 ? '...' : '');
     return '';
-  };
+  }, []);
 
-  // Get categories display
-  const getCategoriesDisplay = (card) => {
+  // Get categories display - memoized to prevent TableRow re-renders
+  const getCategoriesDisplay = useCallback((card) => {
     if (!card.categories || card.categories.length === 0) return 'None';
     return card.categories.map(cat => cat.name).join(', ');
-  };
+  }, []);
 
   // Memoized table row component for performance optimization
   const TableRow = memo(({ card, rowIndex, onEdit, onDelete, onPreview, getFrontContent, getBackContentSummary, getCategoriesDisplay, formatDate }) => {

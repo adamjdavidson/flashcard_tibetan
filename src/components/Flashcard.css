@@ -96,17 +96,24 @@
   width: 100%;
 }
 
+/* T028-T030: Image on back styling */
 .card-image {
   width: 100%;
   max-width: 300px;
   max-height: 200px;
-  margin-bottom: 1rem;
+  min-height: 100px; /* T029: Prevent layout shift */
+  margin: 0 auto 1rem; /* Center horizontally */
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px var(--theme-shadow);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Image displays on back only */
+.flashcard-back .card-image {
+  margin-bottom: 16px;
 }
 
 .card-image img {
