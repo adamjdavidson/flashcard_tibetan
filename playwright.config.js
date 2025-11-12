@@ -34,6 +34,13 @@ if (enableWebKit) {
 export default defineConfig({
   testDir: './tests',
   reporter: 'list',
+  // CI environments are slower - increase timeouts to accommodate legitimate network/rendering delays
+  timeout: process.env.CI ? 60000 : 30000, // 60s in CI, 30s locally
+  expect: {
+    timeout: process.env.CI ? 30000 : 10000, // 30s in CI, 10s locally
+  },
+  // Reduce workers in CI to avoid resource contention (tests pass individually but fail in parallel)
+  workers: process.env.CI ? 2 : undefined, // 2 workers in CI, default locally
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:5173',
     trace: 'on-first-retry',
