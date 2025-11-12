@@ -264,9 +264,14 @@ function App() {
     
     // Apply instruction level filter if any levels selected
     if (selectedInstructionLevels.length > 0) {
-      filtered = filtered.filter(card =>
-        selectedInstructionLevels.includes(card.instructionLevelId)
-      );
+      filtered = filtered.filter(card => {
+        // Handle both camelCase and snake_case field names for backward compatibility
+        const cardLevelId = card.instructionLevelId || card.instruction_level_id;
+        // Convert both to strings for comparison (UUIDs might be different types)
+        const cardLevelIdStr = cardLevelId ? String(cardLevelId) : null;
+        const selectedIds = selectedInstructionLevels.map(id => String(id));
+        return cardLevelIdStr && selectedIds.includes(cardLevelIdStr);
+      });
     }
     
     return filtered;
