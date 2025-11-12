@@ -265,7 +265,7 @@ function App() {
     // Apply instruction level filter if any levels selected
     if (selectedInstructionLevels.length > 0) {
       filtered = filtered.filter(card =>
-        selectedInstructionLevels.includes(card.instruction_level_id)
+        selectedInstructionLevels.includes(card.instructionLevelId)
       );
     }
     
