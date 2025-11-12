@@ -8,6 +8,7 @@ import StudyDirectionToggle from './components/StudyDirectionToggle.jsx';
 import Auth from './components/Auth.jsx';
 import AdminPage from './components/AdminPage.jsx';
 import ThemeSelector from './components/ThemeSelector.jsx';
+import EditCardForm from './components/EditCardForm.jsx';
 import { useAuth } from './hooks/useAuth.js';
 import { convertNumbersToCards } from './data/tibetanNumbers.js';
 import { convertWordsToCards } from './data/tibetanWords.js';
@@ -59,6 +60,9 @@ function App() {
   // T051-T052: US2 - Instruction level filtering state
   const [instructionLevels, setInstructionLevels] = useState([]);
   const [selectedInstructionLevels, setSelectedInstructionLevels] = useState([]);
+  // T087-T088: US3 - Admin edit during study state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCard, setEditingCard] = useState(null);
   const [useSupabase, setUseSupabase] = useState(false);
   const [migrationPrompt, setMigrationPrompt] = useState(false);
 
@@ -503,6 +507,31 @@ function App() {
     }
   };
 
+  // T089-T091: US3 - Admin edit during study handlers
+  const handleEditClickDuringStudy = () => {
+    setEditingCard(currentCard);
+    setShowEditModal(true);
+  };
+
+  const handleEditSaveDuringStudy = async (editedCard) => {
+    try {
+      // Save via existing handleEditCard (includes Supabase sync)
+      await handleEditCard(editedCard);
+      // T105: Update currentCard to show edited content immediately
+      setCurrentCard(editedCard);
+      // Close modal
+      setShowEditModal(false);
+      setEditingCard(null);
+    } catch (error) {
+      console.error('Failed to update card during study:', error);
+    }
+  };
+
+  const handleEditCancelDuringStudy = () => {
+    setShowEditModal(false);
+    setEditingCard(null);
+  };
+
   const handleDeleteCard = async (cardId) => {
     if (window.confirm('Are you sure you want to delete this card?')) {
       // Optimistic update
@@ -644,6 +673,8 @@ function App() {
                   isFlipped={isFlipped}
                   onFlipChange={setIsFlipped}
                   studyDirection={currentCardDirection}
+                  isAdmin={isAdmin}
+                  onEditClick={handleEditClickDuringStudy}
                 />
                 {isFlipped && !isTransitioning && (
                   <CardButtons 
@@ -659,6 +690,20 @@ function App() {
             )}
             
             <ProgressStats stats={calculateStats(filteredCards, progressMap)} />
+            
+            {/* T100-T102: US3 - Edit modal during study (admin only) */}
+            {showEditModal && editingCard && (
+              <div className="modal-overlay" onClick={handleEditCancelDuringStudy}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                  <EditCardForm
+                    card={editingCard}
+                    onSave={handleEditSaveDuringStudy}
+                    onCancel={handleEditCancelDuringStudy}
+                    isAdmin={isAdmin}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         ) : view === 'admin' ? (
           <AdminPage />

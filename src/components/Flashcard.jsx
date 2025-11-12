@@ -16,8 +16,10 @@ import './Flashcard.css';
  * @param {boolean} isFlipped - External flip state (controlled)
  * @param {Function} onFlipChange - Callback for flip state changes
  * @param {string} studyDirection - 'tibetan_to_english' | 'english_to_tibetan' (for word/phrase cards)
+ * @param {boolean} isAdmin - T094: Whether current user is admin (shows edit button)
+ * @param {Function} onEditClick - T094: Callback when edit button clicked
  */
-export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, onFlipChange, studyDirection = 'tibetan_to_english' }) {
+export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, onFlipChange, studyDirection = 'tibetan_to_english', isAdmin = false, onEditClick }) {
   // Use external isFlipped if provided, otherwise use internal state
   const [internalIsFlipped, setInternalIsFlipped] = useState(false);
   const isFlipped = externalIsFlipped !== undefined ? externalIsFlipped : internalIsFlipped;
@@ -106,6 +108,21 @@ export default function Flashcard({ card, onFlip, isFlipped: externalIsFlipped, 
 
   return (
     <div className="flashcard-wrapper">
+      {/* T095-T097: US3 - Admin edit button (only for admin users) */}
+      {isAdmin && onEditClick && (
+        <button 
+          className="flashcard-edit-button"
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent card flip
+            onEditClick();
+          }}
+          aria-label="Edit this card"
+          type="button"
+        >
+          ✏️ Edit
+        </button>
+      )}
+      
       {isFlipped && (
         <button 
           className="turn-button"

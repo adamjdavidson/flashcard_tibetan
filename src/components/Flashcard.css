@@ -18,6 +18,42 @@
   cursor: pointer;
 }
 
+/* T098-T099: US3 - Admin edit button styling */
+.flashcard-edit-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--theme-primary, #007bff);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  z-index: 15;
+  transition: background-color 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.flashcard-edit-button:hover {
+  background: var(--theme-primary-dark, #0056b3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.flashcard-edit-button:focus {
+  outline: 2px solid var(--theme-focus, #0056b3);
+  outline-offset: 2px;
+}
+
+.flashcard-edit-button:active {
+  transform: translateY(0);
+}
+
 .turn-button {
   padding: 0.75rem 1.25rem;
   background: var(--theme-bg-secondary);
