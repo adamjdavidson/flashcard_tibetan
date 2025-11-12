@@ -75,19 +75,33 @@ export function selectRandomCard(cards) {
 /**
  * Gets the next card to study
  * Priority: due cards > all cards
+ * Excludes the current card to prevent immediate repetition
  * @param {Array} cards - Array of cards
  * @param {Object} progressMap - Progress map (direction-aware for word/phrase cards)
  * @param {string} studyDirection - 'tibetan_to_english' | 'english_to_tibetan' | 'both' (for word/phrase cards)
+ * @param {Object} excludeCard - Card to exclude from selection (optional)
  */
-export function getNextCard(cards, progressMap, studyDirection = 'tibetan_to_english') {
+export function getNextCard(cards, progressMap, studyDirection = 'tibetan_to_english', excludeCard = null) {
   const dueCards = getDueCards(cards, progressMap, studyDirection);
   
-  if (dueCards.length > 0) {
-    return selectRandomCard(dueCards);
+  // Filter out the current card if provided
+  let availableDueCards = dueCards;
+  if (excludeCard) {
+    availableDueCards = dueCards.filter(card => card.id !== excludeCard.id);
   }
   
-  // If no cards are due, select from all cards
-  return selectRandomCard(cards);
+  if (availableDueCards.length > 0) {
+    return selectRandomCard(availableDueCards);
+  }
+  
+  // If no due cards available (excluding current), try all cards
+  let availableCards = cards;
+  if (excludeCard) {
+    availableCards = cards.filter(card => card.id !== excludeCard.id);
+  }
+  
+  // If no cards are due, select from all cards (excluding current)
+  return selectRandomCard(availableCards);
 }
 
 /**

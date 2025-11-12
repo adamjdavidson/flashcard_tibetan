@@ -293,7 +293,8 @@ function App() {
       // Only get new card if current card is not in filtered set or we don't have a current card
       if (!currentCard || !isCurrentCardInFilteredSet) {
         // For 'both', getNextCard will check both directions; then we randomly pick which to show
-        const nextCard = getNextCard(filteredCards, progressMap, studyDirection);
+        // Exclude current card to prevent immediate repetition
+        const nextCard = getNextCard(filteredCards, progressMap, studyDirection, currentCard);
         // For 'both', randomly pick a direction to display this card in
         const nextDirection = studyDirection === 'both' 
           ? (Math.random() > 0.5 ? 'tibetan_to_english' : 'english_to_tibetan')
@@ -380,8 +381,9 @@ function App() {
     
       // Wait for fade out, then get next card
       // For 'both' direction, getNextCard checks both directions; then we randomly pick display direction
+      // Exclude current card to prevent immediate repetition
       setTimeout(() => {
-        const nextCard = getNextCard(filteredCards, newProgressMap, studyDirection);
+        const nextCard = getNextCard(filteredCards, newProgressMap, studyDirection, currentCard);
         // For 'both', randomly pick a direction to display this card in
         const nextDirection = studyDirection === 'both' 
           ? (Math.random() > 0.5 ? 'tibetan_to_english' : 'english_to_tibetan')

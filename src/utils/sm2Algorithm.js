@@ -151,6 +151,10 @@ export function calculateReview(cardProgress, quality) {
     const easeChange = 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02);
     easeFactor = Math.max(MIN_EASE_FACTOR, easeFactor + easeChange);
     
+    // LEARNING PHASE: Don't enforce 1-day minimum (allows short intervals like 30 minutes)
+    // But ensure minimum of 0.02 days (about 30 minutes) to prevent negative/zero intervals
+    interval = Math.max(0.02, interval);
+    
   } else {
     // EXPONENTIAL PHASE
     
@@ -235,10 +239,10 @@ export function calculateReview(cardProgress, quality) {
     
     // Add random noise to prevent clustering
     interval = addRandomNoise(interval);
+    
+    // Ensure minimum interval of 1 day for exponential phase
+    interval = Math.max(1, interval);
   }
-
-  // Ensure minimum interval of 1 day
-  interval = Math.max(1, interval);
 
   // Calculate next review date
   const nextReviewDate = Date.now() + interval * 24 * 60 * 60 * 1000;

@@ -165,7 +165,10 @@ describe('sm2Algorithm', () => {
       // Since it starts at 0, it moves to 1
       expect(result.learningStepIndex).toBe(1); // Moves to next step
       expect(result.repetitions).toBe(0); // Stays 0 in learning phase
-      expect(result.interval).toBeGreaterThanOrEqual(1);
+      // Learning phase intervals are less than 1 day (30m, 2h, 2d)
+      // 2 hours = 0.083 days, so interval should be < 1
+      expect(result.interval).toBeGreaterThanOrEqual(0.02); // At least 30 minutes
+      expect(result.interval).toBeLessThan(3); // Less than 3 days (max learning step)
       expect(result.reviewCount).toBe(4); // Should increment review count
     });
     
