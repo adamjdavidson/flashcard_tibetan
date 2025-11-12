@@ -21,7 +21,7 @@ import './AdminPage.css';
  * Provides admin functionality: user management, password changes, progress reset, stats
  */
 export default function AdminPage() {
-  const { user, isAdmin: isAdminUser } = useAuth();
+  const { user, isAdmin: isAdminUser, loading: authLoading } = useAuth();
   
   // All hooks must be called before any conditional returns
   const [activeTab, setActiveTab] = useState('stats');
@@ -509,7 +509,16 @@ export default function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, isAdminUser]);
 
-  // Redirect if not admin - check AFTER all hooks
+  // Wait for auth to initialize - check AFTER all hooks
+  if (authLoading) {
+    return (
+      <div className="admin-page">
+        <div className="loading">Loading...</div>
+      </div>
+    );
+  }
+
+  // Redirect if not admin
   if (!isAdminUser) {
     return (
       <div className="admin-page">
@@ -1066,7 +1075,6 @@ export default function AdminPage() {
                 <BulkAddForm
                   onComplete={handleBulkAddComplete}
                   onCancel={handleBulkAddCancel}
-                  isAdmin={isAdminUser}
                 />
               </div>
             </div>

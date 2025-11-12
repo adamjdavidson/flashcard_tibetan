@@ -2,8 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { checkDuplicates, processBulkAdd } from '../bulkAddService.js';
 import { loadCards, saveCards } from '../cardsService.js';
 import { loadCategories, createCategory } from '../categoriesService.js';
-import { translateText } from '../../utils/translation.js';
-import { generateAIImage } from '../../utils/images.js';
 import { createCard } from '../../data/cardSchema.js';
 
 // Mock dependencies
@@ -227,6 +225,98 @@ describe('bulkAddService', () => {
       expect(createCategory).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'new' })
       );
+    });
+
+    // User Story 2: Conditional "new" category assignment based on markAsNew
+    describe('markAsNew parameter (User Story 2)', () => {
+      it('should assign "new" category when markAsNew is true', async () => {
+        loadCards.mockResolvedValue([]);
+        loadCategories.mockResolvedValue([
+          { id: 'cat_1', name: 'test' },
+          { id: 'cat_new', name: 'new' }
+        ]);
+        
+        const mockCard1 = { id: 'card_1', englishText: 'apple', type: 'word', categoryIds: ['cat_1', 'cat_new'] };
+        const mockCard2 = { id: 'card_2', englishText: 'banana', type: 'word', categoryIds: ['cat_1', 'cat_new'] };
+        createCard.mockReturnValueOnce(mockCard1).mockReturnValueOnce(mockCard2);
+        saveCards.mockResolvedValue({ success: true, data: [mockCard1, mockCard2] });
+
+        const request = {
+          words: ['apple', 'banana'],
+          cardType: 'word',
+          categoryIds: ['cat_1'],
+          instructionLevelId: null,
+          markAsNew: true
+        };
+
+        await processBulkAdd(request);
+
+        expect(saveCards).toHaveBeenCalled();
+        const savedCards = saveCards.mock.calls[0][0];
+        savedCards.forEach(card => {
+          expect(card.categoryIds).toContain('cat_new');
+        });
+      });
+
+      it('should NOT assign "new" category when markAsNew is false', async () => {
+        loadCards.mockResolvedValue([]);
+        loadCategories.mockResolvedValue([
+          { id: 'cat_1', name: 'test' },
+          { id: 'cat_new', name: 'new' }
+        ]);
+        
+        const mockCard1 = { id: 'card_1', englishText: 'apple', type: 'word', categoryIds: ['cat_1'] };
+        const mockCard2 = { id: 'card_2', englishText: 'banana', type: 'word', categoryIds: ['cat_1'] };
+        createCard.mockReturnValueOnce(mockCard1).mockReturnValueOnce(mockCard2);
+        saveCards.mockResolvedValue({ success: true, data: [mockCard1, mockCard2] });
+
+        const request = {
+          words: ['apple', 'banana'],
+          cardType: 'word',
+          categoryIds: ['cat_1'],
+          instructionLevelId: null,
+          markAsNew: false
+        };
+
+        await processBulkAdd(request);
+
+        expect(saveCards).toHaveBeenCalled();
+        const savedCards = saveCards.mock.calls[0][0];
+        savedCards.forEach(card => {
+          expect(card.categoryIds).not.toContain('cat_new');
+          expect(card.categoryIds).toEqual(['cat_1']); // Only selected categories
+        });
+      });
+
+      it('should default markAsNew to true for backward compatibility', async () => {
+        loadCards.mockResolvedValue([]);
+        loadCategories.mockResolvedValue([
+          { id: 'cat_new', name: 'new' }
+        ]);
+        
+        const mockCard1 = { id: 'card_1', englishText: 'apple', type: 'word', categoryIds: ['cat_new'] };
+        const mockCard2 = { id: 'card_2', englishText: 'banana', type: 'word', categoryIds: ['cat_new'] };
+        createCard.mockReturnValueOnce(mockCard1).mockReturnValueOnce(mockCard2);
+        saveCards.mockResolvedValue({ success: true, data: [mockCard1, mockCard2] });
+
+        // Request without markAsNew parameter (backward compatibility)
+        const request = {
+          words: ['apple', 'banana'],
+          cardType: 'word',
+          categoryIds: [],
+          instructionLevelId: null
+          // markAsNew not provided
+        };
+
+        await processBulkAdd(request);
+
+        // Should still assign "new" category (default behavior)
+        expect(saveCards).toHaveBeenCalled();
+        const savedCards = saveCards.mock.calls[0][0];
+        savedCards.forEach(card => {
+          expect(card.categoryIds).toContain('cat_new');
+        });
+      });
     });
   });
 });

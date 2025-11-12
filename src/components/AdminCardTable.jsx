@@ -178,6 +178,18 @@ export default function AdminCardTable({
 
   const totalPages = Math.ceil(sortedCards.length / pageSize);
 
+  // Memoize expensive computation for column header labels
+  // This prevents O(n) filteredCards.every() from running multiple times per render
+  const allWordPhrase = useMemo(() => {
+    if (filterType === 'word' || filterType === 'phrase') {
+      return false; // If filtering by word/phrase, we don't need to check all cards
+    }
+    return filteredCards.length > 0 && filteredCards.every(c => c.type === 'word' || c.type === 'phrase');
+  }, [filterType, filteredCards]);
+
+  const hasWordPhrase = filterType === 'word' || filterType === 'phrase';
+  const showTibetanEnglishLabels = hasWordPhrase || allWordPhrase;
+
   // Handle column header click for sorting
   const handleSort = (column) => {
     if (sortColumn === column) {
@@ -514,18 +526,9 @@ export default function AdminCardTable({
                   type="button"
                   className="sortable-header"
                   onClick={() => handleSort('front')}
-                  aria-label={`Sort by ${(() => {
-                    const hasWordPhrase = filterType === 'word' || filterType === 'phrase';
-                    const allWordPhrase = !hasWordPhrase && filteredCards.length > 0 && filteredCards.every(c => c.type === 'word' || c.type === 'phrase');
-                    return (hasWordPhrase || allWordPhrase) ? 'Tibetan' : 'Front';
-                  })()} ${sortColumn === 'front' ? `(${sortDirection})` : ''}`}
+                  aria-label={`Sort by ${showTibetanEnglishLabels ? 'Tibetan' : 'Front'} ${sortColumn === 'front' ? `(${sortDirection})` : ''}`}
                 >
-                  {(() => {
-                    // Show "Tibetan" if filtering word/phrase OR all visible cards are word/phrase
-                    const hasWordPhrase = filterType === 'word' || filterType === 'phrase';
-                    const allWordPhrase = !hasWordPhrase && filteredCards.length > 0 && filteredCards.every(c => c.type === 'word' || c.type === 'phrase');
-                    return (hasWordPhrase || allWordPhrase) ? 'Tibetan' : 'Front';
-                  })()} {getSortIndicator('front')}
+                  {showTibetanEnglishLabels ? 'Tibetan' : 'Front'} {getSortIndicator('front')}
                 </button>
               </th>
               <th>
@@ -533,18 +536,9 @@ export default function AdminCardTable({
                   type="button"
                   className="sortable-header"
                   onClick={() => handleSort('backContent')}
-                  aria-label={`Sort by ${(() => {
-                    const hasWordPhrase = filterType === 'word' || filterType === 'phrase';
-                    const allWordPhrase = !hasWordPhrase && filteredCards.length > 0 && filteredCards.every(c => c.type === 'word' || c.type === 'phrase');
-                    return (hasWordPhrase || allWordPhrase) ? 'English' : 'Back Content';
-                  })()} ${sortColumn === 'backContent' ? `(${sortDirection})` : ''}`}
+                  aria-label={`Sort by ${showTibetanEnglishLabels ? 'English' : 'Back Content'} ${sortColumn === 'backContent' ? `(${sortDirection})` : ''}`}
                 >
-                  {(() => {
-                    // Show "English" if filtering word/phrase OR all visible cards are word/phrase
-                    const hasWordPhrase = filterType === 'word' || filterType === 'phrase';
-                    const allWordPhrase = !hasWordPhrase && filteredCards.length > 0 && filteredCards.every(c => c.type === 'word' || c.type === 'phrase');
-                    return (hasWordPhrase || allWordPhrase) ? 'English' : 'Back Content';
-                  })()} {getSortIndicator('backContent')}
+                  {showTibetanEnglishLabels ? 'English' : 'Back Content'} {getSortIndicator('backContent')}
                 </button>
               </th>
               <th>

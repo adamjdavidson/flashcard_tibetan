@@ -6,7 +6,11 @@ const enableWebKit = !!process.env.WEBKIT;
 // that have correct system dependencies (e.g., CI container).
 const projects = [
   // Setup project creates storage state via UI login
-  { name: 'setup', testMatch: /.*\.setup\.js/ },
+  { 
+    name: 'setup', 
+    testMatch: /.*\.setup\.js/,
+    timeout: 60000, // 60 seconds for auth setup (CI network latency, Supabase API calls)
+  },
   {
     name: 'chromium',
     use: { ...devices['Desktop Chrome'], storageState: 'playwright/.auth/admin.json' },

@@ -32,7 +32,7 @@ test.describe('Accessibility (global)', () => {
   for (const route of ['/', '/admin']) {
     test(`no critical violations on ${route}`, async ({ page }) => {
       await page.goto(route);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       try {
         await injectAxe(page);
@@ -51,7 +51,7 @@ test.describe('Accessibility (global)', () => {
 
   test('inputs have labels and buttons have accessible names', async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Inputs
     const inputs = await page.locator('input, select, textarea').all();

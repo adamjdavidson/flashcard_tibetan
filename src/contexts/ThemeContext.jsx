@@ -16,7 +16,7 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     loadUserTheme();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user?.id]); // Only when user ID changes, not on every token refresh
 
   // Apply theme when it changes
   useEffect(() => {

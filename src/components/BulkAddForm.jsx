@@ -8,12 +8,29 @@ import './BulkAddForm.css';
 /**
  * BulkAddForm component
  * Allows admins to paste a list of words and bulk create cards
+ * 
+ * Features:
+ * - Bulk add 2-100 words at once
+ * - Automatic translation to Tibetan
+ * - Automatic image generation
+ * - "Mark as New" checkbox to flag cards for review (default: checked)
+ *   - When checked, cards are assigned the "new" category for review by Tibetan speakers
+ *   - When unchecked, cards are created without the "new" category
+ *   - Auto-checks when words are entered (respects manual override)
+ * 
+ * Reviewer Workflow:
+ * - Reviewers can filter cards by "new" category to see all bulk-created cards needing review
+ * - Reviewers use EditCardForm to review card content (translation, image, etc.)
+ * - Reviewers remove "new" category from cards after approval
+ * - Cards without "new" category no longer appear in the review filter
  */
-export default function BulkAddForm({ onComplete, onCancel, isAdmin = true }) {
+export default function BulkAddForm({ onComplete, onCancel }) {
   const [wordsText, setWordsText] = useState('');
   const [cardType, setCardType] = useState('word');
   const [categoryIds, setCategoryIds] = useState([]);
   const [instructionLevelId, setInstructionLevelId] = useState('');
+  const [markAsNew, setMarkAsNew] = useState(true); // Checkbox state for "New" category assignment
+  const [manualOverride, setManualOverride] = useState(false); // Track if user has manually overridden checkbox
   const [categories, setCategories] = useState([]);
   const [instructionLevels, setInstructionLevels] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -43,6 +60,13 @@ export default function BulkAddForm({ onComplete, onCancel, isAdmin = true }) {
     loadData();
   }, []);
 
+  // Auto-check checkbox when words are entered (if not manually overridden)
+  useEffect(() => {
+    if (wordsText.trim().length > 0 && !manualOverride) {
+      setMarkAsNew(true);
+    }
+  }, [wordsText, manualOverride]);
+
   // Parse words from text area (split by newline, trim, filter empty)
   const parseWords = (text) => {
     return text
@@ -65,16 +89,28 @@ export default function BulkAddForm({ onComplete, onCancel, isAdmin = true }) {
     setCardType(e.target.value);
   };
 
-  // Handle category selection (multi-select)
-  const handleCategoryChange = (e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions);
-    const selectedIds = selectedOptions.map(option => option.value);
-    setCategoryIds(selectedIds);
+  // Handle category selection (checkbox-based)
+  const handleCategoryChange = (categoryId) => {
+    setCategoryIds(prev => {
+      if (prev.includes(categoryId)) {
+        // Deselect: remove from array
+        return prev.filter(id => id !== categoryId);
+      } else {
+        // Select: add to array
+        return [...prev, categoryId];
+      }
+    });
   };
 
   // Handle instruction level change
   const handleInstructionLevelChange = (e) => {
     setInstructionLevelId(e.target.value);
+  };
+
+  // Handle checkbox change for "Mark as New"
+  const handleCheckboxChange = (e) => {
+    setMarkAsNew(e.target.checked);
+    setManualOverride(true); // User has manually set state
   };
 
   // Validate form
@@ -124,7 +160,8 @@ export default function BulkAddForm({ onComplete, onCancel, isAdmin = true }) {
         words,
         cardType,
         categoryIds,
-        instructionLevelId: instructionLevelId || null
+        instructionLevelId: instructionLevelId || null,
+        markAsNew // Include checkbox state in request
       };
 
       const result = await processBulkAdd(request, {
@@ -168,6 +205,8 @@ export default function BulkAddForm({ onComplete, onCancel, isAdmin = true }) {
         onNewOperation={() => {
           setSummary(null);
           setWordsText('');
+          setMarkAsNew(true); // Reset checkbox to default
+          setManualOverride(false); // Reset manual override
           setProgress({ stage: 'idle', current: 0, total: 0, details: {} });
         }}
       />
@@ -222,23 +261,46 @@ export default function BulkAddForm({ onComplete, onCancel, isAdmin = true }) {
         </div>
 
         <div className="form-group">
-          <label htmlFor="categories">Categories (optional)</label>
-          <select
-            id="categories"
-            name="categories"
-            multiple
-            value={categoryIds}
-            onChange={handleCategoryChange}
-            size={Math.min(categories.length, 5)}
-            disabled={loading}
-          >
-            {categories.map(category => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <small>Hold Ctrl/Cmd to select multiple categories</small>
+          <label>Categories (optional)</label>
+          <div style={{ 
+            border: '1px solid #ddd', 
+            borderRadius: '4px', 
+            padding: '0.5rem',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            backgroundColor: loading ? '#f5f5f5' : '#fff'
+          }}>
+            {categories.length === 0 ? (
+              <div style={{ color: '#666', fontStyle: 'italic', padding: '0.5rem' }}>
+                No categories available
+              </div>
+            ) : (
+              categories.map(category => (
+                <label
+                  key={category.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '0.25rem 0',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.6 : 1
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={categoryIds.includes(category.id)}
+                    onChange={() => handleCategoryChange(category.id)}
+                    disabled={loading}
+                    style={{ marginRight: '0.5rem', cursor: loading ? 'not-allowed' : 'pointer' }}
+                  />
+                  <span>{category.name}</span>
+                </label>
+              ))
+            )}
+          </div>
+          <small style={{ display: 'block', marginTop: '0.25rem', color: '#666' }}>
+            Click to select or deselect categories
+          </small>
         </div>
 
         <div className="form-group">
@@ -259,6 +321,24 @@ export default function BulkAddForm({ onComplete, onCancel, isAdmin = true }) {
                 </option>
               ))}
           </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="markAsNew">
+            <input
+              type="checkbox"
+              id="markAsNew"
+              name="markAsNew"
+              checked={markAsNew}
+              onChange={handleCheckboxChange}
+              disabled={loading}
+              aria-describedby="markAsNewHelp"
+            />
+            Mark as New (for review)
+          </label>
+          <small id="markAsNewHelp" className="help-text">
+            Cards will be flagged with the "new" category for review by Tibetan speakers.
+          </small>
         </div>
 
         {error && (

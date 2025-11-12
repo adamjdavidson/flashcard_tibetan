@@ -70,11 +70,17 @@ export default function AddCardForm({ onAdd, onCancel, isAdmin = false }) {
     setError('');
   };
 
-  // Handle category selection (multi-select)
-  const handleCategoryChange = (e) => {
-    const selectedOptions = Array.from(e.target.selectedOptions);
-    const selectedIds = selectedOptions.map(option => option.value);
-    setCategoryIds(selectedIds);
+  // Handle category selection (checkbox-based)
+  const handleCategoryChange = (categoryId) => {
+    setCategoryIds(prev => {
+      if (prev.includes(categoryId)) {
+        // Deselect: remove from array
+        return prev.filter(id => id !== categoryId);
+      } else {
+        // Select: add to array
+        return [...prev, categoryId];
+      }
+    });
   };
 
   // Handle instruction level selection (single select)
@@ -540,24 +546,45 @@ export default function AddCardForm({ onAdd, onCancel, isAdmin = false }) {
 
         {/* Classification Fields */}
         <div className="form-group">
-          <label htmlFor="categories">Categories (optional)</label>
+          <label>Categories (optional)</label>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
-            <select
-              id="categories"
-              name="categories"
-              multiple
-              value={categoryIds}
-              onChange={handleCategoryChange}
-              size={Math.min(categories.length, 5)}
-              style={{ padding: '0.5rem', flex: 1 }}
-              disabled={loading}
-            >
-              {categories.map(category => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+            <div style={{ 
+              flex: 1, 
+              border: '1px solid #ddd', 
+              borderRadius: '4px', 
+              padding: '0.5rem',
+              maxHeight: '200px',
+              overflowY: 'auto',
+              backgroundColor: loading ? '#f5f5f5' : '#fff'
+            }}>
+              {categories.length === 0 ? (
+                <div style={{ color: '#666', fontStyle: 'italic', padding: '0.5rem' }}>
+                  No categories available
+                </div>
+              ) : (
+                categories.map(category => (
+                  <label
+                    key={category.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '0.25rem 0',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      opacity: loading ? 0.6 : 1
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={categoryIds.includes(category.id)}
+                      onChange={() => handleCategoryChange(category.id)}
+                      disabled={loading}
+                      style={{ marginRight: '0.5rem', cursor: loading ? 'not-allowed' : 'pointer' }}
+                    />
+                    <span>{category.name}</span>
+                  </label>
+                ))
+              )}
+            </div>
             <button
               type="button"
               onClick={() => setShowNewCategory(!showNewCategory)}
@@ -613,7 +640,7 @@ export default function AddCardForm({ onAdd, onCancel, isAdmin = false }) {
             </div>
           )}
           <small style={{ display: 'block', marginTop: '0.25rem', color: '#666' }}>
-            Hold Ctrl/Cmd to select multiple categories
+            Click to select or deselect categories
           </small>
         </div>
 

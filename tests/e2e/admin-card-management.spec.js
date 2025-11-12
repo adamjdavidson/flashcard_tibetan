@@ -4,7 +4,15 @@ test.describe('Admin Card Management - phase 1', () => {
   test.beforeEach(async ({ page }) => {
     // Go to admin page where advanced card management lives
     await page.goto('/admin');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    
+    // Wait for React to hydrate and admin check to complete
+    // Check that we don't see "access denied" and admin tabs appear
+    await page.waitForFunction(() => {
+      const denied = document.body.textContent?.includes('access denied');
+      const tabs = document.querySelector('.admin-tabs');
+      return !denied && tabs !== null;
+    }, { timeout: 20000 });
 
     // Wait for the admin tab bar to render
     const tabs = page.locator('.admin-tabs');
@@ -15,6 +23,16 @@ test.describe('Admin Card Management - phase 1', () => {
 
     // Ensure Table view is active
     await page.getByRole('button', { name: /^table$/i }).click({ timeout: 20000 });
+
+    // Wait for cards to load - table only renders when cards.length > 0
+    // Wait for either the table to appear OR "No cards found" message
+    await page.waitForFunction(() => {
+      const table = document.querySelector('table[aria-label="Card management table"]');
+      const noCards = document.querySelector('.admin-card-table-empty');
+      const loading = document.querySelector('.admin-card-table-loading');
+      // Table is ready when it exists OR no-cards message exists (not loading)
+      return (table !== null) || (noCards !== null && loading === null);
+    }, { timeout: 20000 });
   });
 
   test('displays cards in table view', async ({ page }) => {

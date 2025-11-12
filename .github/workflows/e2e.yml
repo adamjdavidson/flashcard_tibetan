@@ -57,6 +57,7 @@ jobs:
   e2e-webkit:
     name: WebKit (container)
     runs-on: ubuntu-latest
+    needs: [e2e-chromium-firefox]  # Run sequentially to avoid parallel auth race condition
     container: mcr.microsoft.com/playwright:v1.56.1-jammy
     env:
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}

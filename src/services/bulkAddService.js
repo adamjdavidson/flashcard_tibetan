@@ -90,12 +90,16 @@ export async function ensureNewCategory() {
  * @param {string} request.cardType - Card type ('word' or 'phrase')
  * @param {string[]} request.categoryIds - Array of category IDs (optional)
  * @param {string|null} request.instructionLevelId - Instruction level ID (optional)
+ * @param {boolean} request.markAsNew - Whether to assign "new" category (default: true)
+ *   - When true: Ensures "new" category exists and assigns it to all created cards
+ *   - When false: Skips "new" category assignment, uses only selected categories
+ *   - Defaults to true for backward compatibility
  * @param {Object} options - Processing options
  * @param {Function} options.onProgress - Progress callback (optional)
  * @returns {Promise<Object>} Bulk add summary
  */
 export async function processBulkAdd(request, options = {}) {
-  const { words, cardType, categoryIds = [], instructionLevelId = null } = request;
+  const { words, cardType, categoryIds = [], instructionLevelId = null, markAsNew = true } = request;
   const { onProgress } = options;
 
   // Validate request
@@ -148,27 +152,20 @@ export async function processBulkAdd(request, options = {}) {
     };
   }
 
-  // Ensure "new" category exists
-  let newCategoryId;
-  try {
-    newCategoryId = await ensureNewCategory();
-  } catch (error) {
-    return {
-      totalWords: normalizedWords.length,
-      cardsCreated: 0,
-      duplicatesSkipped: duplicates.length,
-      translationFailures: [],
-      imageFailures: [],
-      errors: [{ word: 'system', error: `Failed to create "new" category: ${error.message}` }],
-      createdCards: [],
-      duplicateWords: duplicates
-    };
-  }
-
-  // Combine selected categories with "new" category
-  const allCategoryIds = [...categoryIds];
-  if (!allCategoryIds.includes(newCategoryId)) {
-    allCategoryIds.push(newCategoryId);
+  // Conditionally ensure "new" category exists and add to category list
+  let allCategoryIds = [...categoryIds];
+  if (markAsNew) {
+    let newCategoryId;
+    try {
+      newCategoryId = await ensureNewCategory();
+      if (!allCategoryIds.includes(newCategoryId)) {
+        allCategoryIds.push(newCategoryId);
+      }
+    } catch (error) {
+      // Log error but continue processing (partial success)
+      console.error('Failed to create "new" category:', error);
+      // Continue without "new" category
+    }
   }
 
   // Translate words (batched with delays)

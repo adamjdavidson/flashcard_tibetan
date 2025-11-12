@@ -137,9 +137,7 @@ describe('BulkImageGenerator', () => {
       const cardsNeedingImages = [mockCards[0]];
       mockFilterCardsNeedingImages.mockReturnValue(cardsNeedingImages);
       
-      let onCompleteCallback;
-      mockProcessBulkImageGeneration.mockImplementation(async (cards, onProgress, onComplete, signal) => {
-        onCompleteCallback = onComplete;
+      mockProcessBulkImageGeneration.mockImplementation(async (cards, onProgress, onComplete, _signal) => {
         // Simulate progress updates
         if (onProgress) {
           onProgress({ current: 0, total: 1, completed: 0, failed: 0, currentCard: cards[0] });
@@ -215,7 +213,7 @@ describe('BulkImageGenerator', () => {
       const cardsNeedingImages = [mockCards[0], mockCards[2]];
       mockFilterCardsNeedingImages.mockReturnValue(cardsNeedingImages);
       
-      mockProcessBulkImageGeneration.mockImplementation(async (cards, onProgress, onComplete, signal) => {
+      mockProcessBulkImageGeneration.mockImplementation(async (cards, onProgress, _onComplete, _signal) => {
         // Simulate progress update immediately
         if (onProgress) {
           onProgress({ current: 0, total: 2, completed: 0, failed: 0, currentCard: cards[0] });
@@ -240,7 +238,7 @@ describe('BulkImageGenerator', () => {
       const cardsNeedingImages = [mockCards[0], mockCards[2]];
       mockFilterCardsNeedingImages.mockReturnValue(cardsNeedingImages);
       
-      mockProcessBulkImageGeneration.mockImplementation(async (cards, onProgress, onComplete, signal) => {
+      mockProcessBulkImageGeneration.mockImplementation(async (cards, onProgress, onComplete, _signal) => {
         // Simulate multiple progress updates
         if (onProgress) {
           onProgress({ current: 0, total: 2, completed: 0, failed: 0, currentCard: cards[0] });
@@ -268,7 +266,7 @@ describe('BulkImageGenerator', () => {
       const cardsNeedingImages = [mockCards[0]];
       mockFilterCardsNeedingImages.mockReturnValue(cardsNeedingImages);
       
-      mockProcessBulkImageGeneration.mockImplementation(async (cards, onProgress, onComplete, signal) => {
+      mockProcessBulkImageGeneration.mockImplementation(async (cards, onProgress, onComplete, _signal) => {
         if (onProgress) {
           onProgress({ current: 0, total: 1, completed: 0, failed: 0, currentCard: cards[0] });
           // Keep running - don't complete immediately
@@ -294,7 +292,7 @@ describe('BulkImageGenerator', () => {
       const cardsNeedingImages = [mockCards[0], mockCards[2]];
       mockFilterCardsNeedingImages.mockReturnValue(cardsNeedingImages);
       
-      mockProcessBulkImageGeneration.mockImplementation(async (cards, onProgress, onComplete, signal) => {
+      mockProcessBulkImageGeneration.mockImplementation(async (cards, onProgress, onComplete, _signal) => {
         if (onProgress) {
           onProgress({ current: 1, total: 2, completed: 0, failed: 1, currentCard: cards[1] });
           // Keep running - don't complete immediately
@@ -320,7 +318,7 @@ describe('BulkImageGenerator', () => {
       const cardsNeedingImages = [mockCards[0]];
       mockFilterCardsNeedingImages.mockReturnValue(cardsNeedingImages);
       
-      mockProcessBulkImageGeneration.mockImplementation(async (cards, onProgress, onComplete, signal) => {
+      mockProcessBulkImageGeneration.mockImplementation(async (cards, onProgress, _onComplete, _signal) => {
         // Keep running - don't complete
         if (onProgress) {
           onProgress({ current: 0, total: 1, completed: 0, failed: 0, currentCard: cards[0] });
@@ -377,9 +375,7 @@ describe('BulkImageGenerator', () => {
       const cardsNeedingImages = [mockCards[0], mockCards[2]];
       mockFilterCardsNeedingImages.mockReturnValue(cardsNeedingImages);
       
-      let onCompleteCallback;
       mockProcessBulkImageGeneration.mockImplementation(async (cards, onProgress, onComplete, signal) => {
-        onCompleteCallback = onComplete;
         // Simulate processing
         if (onProgress) {
           onProgress({ current: 0, total: 2, completed: 0, failed: 0, currentCard: cards[0] });
